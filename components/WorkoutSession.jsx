@@ -154,16 +154,17 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Workout Session" size="xl">
-      <div className="space-y-6">
-        {/* Workout Header */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-surface-50 mb-2">
-            {workoutStarted ? 'Workout In Progress' : 'Ready to Start?'}
-          </h2>
-          <div className="text-primary text-lg font-semibold">
-            Total Time: {formatTotalTime(totalWorkoutTime)}
+      <div className="max-h-[70vh] overflow-y-auto">
+        <div className="space-y-6 p-1">
+          {/* Workout Header */}
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-surface-50 mb-2">
+              {workoutStarted ? 'Workout In Progress' : 'Ready to Start?'}
+            </h2>
+            <div className="text-primary text-lg font-semibold">
+              Total Time: {formatTotalTime(totalWorkoutTime)}
+            </div>
           </div>
-        </div>
 
         {!workoutStarted ? (
           <div className="text-center py-8">
