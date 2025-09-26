@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, Star } from 'lucide-react';
-import { Button } from './button';
 
 export function CoachRating({ isOpen, onClose, coach, hire, onSubmitRating }) {
   const [rating, setRating] = useState(0);
