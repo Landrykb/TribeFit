@@ -30,14 +30,15 @@ export function ShrinkWorkoutModal({ isOpen, onClose, onShrink }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Shrink Workout" size="md">
-      <div className="space-y-6">
-        <div className="text-center">
-          <Clock size={48} className="text-primary mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-surface-50 mb-2">Adjust Workout Duration</h3>
-          <p className="text-surface-400 text-sm">
-            Choose how much time you have available. We&apos;ll optimize your workout accordingly.
-          </p>
-        </div>
+      <div className="max-h-[70vh] overflow-y-auto">
+        <div className="space-y-6 p-1">
+          <div className="text-center">
+            <Clock size={40} className="text-primary mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-surface-50 mb-2">Adjust Workout Duration</h3>
+            <p className="text-surface-400 text-sm">
+              Choose how much time you have available. We&apos;ll optimize your workout accordingly.
+            </p>
+          </div>
 
         {/* Quick Time Selection */}
         <div>
