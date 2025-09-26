@@ -234,10 +234,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Skip Flow API"
-    - "Pact Wallet API"
     - "Skip Modal (Core Feature)"
-    - "Snitch Notifications API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
