@@ -149,15 +149,18 @@ backend:
         
   - task: "Wallet Top-up API"
     implemented: true
-    working: "needs_testing"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "needs_testing"
         agent: "main"
         comment: "Implemented /api/wallet/topup endpoint with mock Stripe integration. Adds TribeCoins to user wallet balance."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Wallet topup API working correctly. POST /api/wallet/topup successfully adds TribeCoins to user balance. Returns success status, new balance, and charged amount. Mock Stripe integration functioning as expected."
         
   - task: "Snitch Notifications API"
     implemented: true
