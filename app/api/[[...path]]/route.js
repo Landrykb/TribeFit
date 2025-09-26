@@ -178,7 +178,7 @@ let mockData = {
 // Helper to send snitch notification
 const sendSnitchNotification = async (actorName, recipientIds, method, locale = 'en') => {
   const key = method === 'pay' ? 'snitch.paid' : 'snitch.watched_ad';
-  const message = t(key, { name: actorName }, locale);
+  const message = i18n.t(key, { name: actorName }, locale);
   
   if (isUsingMockData) {
     // Mock mode - just add to array
