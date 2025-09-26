@@ -164,15 +164,18 @@ backend:
         
   - task: "Snitch Notifications API"
     implemented: true
-    working: "needs_testing"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "needs_testing"
         agent: "main"
         comment: "Implemented snitch notification system with localized messages. Sends notifications when users skip with snitch mode enabled."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Snitch notifications working perfectly. When users skip (both pay and ad methods), proper localized notifications are generated. Pay method: 'Alex Chen PAID to skip 💸. Your tribe is stronger than excuses.' Ad method: 'Alex Chen watched an ad to skip 📺. Still training tomorrow?' Notifications include user names and appropriate emojis."
 
 frontend:
   - task: "TribeFit Main UI"
