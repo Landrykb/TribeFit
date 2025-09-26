@@ -158,6 +158,20 @@ let mockData = {
       price_tc: 200,
       duration_weeks: 4
     }
+  ],
+  coach_hires: [],
+  coach_ratings: [],
+  catalog_items: [
+    { slug: 'dumbbell', title: 'Dumbbells', category: 'strength', icon: 'dumbbell', specs: { weights: [5,10,15,20,25,30] }, price_tc: 80 },
+    { slug: 'barbell', title: 'Barbell', category: 'strength', icon: 'barbell', specs: { types: ['olympic','curl'] }, price_tc: 150 },
+    { slug: 'kettlebell', title: 'Kettlebells', category: 'strength', icon: 'circle-dot', specs: { weights: [8,12,16,24] }, price_tc: 70 },
+    { slug: 'bands', title: 'Resistance Bands', category: 'strength', icon: 'link', specs: { levels: ['light','medium','heavy'] }, price_tc: 30 },
+    { slug: 'jumprope', title: 'Jump Rope', category: 'cardio', icon: 'rope', specs: { types: ['speed','weighted'] }, price_tc: 20 },
+    { slug: 'foamroller', title: 'Foam Roller', category: 'recovery', icon: 'circle', specs: { sizes: ['30cm','60cm'] }, price_tc: 25 },
+    { slug: 'yogamat', title: 'Yoga Mat', category: 'recovery', icon: 'layout', specs: { thickness: ['5mm','10mm'] }, price_tc: 40 },
+    { slug: 'gloves', title: 'Lifting Gloves', category: 'accessories', icon: 'hand', specs: { sizes: ['S','M','L'] }, price_tc: 25 },
+    { slug: 'shaker', title: 'Protein Shaker', category: 'accessories', icon: 'bottle', specs: { sizes: ['500ml','1L'] }, price_tc: 15 },
+    { slug: 'protein', title: 'Whey Protein', category: 'nutrition', icon: 'cup-soda', specs: { flavors: ['vanilla','chocolate','strawberry'] }, price_tc: 40 }
   ]
 };
 
