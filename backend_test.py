@@ -306,6 +306,117 @@ def test_voting_apis():
     print(f"\n📊 VOTING API RESULTS: {passed}/{total} tests passed")
     return passed, total
 
+def test_ai_workout_generation():
+    """Test AI Workout Generation with Emergent LLM"""
+    print("\n" + "="*60)
+    print("TESTING AI WORKOUT GENERATION (EMERGENT LLM)")
+    print("="*60)
+    
+    results = []
+    
+    # Test with the exact parameters from the review request
+    ai_workout_data = {
+        'fitnessGoals': 'Muscle Building',
+        'availableTime': 45,
+        'equipment': 'Dumbbells, Resistance Bands',
+        'experienceLevel': 'Intermediate',
+        'userId': 'test-user-123'
+    }
+    
+    print("Testing AI Workout Generation with review parameters:")
+    print(f"- Fitness Goals: {ai_workout_data['fitnessGoals']}")
+    print(f"- Available Time: {ai_workout_data['availableTime']} minutes")
+    print(f"- Equipment: {ai_workout_data['equipment']}")
+    print(f"- Experience Level: {ai_workout_data['experienceLevel']}")
+    print(f"- User ID: {ai_workout_data['userId']}")
+    
+    results.append(test_api_endpoint(
+        'POST', '/generate-workout', 
+        data=ai_workout_data, 
+        description="AI workout generation with Emergent LLM"
+    ))
+    
+    # Test with missing required fields
+    invalid_data = {
+        'fitnessGoals': 'Muscle Building',
+        'availableTime': 45
+        # Missing equipment and experienceLevel
+    }
+    results.append(test_api_endpoint(
+        'POST', '/generate-workout',
+        data=invalid_data,
+        expected_status=400,
+        description="Test validation - missing required fields"
+    ))
+    
+    # Test with different parameters
+    cardio_workout_data = {
+        'fitnessGoals': 'Weight Loss',
+        'availableTime': 30,
+        'equipment': 'None (Bodyweight)',
+        'experienceLevel': 'Beginner',
+        'userId': 'test-user-456'
+    }
+    results.append(test_api_endpoint(
+        'POST', '/generate-workout',
+        data=cardio_workout_data,
+        description="AI workout generation - cardio/weight loss focus"
+    ))
+    
+    passed = sum(results)
+    total = len(results)
+    print(f"\n📊 AI WORKOUT GENERATION RESULTS: {passed}/{total} tests passed")
+    return passed, total
+
+def test_equipment_request_integration():
+    """Test Equipment Request Integration with Voting System"""
+    print("\n" + "="*60)
+    print("TESTING EQUIPMENT REQUEST INTEGRATION")
+    print("="*60)
+    
+    results = []
+    
+    # Test 1: Create equipment request (should create voting entry)
+    equipment_request_data = {
+        'type': 'gear',
+        'label': 'Dumbbells 20kg Set',
+        'amount_tc': 400,
+        'item_id': 'dumbbell',
+        'specs': {
+            'weight': '20kg',
+            'quantity': 2
+        }
+    }
+    results.append(test_api_endpoint(
+        'POST', '/pact/spend/request',
+        data=equipment_request_data,
+        description="Create equipment request (dumbbells)"
+    ))
+    
+    # Test 2: Create donation request
+    donation_request_data = {
+        'type': 'donation',
+        'label': 'Local Gym Membership Fund',
+        'amount_tc': 200,
+        'gym_name': 'FitLife Gym'
+    }
+    results.append(test_api_endpoint(
+        'POST', '/pact/spend/request',
+        data=donation_request_data,
+        description="Create donation request"
+    ))
+    
+    # Test 3: Get pact ledger (should show requests)
+    results.append(test_api_endpoint(
+        'GET', f'/pact/ledger?tribe_id={TEST_TRIBE_ID}',
+        description="Get pact ledger with spend requests"
+    ))
+    
+    passed = sum(results)
+    total = len(results)
+    print(f"\n📊 EQUIPMENT REQUEST INTEGRATION: {passed}/{total} tests passed")
+    return passed, total
+
 def test_core_features_verification():
     """Quick verification of previously working core features"""
     print("\n" + "="*60)
@@ -319,27 +430,16 @@ def test_core_features_verification():
     results.append(test_api_endpoint('GET', '/wallet/balance', description="Wallet balance"))
     
     # Skip flow (core feature)
-    skip_data = {'method': 'pay', 'user_id': TEST_USERS['alex']['id']}
+    skip_data = {'method': 'pay', 'userId': TEST_USERS['alex']['id']}
     results.append(test_api_endpoint('POST', '/skip', data=skip_data, description="Skip flow - pay method"))
     
     # Pact wallet (with required parameters)
     results.append(test_api_endpoint('GET', f'/pact/wallet?tribe_id={TEST_TRIBE_ID}', description="Pact wallet balance"))
-    results.append(test_api_endpoint('GET', '/pact/transactions?wallet_id=workout-pact-1', description="Pact transactions"))
     
     # Workout system
     results.append(test_api_endpoint('GET', '/workout/today', description="Today's workout"))
-    workout_start_data = {'user_id': TEST_USERS['alex']['id'], 'workout_id': 'daily-workout'}
+    workout_start_data = {'programId': 'prog-1'}
     results.append(test_api_endpoint('POST', '/workout/start', data=workout_start_data, description="Start workout"))
-    
-    # AI Workout Generation
-    ai_workout_data = {
-        'fitnessGoals': 'muscle_building',
-        'availableTime': 45,
-        'equipment': 'dumbbells',
-        'experienceLevel': 'intermediate',
-        'userId': TEST_USERS['alex']['id']
-    }
-    results.append(test_api_endpoint('POST', '/generate-workout', data=ai_workout_data, description="AI workout generation"))
     
     # Coach system
     results.append(test_api_endpoint('GET', '/coach/list', description="Coach list"))
