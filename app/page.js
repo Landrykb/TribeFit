@@ -517,38 +517,47 @@ function TribeFitApp() {
   const renderHome = () => (
     <div className="space-y-6 animate-fade-in">
       {/* Hero Section */}
-      <div className="gradient-tribal rounded-3xl p-6 text-white tribal-pattern">
+      <div className="bg-gradient-to-br from-surface-800 via-surface-700 to-surface-800 border border-surface-600 rounded-2xl p-6 text-surface-100">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Welcome back, {user?.name}!</h2>
-            <p className="opacity-90">Ready to crush today's goals?</p>
+            <h2 className="text-xl font-bold">Welcome back, {user?.name}!</h2>
+            <p className="text-surface-300">Ready to crush today's goals?</p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold number-display">{walletBalance}</div>
-            <div className="text-sm opacity-90">TribeCoins</div>
+            <div className="text-2xl font-bold number-display text-primary">{walletBalance}</div>
+            <div className="text-sm text-surface-400">TribeCoins</div>
           </div>
         </div>
         
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          <div className="glass rounded-xl p-4 animate-pulse-soft">
-            <div className="flex items-center space-x-2">
-              <Trophy size={20} />
-              <span className="font-medium">{user?.streak_days || 7} Day Streak</span>
-            </div>
-          </div>
-          <div className="glass rounded-xl p-4">
-            <div className="flex items-center space-x-2">
-              <Users size={20} />
-              <span className="font-medium">Founders Tribe</span>
-            </div>
-          </div>
+        <div className="mt-6 grid grid-cols-3 gap-3">
           <button 
-            onClick={() => setShowWorkoutCalendar(true)}
-            className="glass rounded-xl p-4 hover:bg-white/10 transition-colors"
+            onClick={() => toast.success(`🔥 ${user?.streak_days || 7} day streak! Keep it up!`)}
+            className="bg-surface-700/50 hover:bg-surface-700 rounded-xl p-3 transition-colors border border-surface-600 hover:border-primary/50"
           >
             <div className="flex items-center space-x-2">
-              <Calendar size={20} />
-              <span className="font-medium text-sm">Schedule</span>
+              <Trophy size={16} className="text-accent" />
+              <span className="font-medium text-xs">{user?.streak_days || 7} Day Streak</span>
+            </div>
+          </button>
+          <button 
+            onClick={() => {
+              setActiveTab('tribe');
+              toast.info('Viewing tribe details');
+            }}
+            className="bg-surface-700/50 hover:bg-surface-700 rounded-xl p-3 transition-colors border border-surface-600 hover:border-primary/50"
+          >
+            <div className="flex items-center space-x-2">
+              <Users size={16} className="text-primary" />
+              <span className="font-medium text-xs">Founders Tribe</span>
+            </div>
+          </button>
+          <button 
+            onClick={() => setShowWorkoutCalendar(true)}
+            className="bg-surface-700/50 hover:bg-surface-700 rounded-xl p-3 transition-colors border border-surface-600 hover:border-primary/50"
+          >
+            <div className="flex items-center space-x-2">
+              <Calendar size={16} className="text-success" />
+              <span className="font-medium text-xs">Schedule</span>
             </div>
           </button>
         </div>
