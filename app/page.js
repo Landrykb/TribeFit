@@ -177,6 +177,7 @@ export default function TribeFitApp() {
 
   // Handler for becoming a coach
   const handleBecomeCoach = async () => {
+    console.log('Applying to become coach...');
     try {
       const response = await fetch('/api/coach/apply', {
         method: 'POST',
@@ -186,15 +187,17 @@ export default function TribeFitApp() {
         })
       });
 
+      const data = await response.json();
+      console.log('Coach apply response:', data);
+
       if (response.ok) {
-        alert('Coach application submitted! We\'ll review it soon.');
+        alert('Coach application submitted! We\'ll review it soon. 🏆');
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to submit application');
+        alert(data.error || 'Failed to submit application');
       }
     } catch (error) {
       console.error('Coach application failed:', error);
-      alert('Failed to submit application');
+      alert('Failed to submit application: ' + error.message);
     }
   };
 
