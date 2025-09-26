@@ -255,6 +255,7 @@ export default function TribeFitApp() {
 
   // Handler for starting workout
   const handleStartWorkout = async () => {
+    console.log('Starting workout...');
     try {
       const response = await fetch('/api/workout/start', {
         method: 'POST',
@@ -265,21 +266,23 @@ export default function TribeFitApp() {
         })
       });
 
+      const data = await response.json();
+      console.log('Workout start response:', data);
+
       if (response.ok) {
         alert('Workout started! Let\'s crush it! 💪');
-        // Here you would navigate to workout session page
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to start workout');
+        alert(data.error || 'Failed to start workout');
       }
     } catch (error) {
       console.error('Start workout failed:', error);
-      alert('Failed to start workout');
+      alert('Failed to start workout: ' + error.message);
     }
   };
 
   // Handler for shrinking workout
   const handleShrinkWorkout = async () => {
+    console.log('Shrinking workout...');
     const minutes = prompt('How many minutes do you have?', '30');
     if (!minutes) return;
 
@@ -290,16 +293,18 @@ export default function TribeFitApp() {
         body: JSON.stringify({ minutes: parseInt(minutes) })
       });
 
+      const data = await response.json();
+      console.log('Shrink response:', data);
+
       if (response.ok) {
         alert(`Workout adjusted to ${minutes} minutes! Starting now...`);
         handleStartWorkout();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to shrink workout');
+        alert(data.error || 'Failed to shrink workout');
       }
     } catch (error) {
       console.error('Shrink workout failed:', error);
-      alert('Failed to shrink workout');
+      alert('Failed to shrink workout: ' + error.message);
     }
   };
 
