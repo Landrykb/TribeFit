@@ -60,6 +60,11 @@ export function WorkoutCalendar({ isOpen, onClose }) {
     setCurrentDate(newDate);
   };
 
+  const getWorkoutsForDate = (date) => {
+    const dateStr = formatDate(date);
+    return workoutSchedule[dateStr] || [];
+  };
+
   const handleScheduleWorkout = async (scheduleData) => {
     try {
       const response = await fetch('/api/calendar', {
