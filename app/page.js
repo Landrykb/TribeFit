@@ -482,7 +482,7 @@ export default function TribeFitApp() {
               <span className="hidden sm:inline">{t('nav.home', {}, locale)}</span>
             </TabsTrigger>
             <TabsTrigger value="feed" className="flex items-center gap-2">
-              <Feed className="w-4 h-4" />
+              <Rss className="w-4 h-4" />
               <span className="hidden sm:inline">{t('nav.feed', {}, locale)}</span>
             </TabsTrigger>
             <TabsTrigger value="pact" className="flex items-center gap-2">
