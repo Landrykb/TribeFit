@@ -529,7 +529,7 @@ function TribeFitApp() {
           </div>
         </div>
         
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid grid-cols-3 gap-4">
           <div className="glass rounded-xl p-4 animate-pulse-soft">
             <div className="flex items-center space-x-2">
               <Trophy size={20} />
@@ -542,6 +542,15 @@ function TribeFitApp() {
               <span className="font-medium">Founders Tribe</span>
             </div>
           </div>
+          <button 
+            onClick={() => setShowWorkoutCalendar(true)}
+            className="glass rounded-xl p-4 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <Calendar size={20} />
+              <span className="font-medium text-sm">Schedule</span>
+            </div>
+          </button>
         </div>
       </div>
 
