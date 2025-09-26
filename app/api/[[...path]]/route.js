@@ -1,104 +1,229 @@
-import { MongoClient } from 'mongodb'
-import { v4 as uuidv4 } from 'uuid'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { supabase, isUsingMockData } from '@/lib/supabase';
+import { t } from '@/lib/i18n';
 
-// MongoDB connection
-let client
-let db
+// Mock data for demo
+let mockData = {
+  users: [
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      email: 'demo1@tribefit.app', 
+      name: 'Alex Chen',
+      wallet_balance_tc: 500,
+      settings: { snitch: true, privacy: 'friends' }
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      email: 'demo2@tribefit.app',
+      name: 'Jordan Kim', 
+      wallet_balance_tc: 250,
+      settings: { snitch: true, privacy: 'friends' }
+    }
+  ],
+  pact_wallets: [
+    {
+      id: '20000000-0000-0000-0000-000000000001',
+      tribe_id: '10000000-0000-0000-0000-000000000001',
+      balance_tc: 300,
+      goal_label: 'Dumbbells 20kg Set'
+    }
+  ],
+  pact_tx: [
+    {
+      id: '30000000-0000-0000-0000-000000000001',
+      wallet_id: '20000000-0000-0000-0000-000000000001',
+      user_id: '00000000-0000-0000-0000-000000000002',
+      type: 'skip',
+      amount_tc: 100,
+      meta: { method: 'pay' },
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: '30000000-0000-0000-0000-000000000002', 
+      wallet_id: '20000000-0000-0000-0000-000000000001',
+      user_id: '00000000-0000-0000-0000-000000000001',
+      type: 'skip',
+      amount_tc: 100,
+      meta: { method: 'ad' },
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ],
+  notifications: []
+};
 
-async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
-  }
-  return db
-}
+// Helper to simulate notifications
+const sendSnitchNotification = (actorName, recipientIds, method, locale = 'en') => {
+  const key = method === 'pay' ? 'snitch.paid' : 'snitch.watched_ad';
+  const message = t(key, { name: actorName }, locale);
+  
+  // In mock mode, just add to notifications array
+  const notification = {
+    id: `notif-${Date.now()}`,
+    message,
+    timestamp: new Date().toISOString(),
+    recipients: recipientIds
+  };
+  mockData.notifications.push(notification);
+  return notification;
+};
 
-// Helper function to handle CORS
-function handleCORS(response) {
-  response.headers.set('Access-Control-Allow-Origin', process.env.CORS_ORIGINS || '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  return response
-}
-
-// OPTIONS handler for CORS
-export async function OPTIONS() {
-  return handleCORS(new NextResponse(null, { status: 200 }))
-}
-
-// Route handler function
-async function handleRoute(request, { params }) {
-  const { path = [] } = params
-  const route = `/${path.join('/')}`
-  const method = request.method
-
+export async function GET(request, { params }) {
+  const path = params.path ? params.path.join('/') : '';
+  
   try {
-    const db = await connectToMongo()
-
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/root' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
+    switch (path) {
+      case 'user/current':
+        return NextResponse.json({
+          user: mockData.users[0], // Current user
+          isDemo: isUsingMockData
+        });
+        
+      case 'wallet/balance':
+        const currentUser = mockData.users[0];
+        return NextResponse.json({
+          balance_tc: currentUser.wallet_balance_tc,
+          formatted: `${currentUser.wallet_balance_tc} TC`
+        });
+        
+      case 'pact/wallet':
+        const { searchParams } = new URL(request.url);
+        const tribeId = searchParams.get('tribe_id') || '10000000-0000-0000-0000-000000000001';
+        const pactWallet = mockData.pact_wallets.find(w => w.tribe_id === tribeId);
+        return NextResponse.json(pactWallet || { balance_tc: 0, goal_label: 'Equipment Fund' });
+        
+      case 'pact/transactions':
+        const walletId = new URL(request.url).searchParams.get('wallet_id') || '20000000-0000-0000-0000-000000000001';
+        const transactions = mockData.pact_tx
+          .filter(tx => tx.wallet_id === walletId)
+          .map(tx => ({
+            ...tx,
+            user_name: mockData.users.find(u => u.id === tx.user_id)?.name || 'Unknown'
+          }))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return NextResponse.json(transactions);
+        
+      case 'notifications':
+        return NextResponse.json(mockData.notifications.slice(-10)); // Recent 10
+        
+      default:
+        return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-
-    // Status endpoints - POST /api/status
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
-      
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
-      }
-
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
-      }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
-    }
-
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
-        .find({})
-        .limit(1000)
-        .toArray()
-
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
-      
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
-    }
-
-    // Route not found
-    return handleCORS(NextResponse.json(
-      { error: `Route ${route} not found` }, 
-      { status: 404 }
-    ))
-
   } catch (error) {
-    console.error('API Error:', error)
-    return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
-      { status: 500 }
-    ))
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Export all HTTP methods
-export const GET = handleRoute
-export const POST = handleRoute
-export const PUT = handleRoute
-export const DELETE = handleRoute
-export const PATCH = handleRoute
+export async function POST(request, { params }) {
+  const path = params.path ? params.path.join('/') : '';
+  
+  try {
+    const body = await request.json();
+    
+    switch (path) {
+      case 'skip':
+        const { userId, method, tribeId = '10000000-0000-0000-0000-000000000001' } = body;
+        const feeTc = parseInt(process.env.SKIP_FEE_TC || '100');
+        const user = mockData.users.find(u => u.id === userId) || mockData.users[0];
+        const pactWallet = mockData.pact_wallets.find(w => w.tribe_id === tribeId);
+        
+        if (method === 'pay') {
+          // Check sufficient balance
+          if (user.wallet_balance_tc < feeTc) {
+            return NextResponse.json({ 
+              error: 'Insufficient TribeCoins',
+              needed: feeTc,
+              current: user.wallet_balance_tc 
+            }, { status: 402 });
+          }
+          
+          // Deduct from user, add to pact wallet
+          user.wallet_balance_tc -= feeTc;
+          if (pactWallet) pactWallet.balance_tc += feeTc;
+        }
+        
+        // Record transaction
+        const transaction = {
+          id: `tx-${Date.now()}`,
+          wallet_id: pactWallet?.id || '20000000-0000-0000-0000-000000000001',
+          user_id: user.id,
+          type: 'skip',
+          amount_tc: feeTc,
+          meta: { method },
+          created_at: new Date().toISOString()
+        };
+        mockData.pact_tx.push(transaction);
+        
+        // Send snitch notification if enabled
+        if (user.settings.snitch) {
+          const tribeMembers = ['00000000-0000-0000-0000-000000000002']; // Other member
+          const notification = sendSnitchNotification(user.name, tribeMembers, method);
+          
+          return NextResponse.json({
+            success: true,
+            transaction,
+            notification: notification.message,
+            new_balance: user.wallet_balance_tc,
+            pact_balance: pactWallet?.balance_tc || 0
+          });
+        }
+        
+        return NextResponse.json({
+          success: true,
+          transaction,
+          new_balance: user.wallet_balance_tc,
+          pact_balance: pactWallet?.balance_tc || 0
+        });
+        
+      case 'wallet/topup':
+        const { amountTc } = body;
+        const targetUser = mockData.users.find(u => u.id === body.userId) || mockData.users[0];
+        
+        // Simulate Stripe payment success
+        targetUser.wallet_balance_tc += parseFloat(amountTc);
+        
+        return NextResponse.json({
+          success: true,
+          new_balance: targetUser.wallet_balance_tc,
+          charged_amount: amountTc,
+          payment_method: 'demo_mode'
+        });
+        
+      case 'ad/reward':
+        // Simulate successful ad watch
+        return NextResponse.json({
+          success: true,
+          reward_tc: 0, // Ads don't give TC, they just avoid payment
+          message: 'Ad watched successfully!',
+          can_skip: true
+        });
+        
+      default:
+        return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request, { params }) {
+  const path = params.path ? params.path.join('/') : '';
+  
+  try {
+    const body = await request.json();
+    
+    switch (path) {
+      case 'user/settings':
+        const user = mockData.users[0]; // Current user
+        user.settings = { ...user.settings, ...body };
+        return NextResponse.json({ success: true, settings: user.settings });
+        
+      default:
+        return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
