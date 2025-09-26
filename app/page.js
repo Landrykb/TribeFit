@@ -174,7 +174,8 @@ function TribeFitApp() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Workout started! Let\'s crush it! 💪');
+        setShowWorkoutSession(true);
+        toast.success('Opening workout session! 💪');
       } else {
         toast.error(data.error || 'Failed to start workout');
       }
@@ -185,22 +186,23 @@ function TribeFitApp() {
   };
 
   const handleShrinkWorkout = async () => {
-    console.log('Shrinking workout...');
-    const minutes = prompt('How many minutes do you have?', '30');
-    if (!minutes) return;
+    setShowShrinkModal(true);
+  };
 
+  const handleShrinkAndStart = async (minutes) => {
+    console.log('Shrinking workout to', minutes, 'minutes');
     try {
       const response = await fetch('/api/workout/shrink', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ minutes: parseInt(minutes) })
+        body: JSON.stringify({ minutes })
       });
 
       const data = await response.json();
 
       if (response.ok) {
         toast.success(`Workout adjusted to ${minutes} minutes! Starting now...`);
-        handleStartWorkout();
+        setShowWorkoutSession(true);
       } else {
         toast.error(data.error || 'Failed to shrink workout');
       }
