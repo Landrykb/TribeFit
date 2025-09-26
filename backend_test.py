@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """
 TribeFit Backend API Testing Suite
-Tests the newly implemented missing functionality:
-- Coach System APIs (hire/rate)
-- Equipment Catalog API
-- Pact Spend Request system
-- Feed Share and Tip functionality
+Tests critical button functionality reported as broken by user:
+1. Start Workout Button: POST /api/workout/start
+2. Shrink Workout Button: POST /api/workout/shrink  
+3. Share Today's Progress: POST /api/posts/create
+4. Become Coach Button: POST /api/coach/apply
+5. Hire Coach Button: POST /api/coach/hire
+6. Notification System: GET /api/notifications
+
+Also tests initial data endpoints:
+- GET /api/user/current 
+- GET /api/wallet/balance
+- GET /api/workout/today
+- GET /api/coach/list
+- GET /api/posts/feed
 """
 
 import requests
 import json
 import time
 from typing import Dict, Any
+from datetime import datetime
 
 # Configuration
 BASE_URL = "https://workout-pact.preview.emergentagent.com/api"
