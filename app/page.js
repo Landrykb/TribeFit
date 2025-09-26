@@ -770,6 +770,7 @@ export default function TribeFitApp() {
           {activeTab === 'pact' && renderPact()}
           {activeTab === 'coach' && renderCoach()}
           {activeTab === 'profile' && renderProfile()}
+          {activeTab === 'notifications' && renderNotifications()}
         </div>
 
         {/* Bottom Navigation */}
