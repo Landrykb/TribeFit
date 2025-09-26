@@ -397,10 +397,9 @@ class TribeFitTester:
         print("\n=== Testing Posts Create Functionality ===")
         
         post_data = {
-            'userId': TEST_USER_ID,
+            'tribeId': '10000000-0000-0000-0000-000000000001',  # Use the mock tribe ID
             'caption': 'Just finished an amazing workout! 💪 #TribeFit #StayStrong',
-            'media_url': 'https://example.com/workout-photo.jpg',
-            'media_type': 'image'
+            'media_url': 'https://example.com/workout-photo.jpg'
         }
         
         response = self.make_request('POST', 'posts/create', post_data)
