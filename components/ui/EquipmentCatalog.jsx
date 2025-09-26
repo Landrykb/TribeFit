@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Dumbbell, Link, CircleDot, Circle, Layout, Hand, CupSoda, Zap, Shield, Activity } from 'lucide-react';
-import { Button } from './button';
-import { Card } from './card';
 
 // Icon mapping for catalog items
 const CatalogIcon = {
