@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, Rss, Wallet, Users, User, Bell, Plus, Coins, 
   ShoppingCart, Heart, Clock, Target, Trophy, Zap,
-  Play, SkipForward, Share, Gift, Star, UserPlus
+  Play, SkipForward, Share, Gift, Star, UserPlus, X
 } from 'lucide-react';
 
 // Import new components
