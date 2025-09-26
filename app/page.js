@@ -415,14 +415,14 @@ export default function TribeFitApp() {
             </div>
             <div className="grid grid-cols-3 gap-3">
               <button 
-                onClick={() => alert('Starting workout...')}
+                onClick={handleStartWorkout}
                 className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl p-4 flex flex-col items-center space-y-2 transition-all"
               >
                 <Play size={24} />
                 <span className="text-sm font-medium">Start</span>
               </button>
               <button 
-                onClick={() => alert('Opening shrink modal...')}
+                onClick={handleShrinkWorkout}
                 className="bg-gray-700 hover:bg-gray-600 text-white rounded-xl p-4 flex flex-col items-center space-y-2 transition-all"
               >
                 <Clock size={24} />
