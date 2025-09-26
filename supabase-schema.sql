@@ -471,6 +471,29 @@ create policy "Public can read coach profiles" on public.coach_profiles
 
 create policy "Coaches can update own profile" on public.coach_profiles
   for update using (auth.uid() = user_id);
+-- Add RLS policies for new tables
+alter table public.tribe_invite_codes enable row level security;
+create policy "Tribe members can read invite codes" on public.tribe_invite_codes
+  for select using (
+    exists (
+      select 1 from public.tribe_members tm
+      where tm.tribe_id = tribe_invite_codes.tribe_id and tm.user_id = auth.uid()
+    )
+  );
+
+alter table public.pact_spend_requests enable row level security;
+create policy "Tribe members can read spend requests" on public.pact_spend_requests
+  for select using (
+    exists (
+      select 1 from public.pact_wallets pw
+      join public.tribe_members tm on tm.tribe_id = pw.tribe_id
+      where pw.id = pact_spend_requests.wallet_id and tm.user_id = auth.uid()
+    )
+  );
+
+alter table public.gyms enable row level security;
+create policy "Public can read gyms" on public.gyms
+  for select using (true);
 
 -- =====================================================================================
 -- STORAGE BUCKETS
