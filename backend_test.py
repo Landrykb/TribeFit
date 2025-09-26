@@ -356,7 +356,7 @@ class TribeFitTester:
     def run_all_tests(self):
         """Run all backend tests focusing on critical button functionality"""
         print("🚀 TribeFit Backend API Testing Suite")
-        print("🎯 Focus: Critical Button Functionality Reported as Broken")
+        print("🎯 Focus: Comprehensive Testing of Enhanced TribeFit Application")
         print("=" * 70)
         print(f"Base URL: {BASE_URL}")
         print(f"Test Time: {datetime.now().isoformat()}")
@@ -367,6 +367,9 @@ class TribeFitTester:
         
         # Test critical button functionality
         self.test_critical_button_functionality()
+        
+        # Test NEW AI workout generation feature
+        self.test_ai_workout_generation()
         
         # Test additional core functionality
         self.test_additional_core_functionality()
@@ -401,6 +404,15 @@ class TribeFitTester:
                 print(f"  {button}: {status}")
                 if not result['success'] and result['details']:
                     print(f"    Issue: {result['details']}")
+        
+        # NEW AI Feature status
+        print(f"\n🤖 NEW AI WORKOUT GENERATION STATUS:")
+        ai_result = next((r for r in self.test_results if r['test'] == "POST /api/generate-workout (AI Workout Generation)"), None)
+        if ai_result:
+            status = "✅ WORKING" if ai_result['success'] else "❌ BROKEN"
+            print(f"  POST /api/generate-workout (AI Workout Generation): {status}")
+            if not ai_result['success'] and ai_result['details']:
+                print(f"    Issue: {ai_result['details']}")
         
         # Initial data endpoints status
         print(f"\n📊 INITIAL DATA ENDPOINTS STATUS:")
