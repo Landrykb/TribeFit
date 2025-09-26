@@ -457,27 +457,37 @@ def test_core_features_verification():
 
 def main():
     """Run comprehensive backend testing"""
-    print("🚀 STARTING TRIBEFIT COMPREHENSIVE BACKEND TESTING")
+    print("🚀 STARTING TRIBEFIT ENHANCED FEATURES TESTING")
     print("="*80)
     
     total_passed = 0
     total_tests = 0
     
-    # Test newly implemented features
-    print("\n🆕 TESTING NEWLY IMPLEMENTED FEATURES")
+    # Test newly implemented and enhanced features
+    print("\n🆕 TESTING ENHANCED FEATURES AS REQUESTED")
     
-    # Calendar APIs
+    # AI Workout Generation (Priority 1)
+    ai_passed, ai_total = test_ai_workout_generation()
+    total_passed += ai_passed
+    total_tests += ai_total
+    
+    # Calendar APIs (Priority 2)
     calendar_passed, calendar_total = test_calendar_apis()
     total_passed += calendar_passed
     total_tests += calendar_total
     
-    # Voting APIs  
+    # Voting APIs (Priority 3)
     voting_passed, voting_total = test_voting_apis()
     total_passed += voting_passed
     total_tests += voting_total
     
-    # Verify core features still working
-    print("\n✅ VERIFYING PREVIOUSLY WORKING FEATURES")
+    # Equipment Request Integration (Priority 4)
+    equipment_passed, equipment_total = test_equipment_request_integration()
+    total_passed += equipment_passed
+    total_tests += equipment_total
+    
+    # Verify core features still working (Priority 5)
+    print("\n✅ VERIFYING EXISTING CORE APIs")
     core_passed, core_total = test_core_features_verification()
     total_passed += core_passed
     total_tests += core_total
@@ -487,11 +497,14 @@ def main():
     print("🏁 FINAL TESTING RESULTS")
     print("="*80)
     print(f"📊 TOTAL: {total_passed}/{total_tests} tests passed ({(total_passed/total_tests)*100:.1f}%)")
-    print(f"🆕 New Features: {calendar_passed + voting_passed}/{calendar_total + voting_total} tests passed")
-    print(f"✅ Core Features: {core_passed}/{core_total} tests passed")
+    print(f"🤖 AI Workout Generation: {ai_passed}/{ai_total} tests passed")
+    print(f"📅 Calendar Integration: {calendar_passed}/{calendar_total} tests passed")
+    print(f"🗳️  Pact Voting System: {voting_passed}/{voting_total} tests passed")
+    print(f"🏋️  Equipment Requests: {equipment_passed}/{equipment_total} tests passed")
+    print(f"✅ Core APIs: {core_passed}/{core_total} tests passed")
     
     if total_passed == total_tests:
-        print("🎉 ALL TESTS PASSED! TribeFit backend is fully functional.")
+        print("🎉 ALL TESTS PASSED! TribeFit enhanced features are fully functional.")
     elif total_passed >= total_tests * 0.9:
         print("✅ EXCELLENT! Most tests passed. Minor issues may exist.")
     elif total_passed >= total_tests * 0.8:
@@ -500,10 +513,11 @@ def main():
         print("❌ ISSUES DETECTED! Multiple endpoints need attention.")
     
     print("\n🔍 KEY FINDINGS:")
-    print("- Calendar Integration: Workout scheduling with date/time validation")
-    print("- Voting System: Democratic approval process for equipment requests")
-    print("- All previously working features verified")
-    print("- Complete social fitness platform functionality")
+    print("- AI Workout Generation: Emergent LLM integration for personalized plans")
+    print("- Calendar Integration: Workout scheduling with validation and conflict detection")
+    print("- Voting System: Democratic approval process for equipment/donation requests")
+    print("- Equipment Requests: Integration with voting system for tribe governance")
+    print("- Core APIs: All existing functionality verified for regressions")
 
 if __name__ == "__main__":
     main()
