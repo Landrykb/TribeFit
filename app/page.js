@@ -73,6 +73,31 @@ export default function TribeFitApp() {
       setPactTransactions(txData);
     } catch (error) {
       console.error('Failed to load pact data:', error);
+      // Fallback to mock data
+      setPactWallet({
+        id: '20000000-0000-0000-0000-000000000001',
+        tribe_id: '10000000-0000-0000-0000-000000000001',
+        balance_tc: 300,
+        goal_label: 'Dumbbells 20kg Set'
+      });
+      setPactTransactions([
+        {
+          id: '30000000-0000-0000-0000-000000000001',
+          user_name: 'Jordan Kim',
+          type: 'skip',
+          amount_tc: 100,
+          meta: { method: 'pay' },
+          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '30000000-0000-0000-0000-000000000002',
+          user_name: 'Alex Chen',
+          type: 'skip',
+          amount_tc: 100,
+          meta: { method: 'ad' },
+          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
     }
   };
 
