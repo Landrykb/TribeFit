@@ -95,21 +95,20 @@ export function CoachRating({ isOpen, onClose, coach, hire, onSubmitRating }) {
           </div>
 
           <div className="flex space-x-3">
-            <Button
-              variant="ghost"
+            <button
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg px-4 py-2 transition-all"
             >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={handleSubmit}
               disabled={!rating || loading}
-              loading={loading}
-              className="flex-1"
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg px-4 py-2 transition-all flex items-center justify-center space-x-2"
             >
-              Submit Rating
-            </Button>
+              {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>}
+              <span>Submit Rating</span>
+            </button>
           </div>
         </div>
       </div>
