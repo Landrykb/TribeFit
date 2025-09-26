@@ -290,7 +290,7 @@ class TribeFitTester:
             return
             
         request = data['request']
-        required_fields = ['id', 'user_id', 'amount_tc', 'description']
+        required_fields = ['id', 'created_by', 'amount_tc', 'label']
         missing_fields = [field for field in required_fields if field not in request]
         
         if missing_fields:
