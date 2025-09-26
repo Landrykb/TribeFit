@@ -292,6 +292,44 @@ create table if not exists public.webhook_events (
   source text not null default 'stripe'
 );
 
+-- Add these new tables after the main schema
+
+-- Tribe invite codes (separate from main tribes table for tracking)
+create table if not exists public.tribe_invite_codes (
+  id uuid primary key default uuid_generate_v4(),
+  tribe_id uuid references public.tribes(id) on delete cascade,
+  code text unique not null default substr(md5(random()::text), 1, 8),
+  created_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+-- Pact spend requests
+create table if not exists public.pact_spend_requests (
+  id uuid primary key default uuid_generate_v4(),
+  wallet_id uuid references public.pact_wallets(id) on delete cascade,
+  type text not null check (type in ('gear', 'donation')),
+  label text not null,
+  amount_tc numeric(12,2) not null check (amount_tc > 0),
+  status text not null default 'requested' check (status in ('requested', 'approved', 'rejected')),
+  vendor_ref text,
+  gym_name text,
+  created_by uuid references public.users(id) on delete set null,
+  approved_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  approved_at timestamptz
+);
+
+-- Gyms directory (optional)
+create table if not exists public.gyms (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  stripe_connect_id text,
+  country text default 'US',
+  city text,
+  address text,
+  created_at timestamptz not null default now()
+);
+
 -- =====================================================================================
 -- ROW LEVEL SECURITY POLICIES
 -- =====================================================================================
