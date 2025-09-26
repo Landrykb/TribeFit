@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, MapPin } from 'lucide-react';
-import { Button } from './button';
 
 export function DonationModal({ isOpen, onClose, onSubmitRequest }) {
   const [gymName, setGymName] = useState('');
