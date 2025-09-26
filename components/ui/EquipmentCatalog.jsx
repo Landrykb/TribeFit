@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Dumbbell, Link, CircleDot, Circle, Layout, Hand, Bottle, CupSoda, Zap } from 'lucide-react';
+import { X, Dumbbell, Link, CircleDot, Circle, Layout, Hand, CupSoda, Zap, Shield, Activity } from 'lucide-react';
 import { Button } from './button';
 import { Card } from './card';
 
@@ -13,7 +13,7 @@ const CatalogIcon = {
   circle: Circle,
   layout: Layout,
   hand: Hand,
-  bottle: Bottle,
+  bottle: Activity, // Using activity for bottle
   'cup-soda': CupSoda
 };
 
