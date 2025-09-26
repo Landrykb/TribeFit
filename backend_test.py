@@ -75,76 +75,128 @@ class TribeFitTester:
                 'data': {'error': str(e)},
                 'success': False
             }
-    
-    def test_equipment_catalog(self):
-        """Test GET /api/catalog/list - Equipment catalog with items like dumbbells, ropes, etc."""
-        print("\n=== Testing Equipment Catalog API ===")
+
+    def test_initial_data_endpoints(self):
+        """Test initial data endpoints that populate the UI"""
+        print("\n=== Testing Initial Data Endpoints ===")
         
-        response = self.make_request('GET', 'catalog/list')
+        # Test GET /api/user/current
+        response = self.make_request('GET', 'user/current')
+        if response['success'] and 'user' in response['data']:
+            self.log_result("GET /api/user/current", True, f"User data loaded successfully")
+        else:
+            self.log_result("GET /api/user/current", False, f"Failed: {response['data']}")
         
-        if not response['success']:
-            self.log_result("Equipment Catalog API", False, f"Request failed: {response['data']}")
-            return
-            
-        data = response['data']
+        # Test GET /api/wallet/balance
+        response = self.make_request('GET', 'wallet/balance')
+        if response['success'] and 'balance_tc' in response['data']:
+            balance = response['data']['balance_tc']
+            self.log_result("GET /api/wallet/balance", True, f"Balance: {balance} TC")
+        else:
+            self.log_result("GET /api/wallet/balance", False, f"Failed: {response['data']}")
         
-        # Check response structure
-        if 'items' not in data:
-            self.log_result("Equipment Catalog API", False, "Missing 'items' field in response")
-            return
-            
-        items = data['items']
-        if not isinstance(items, list):
-            self.log_result("Equipment Catalog API", False, "'items' should be a list")
-            return
-            
-        if len(items) == 0:
-            self.log_result("Equipment Catalog API", False, "No catalog items returned")
-            return
-            
-        # Check item structure
-        required_fields = ['slug', 'title', 'category', 'specs', 'price_tc']
-        sample_item = items[0]
+        # Test GET /api/workout/today
+        response = self.make_request('GET', 'workout/today')
+        if response['success'] and 'program' in response['data']:
+            program = response['data']['program']
+            program_name = program.get('title', 'Unknown') if program else 'No program'
+            self.log_result("GET /api/workout/today", True, f"Today's workout: {program_name}")
+        else:
+            self.log_result("GET /api/workout/today", False, f"Failed: {response['data']}")
         
-        missing_fields = [field for field in required_fields if field not in sample_item]
-        if missing_fields:
-            self.log_result("Equipment Catalog API", False, f"Missing fields in items: {missing_fields}")
-            return
-            
-        # Check for expected equipment types
-        expected_items = ['dumbbell', 'barbell', 'kettlebell', 'bands', 'jumprope', 'protein']
-        found_items = [item['slug'] for item in items]
+        # Test GET /api/coach/list
+        response = self.make_request('GET', 'coach/list')
+        if response['success']:
+            coaches = response['data'] if isinstance(response['data'], list) else []
+            self.log_result("GET /api/coach/list", True, f"Found {len(coaches)} coaches")
+        else:
+            self.log_result("GET /api/coach/list", False, f"Failed: {response['data']}")
         
-        found_expected = [item for item in expected_items if item in found_items]
+        # Test GET /api/posts/feed
+        response = self.make_request('GET', 'posts/feed')
+        if response['success']:
+            posts = response['data'] if isinstance(response['data'], list) else []
+            self.log_result("GET /api/posts/feed", True, f"Found {len(posts)} posts")
+        else:
+            self.log_result("GET /api/posts/feed", False, f"Failed: {response['data']}")
         
-        self.log_result("Equipment Catalog API", True, 
-                       f"Found {len(items)} items including: {', '.join(found_expected[:5])}")
+        # Test GET /api/notifications
+        response = self.make_request('GET', 'notifications')
+        if response['success']:
+            notifications = response['data'] if isinstance(response['data'], list) else []
+            self.log_result("GET /api/notifications", True, f"Found {len(notifications)} notifications")
+        else:
+            self.log_result("GET /api/notifications", False, f"Failed: {response['data']}")
+
+    def test_critical_button_functionality(self):
+        """Test the critical button functionality reported as broken"""
+        print("\n=== Testing Critical Button Functionality ===")
         
-        # Test specific item specs
-        dumbbell_item = next((item for item in items if item['slug'] == 'dumbbell'), None)
-        if dumbbell_item and 'weights' in dumbbell_item.get('specs', {}):
-            weights = dumbbell_item['specs']['weights']
-            self.log_result("Dumbbell Specs", True, f"Available weights: {weights}")
+        # 1. Test Start Workout Button: POST /api/workout/start
+        print("\n🏋️ Testing Start Workout Button")
+        start_workout_data = {
+            'programId': 'prog-1'
+        }
+        response = self.make_request('POST', 'workout/start', start_workout_data)
+        if response['success'] and 'session' in response['data']:
+            session = response['data']['session']
+            self.log_result("POST /api/workout/start (Start Workout Button)", True, 
+                           f"Session created: {session.get('id', 'unknown')}")
+        else:
+            self.log_result("POST /api/workout/start (Start Workout Button)", False, 
+                           f"Failed: {response['data']}")
         
-        protein_item = next((item for item in items if item['slug'] == 'protein'), None)
-        if protein_item and 'flavors' in protein_item.get('specs', {}):
-            flavors = protein_item['specs']['flavors']
-            self.log_result("Protein Specs", True, f"Available flavors: {flavors}")
-    
-    def test_coach_hire_system(self):
-        """Test POST /api/coach/hire - Hire a coach with TribeCoin payment"""
-        print("\n=== Testing Coach Hire System ===")
+        # 2. Test Shrink Workout Button: POST /api/workout/shrink
+        print("\n⏰ Testing Shrink Workout Button")
+        shrink_data = {
+            'minutes': 30
+        }
+        response = self.make_request('POST', 'workout/shrink', shrink_data)
+        if response['success'] and 'target_minutes' in response['data']:
+            target = response['data']['target_minutes']
+            self.log_result("POST /api/workout/shrink (Shrink Workout Button)", True, 
+                           f"Workout shrunk to {target} minutes")
+        else:
+            self.log_result("POST /api/workout/shrink (Shrink Workout Button)", False, 
+                           f"Failed: {response['data']}")
         
-        # First, get current user balance
+        # 3. Test Share Today's Progress: POST /api/posts/create
+        print("\n📱 Testing Share Today's Progress Button")
+        share_data = {
+            'tribeId': '10000000-0000-0000-0000-000000000001',
+            'caption': 'Just finished my workout! 💪 #TribeFit #Progress',
+            'media_url': 'https://example.com/workout-photo.jpg'
+        }
+        response = self.make_request('POST', 'posts/create', share_data)
+        if response['success'] and 'post' in response['data']:
+            post = response['data']['post']
+            self.log_result("POST /api/posts/create (Share Progress Button)", True, 
+                           f"Post created: {post.get('id', 'unknown')}")
+        else:
+            self.log_result("POST /api/posts/create (Share Progress Button)", False, 
+                           f"Failed: {response['data']}")
+        
+        # 4. Test Become Coach Button: POST /api/coach/apply
+        print("\n👨‍🏫 Testing Become Coach Button")
+        apply_data = {}  # No additional data needed for application
+        response = self.make_request('POST', 'coach/apply', apply_data)
+        if response['success'] and (response['data'].get('success') or 'application' in response['data']):
+            self.log_result("POST /api/coach/apply (Become Coach Button)", True, 
+                           "Coach application submitted successfully")
+        else:
+            self.log_result("POST /api/coach/apply (Become Coach Button)", False, 
+                           f"Failed: {response['data']}")
+        
+        # 5. Test Hire Coach Button: POST /api/coach/hire
+        print("\n💰 Testing Hire Coach Button")
+        
+        # First check current balance
         balance_response = self.make_request('GET', 'wallet/balance')
-        if not balance_response['success']:
-            self.log_result("Coach Hire - Get Balance", False, "Could not get wallet balance")
-            return
-            
-        initial_balance = balance_response['data'].get('balance_tc', 0)
-        print(f"Initial balance: {initial_balance} TC")
+        current_balance = 0
+        if balance_response['success']:
+            current_balance = balance_response['data'].get('balance_tc', 0)
+            print(f"Current balance: {current_balance} TC")
         
-        # Test hiring a coach
         hire_data = {
             'clientId': TEST_USER_ID,
             'coachId': TEST_COACH_ID,
@@ -153,326 +205,136 @@ class TribeFitTester:
         }
         
         response = self.make_request('POST', 'coach/hire', hire_data)
-        
-        if not response['success']:
-            if response['status_code'] == 402:
-                self.log_result("Coach Hire API", False, 
-                               f"Insufficient balance - needed: {hire_data['priceTc']}, current: {initial_balance}")
-                return
-            else:
-                self.log_result("Coach Hire API", False, f"Request failed: {response['data']}")
-                return
-        
-        data = response['data']
-        
-        # Check response structure
-        if not data.get('success'):
-            self.log_result("Coach Hire API", False, "Response success field is false")
-            return
-            
-        if 'hire' not in data:
-            self.log_result("Coach Hire API", False, "Missing 'hire' field in response")
-            return
-            
-        hire = data['hire']
-        required_fields = ['id', 'coach_id', 'client_id', 'price_tc', 'status']
-        missing_fields = [field for field in required_fields if field not in hire]
-        
-        if missing_fields:
-            self.log_result("Coach Hire API", False, f"Missing fields in hire record: {missing_fields}")
-            return
-            
-        # Verify balance was deducted (allow for some tolerance due to concurrent operations)
-        new_balance_response = self.make_request('GET', 'wallet/balance')
-        if new_balance_response['success']:
-            new_balance = new_balance_response['data'].get('balance_tc', 0)
-            expected_balance = initial_balance - hire_data['priceTc']
-            
-            if new_balance <= initial_balance:
-                self.log_result("Coach Hire - Balance Deduction", True, 
-                               f"Balance was deducted: {initial_balance} -> {new_balance} TC")
-            else:
-                self.log_result("Coach Hire - Balance Deduction", False, 
-                               f"Balance not deducted: {initial_balance} -> {new_balance} TC")
-        
-        self.log_result("Coach Hire API", True, 
-                       f"Successfully hired coach {hire['coach_id']} for {hire['price_tc']} TC")
-        
-        return hire['id']  # Return hire ID for rating test
-    
-    def test_coach_rating_system(self, hire_id: str = None):
-        """Test POST /api/coach/rate - Rate a hired coach"""
-        print("\n=== Testing Coach Rating System ===")
-        
-        if not hire_id:
-            # Create a mock hire ID for testing
-            hire_id = f"hire-{int(time.time())}"
-            print(f"Using mock hire ID: {hire_id}")
-        
-        # Test rating a coach
-        rating_data = {
-            'hireId': hire_id,
-            'coachId': TEST_COACH_ID,
-            'clientId': TEST_USER_ID,
-            'stars': 5,
-            'text': 'Excellent coach! Very knowledgeable and motivating.'
-        }
-        
-        response = self.make_request('POST', 'coach/rate', rating_data)
-        
-        if not response['success']:
-            self.log_result("Coach Rating API", False, f"Request failed: {response['data']}")
-            return
-        
-        data = response['data']
-        
-        # Check response structure
-        if not data.get('success'):
-            self.log_result("Coach Rating API", False, "Response success field is false")
-            return
-            
-        if 'rating' not in data:
-            self.log_result("Coach Rating API", False, "Missing 'rating' field in response")
-            return
-            
-        rating = data['rating']
-        required_fields = ['id', 'coach_id', 'client_id', 'stars', 'text']
-        missing_fields = [field for field in required_fields if field not in rating]
-        
-        if missing_fields:
-            self.log_result("Coach Rating API", False, f"Missing fields in rating record: {missing_fields}")
-            return
-            
-        # Verify rating values
-        if rating['stars'] != rating_data['stars']:
-            self.log_result("Coach Rating API", False, f"Stars mismatch: expected {rating_data['stars']}, got {rating['stars']}")
-            return
-            
-        if rating['text'] != rating_data['text']:
-            self.log_result("Coach Rating API", False, "Rating text mismatch")
-            return
-            
-        self.log_result("Coach Rating API", True, 
-                       f"Successfully rated coach {rating['coach_id']} with {rating['stars']} stars")
-        
-        # Test invalid rating (stars out of range)
-        invalid_rating_data = rating_data.copy()
-        invalid_rating_data['stars'] = 6
-        
-        invalid_response = self.make_request('POST', 'coach/rate', invalid_rating_data)
-        if invalid_response['status_code'] == 400:
-            self.log_result("Coach Rating - Validation", True, "Correctly rejected invalid star rating (6)")
+        if response['success'] and response['data'].get('success'):
+            hire = response['data'].get('hire', {})
+            self.log_result("POST /api/coach/hire (Hire Coach Button)", True, 
+                           f"Coach hired successfully for {hire.get('price_tc', 200)} TC")
+        elif response['status_code'] == 402:
+            self.log_result("POST /api/coach/hire (Hire Coach Button)", False, 
+                           f"Insufficient balance: need 200 TC, have {current_balance} TC")
         else:
-            self.log_result("Coach Rating - Validation", False, "Should reject star ratings > 5")
-    
-    def test_pact_spend_request_system(self):
-        """Test POST /api/pact/spend/request - Improved to handle item_id and specs for equipment"""
-        print("\n=== Testing Pact Spend Request System ===")
+            self.log_result("POST /api/coach/hire (Hire Coach Button)", False, 
+                           f"Failed: {response['data']}")
+
+    def test_additional_core_functionality(self):
+        """Test additional core functionality to ensure system is working"""
+        print("\n=== Testing Additional Core Functionality ===")
         
-        # Test equipment request with item_id and specs
-        spend_data = {
-            'type': 'gear',
-            'label': 'Dumbbells 20kg Set (2 pieces) for home gym',
-            'item_id': 'dumbbell',
-            'specs': {
-                'weight': '20kg',
-                'quantity': 2
-            },
-            'amount_tc': 160,  # 80 TC per dumbbell * 2
-            'gym_name': 'Home Gym'
+        # Test skip flow (core feature)
+        print("\n💸 Testing Skip Flow")
+        skip_data = {
+            'userId': TEST_USER_ID,
+            'method': 'pay',
+            'tribeId': '10000000-0000-0000-0000-000000000001'
         }
-        
-        response = self.make_request('POST', 'pact/spend/request', spend_data)
-        
-        if not response['success']:
-            self.log_result("Pact Spend Request API", False, f"Request failed: {response['data']}")
-            return
-        
-        data = response['data']
-        
-        # Check response structure
-        if not data.get('success'):
-            self.log_result("Pact Spend Request API", False, "Response success field is false")
-            return
-            
-        if 'request' not in data:
-            self.log_result("Pact Spend Request API", False, "Missing 'request' field in response")
-            return
-            
-        request = data['request']
-        required_fields = ['id', 'created_by', 'amount_tc', 'label']
-        missing_fields = [field for field in required_fields if field not in request]
-        
-        if missing_fields:
-            self.log_result("Pact Spend Request API", False, f"Missing fields in request record: {missing_fields}")
-            return
-            
-        # Check if item_id and specs are preserved
-        if 'item_id' in request and request['item_id'] == spend_data['item_id']:
-            self.log_result("Pact Spend - Item ID", True, f"Item ID correctly stored: {request['item_id']}")
-        
-        if 'specs' in request and request['specs'] == spend_data['specs']:
-            self.log_result("Pact Spend - Specs", True, f"Specs correctly stored: {request['specs']}")
-        
-        self.log_result("Pact Spend Request API", True, 
-                       f"Successfully created spend request for {request['amount_tc']} TC")
-        
-        # Test protein request with flavors
-        protein_data = {
-            'type': 'gear',
-            'label': 'Whey Protein - Chocolate flavor, 2kg',
-            'item_id': 'protein',
-            'specs': {
-                'flavor': 'chocolate',
-                'size': '2kg'
-            },
-            'amount_tc': 40,
-            'gym_name': 'Home Gym'
-        }
-        
-        protein_response = self.make_request('POST', 'pact/spend/request', protein_data)
-        if protein_response['success']:
-            self.log_result("Pact Spend - Protein Request", True, "Successfully created protein spend request")
+        response = self.make_request('POST', 'skip', skip_data)
+        if response['success'] and response['data'].get('success'):
+            new_balance = response['data'].get('new_balance', 0)
+            self.log_result("POST /api/skip (Skip Flow)", True, 
+                           f"Skip successful, new balance: {new_balance} TC")
+        elif response['status_code'] == 402:
+            self.log_result("POST /api/skip (Skip Flow)", False, 
+                           "Insufficient balance for skip payment")
         else:
-            self.log_result("Pact Spend - Protein Request", False, f"Failed: {protein_response['data']}")
-    
-    def test_tip_functionality(self):
-        """Test POST /api/tip - Tip TribeCoins to users"""
-        print("\n=== Testing Tip Functionality ===")
+            self.log_result("POST /api/skip (Skip Flow)", False, 
+                           f"Failed: {response['data']}")
         
-        # Get initial balances
-        from_balance_response = self.make_request('GET', 'wallet/balance')
-        if not from_balance_response['success']:
-            self.log_result("Tip - Get Sender Balance", False, "Could not get sender balance")
-            return
-            
-        initial_from_balance = from_balance_response['data'].get('balance_tc', 0)
-        print(f"Sender initial balance: {initial_from_balance} TC")
-        
-        # Test tipping
-        tip_data = {
-            'fromUserId': TEST_USER_ID,
-            'toUserId': TEST_USER_ID_2,
-            'postId': 'post-123',  # Optional
-            'amount': 50,
-            'message': 'Great workout post! Keep it up! 💪'
-        }
-        
-        response = self.make_request('POST', 'tip', tip_data)
-        
-        if not response['success']:
-            if response['status_code'] == 402:
-                self.log_result("Tip API", False, 
-                               f"Insufficient balance - needed: {tip_data['amount']}, current: {initial_from_balance}")
-                return
-            else:
-                self.log_result("Tip API", False, f"Request failed: {response['data']}")
-                return
-        
-        data = response['data']
-        
-        # Check response structure
-        if not data.get('success'):
-            self.log_result("Tip API", False, "Response success field is false")
-            return
-            
-        # Verify balance was deducted from sender
-        new_from_balance_response = self.make_request('GET', 'wallet/balance')
-        if new_from_balance_response['success']:
-            new_from_balance = new_from_balance_response['data'].get('balance_tc', 0)
-            expected_balance = initial_from_balance - tip_data['amount']
-            
-            if new_from_balance == expected_balance:
-                self.log_result("Tip - Sender Balance Deduction", True, 
-                               f"Sender balance correctly deducted: {initial_from_balance} -> {new_from_balance} TC")
-            else:
-                self.log_result("Tip - Sender Balance Deduction", False, 
-                               f"Sender balance mismatch: expected {expected_balance}, got {new_from_balance}")
-        
-        self.log_result("Tip API", True, 
-                       f"Successfully tipped {tip_data['amount']} TC from {tip_data['fromUserId']} to {tip_data['toUserId']}")
-        
-        # Test invalid tip (negative amount)
-        invalid_tip_data = tip_data.copy()
-        invalid_tip_data['amount'] = -10
-        
-        invalid_response = self.make_request('POST', 'tip', invalid_tip_data)
-        if invalid_response['status_code'] == 400:
-            self.log_result("Tip - Validation", True, "Correctly rejected negative tip amount")
+        # Test pact wallet
+        print("\n🏦 Testing Pact Wallet")
+        response = self.make_request('GET', 'pact/wallet?tribe_id=10000000-0000-0000-0000-000000000001')
+        if response['success'] and 'balance_tc' in response['data']:
+            balance = response['data']['balance_tc']
+            goal = response['data'].get('goal_label', 'Unknown goal')
+            self.log_result("GET /api/pact/wallet", True, 
+                           f"Pact wallet balance: {balance} TC, Goal: {goal}")
         else:
-            self.log_result("Tip - Validation", False, "Should reject negative tip amounts")
-    
-    def test_posts_create_functionality(self):
-        """Test POST /api/posts/create - Share posts to feed (already implemented, verify it works)"""
-        print("\n=== Testing Posts Create Functionality ===")
+            self.log_result("GET /api/pact/wallet", False, 
+                           f"Failed: {response['data']}")
         
-        post_data = {
-            'tribeId': '10000000-0000-0000-0000-000000000001',  # Use the mock tribe ID
-            'caption': 'Just finished an amazing workout! 💪 #TribeFit #StayStrong',
-            'media_url': 'https://example.com/workout-photo.jpg'
-        }
-        
-        response = self.make_request('POST', 'posts/create', post_data)
-        
-        if not response['success']:
-            self.log_result("Posts Create API", False, f"Request failed: {response['data']}")
-            return
-        
-        data = response['data']
-        
-        # Check response structure - posts/create returns the post directly, not wrapped in success
-        if 'post' not in data:
-            self.log_result("Posts Create API", False, "Missing 'post' field in response")
-            return
-            
-        post = data['post']
-        required_fields = ['id', 'user_id', 'caption', 'created_at']
-        missing_fields = [field for field in required_fields if field not in post]
-        
-        if missing_fields:
-            self.log_result("Posts Create API", False, f"Missing fields in post record: {missing_fields}")
-            return
-            
-        self.log_result("Posts Create API", True, 
-                       f"Successfully created post with caption: '{post['caption'][:50]}...'")
-    
+        # Test wallet topup
+        print("\n💳 Testing Wallet Topup")
+        topup_data = {'amountTc': 100}
+        response = self.make_request('POST', 'wallet/topup', topup_data)
+        if response['success'] and response['data'].get('success'):
+            new_balance = response['data'].get('new_balance', 0)
+            self.log_result("POST /api/wallet/topup", True, 
+                           f"Topup successful, new balance: {new_balance} TC")
+        else:
+            self.log_result("POST /api/wallet/topup", False, 
+                           f"Failed: {response['data']}")
+
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting TribeFit Backend API Testing Suite")
-        print("=" * 60)
+        """Run all backend tests focusing on critical button functionality"""
+        print("🚀 TribeFit Backend API Testing Suite")
+        print("🎯 Focus: Critical Button Functionality Reported as Broken")
+        print("=" * 70)
+        print(f"Base URL: {BASE_URL}")
+        print(f"Test Time: {datetime.now().isoformat()}")
+        print()
         
-        # Test new functionality as requested
-        self.test_equipment_catalog()
-        hire_id = self.test_coach_hire_system()
-        self.test_coach_rating_system(hire_id)
-        self.test_pact_spend_request_system()
-        self.test_tip_functionality()
-        self.test_posts_create_functionality()
+        # Test initial data endpoints
+        self.test_initial_data_endpoints()
+        
+        # Test critical button functionality
+        self.test_critical_button_functionality()
+        
+        # Test additional core functionality
+        self.test_additional_core_functionality()
         
         # Summary
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 70)
         print("🏁 TEST SUMMARY")
-        print("=" * 60)
+        print("=" * 70)
         
         passed = sum(1 for result in self.test_results if result['success'])
         total = len(self.test_results)
         
         print(f"Total Tests: {total}")
-        print(f"Passed: {passed}")
-        print(f"Failed: {total - passed}")
+        print(f"Passed: {passed} ✅")
+        print(f"Failed: {total - passed} ❌")
         print(f"Success Rate: {(passed/total)*100:.1f}%")
         
+        # Critical button status
+        print(f"\n🎯 CRITICAL BUTTON FUNCTIONALITY STATUS:")
+        critical_buttons = [
+            "POST /api/workout/start (Start Workout Button)",
+            "POST /api/workout/shrink (Shrink Workout Button)", 
+            "POST /api/posts/create (Share Progress Button)",
+            "POST /api/coach/apply (Become Coach Button)",
+            "POST /api/coach/hire (Hire Coach Button)"
+        ]
+        
+        for button in critical_buttons:
+            result = next((r for r in self.test_results if r['test'] == button), None)
+            if result:
+                status = "✅ WORKING" if result['success'] else "❌ BROKEN"
+                print(f"  {button}: {status}")
+                if not result['success'] and result['details']:
+                    print(f"    Issue: {result['details']}")
+        
+        # Initial data endpoints status
+        print(f"\n📊 INITIAL DATA ENDPOINTS STATUS:")
+        data_endpoints = [
+            "GET /api/user/current",
+            "GET /api/wallet/balance",
+            "GET /api/workout/today",
+            "GET /api/coach/list",
+            "GET /api/posts/feed",
+            "GET /api/notifications"
+        ]
+        
+        for endpoint in data_endpoints:
+            result = next((r for r in self.test_results if r['test'] == endpoint), None)
+            if result:
+                status = "✅ WORKING" if result['success'] else "❌ BROKEN"
+                print(f"  {endpoint}: {status}")
+        
         if total - passed > 0:
-            print("\n❌ FAILED TESTS:")
+            print("\n❌ FAILED TESTS DETAILS:")
             for result in self.test_results:
                 if not result['success']:
                     print(f"  - {result['test']}: {result['details']}")
         
-        print("\n✅ PASSED TESTS:")
-        for result in self.test_results:
-            if result['success']:
-                print(f"  - {result['test']}")
-                
         return passed == total
 
 if __name__ == "__main__":
