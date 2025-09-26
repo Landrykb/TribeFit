@@ -323,6 +323,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ISSUE DETECTED: AI workout generation now failing with 500 error 'Failed to generate workout plan'. This appears to be an API key or external service integration issue with Emergent LLM. All other backend features working perfectly (32/33 tests passed, 97% success rate). Core functionality not affected - this is an enhancement feature."
+      - working: false
+        agent: "testing"
+        comment: "❌ CONFIRMED API KEY ISSUE: Comprehensive testing shows AI workout generation failing with 'Incorrect API key provided: sk-emerg******************dDc4' error from OpenAI API. Tested with exact review parameters (Muscle Building, 45 minutes, Dumbbells/Resistance Bands, Intermediate level). Validation working correctly (1/3 tests passed), but actual AI generation fails due to external API key issue. This is not a code problem but an integration issue with Emergent LLM service."
 
   - task: "Calendar Integration APIs"
     implemented: true
