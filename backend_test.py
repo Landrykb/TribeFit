@@ -322,9 +322,9 @@ def test_core_features_verification():
     skip_data = {'method': 'pay', 'user_id': TEST_USERS['alex']['id']}
     results.append(test_api_endpoint('POST', '/skip', data=skip_data, description="Skip flow - pay method"))
     
-    # Pact wallet
-    results.append(test_api_endpoint('GET', '/pact/wallet', description="Pact wallet balance"))
-    results.append(test_api_endpoint('GET', '/pact/transactions', description="Pact transactions"))
+    # Pact wallet (with required parameters)
+    results.append(test_api_endpoint('GET', f'/pact/wallet?tribe_id={TEST_TRIBE_ID}', description="Pact wallet balance"))
+    results.append(test_api_endpoint('GET', '/pact/transactions?wallet_id=20000000-0000-0000-0000-000000000001', description="Pact transactions"))
     
     # Workout system
     results.append(test_api_endpoint('GET', '/workout/today', description="Today's workout"))
