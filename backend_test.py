@@ -261,14 +261,15 @@ class TribeFitTester:
         
         # Test equipment request with item_id and specs
         spend_data = {
-            'userId': TEST_USER_ID,
+            'type': 'gear',
+            'label': 'Dumbbells 20kg Set (2 pieces) for home gym',
             'item_id': 'dumbbell',
             'specs': {
                 'weight': '20kg',
                 'quantity': 2
             },
             'amount_tc': 160,  # 80 TC per dumbbell * 2
-            'description': 'Dumbbells 20kg Set (2 pieces) for home gym'
+            'gym_name': 'Home Gym'
         }
         
         response = self.make_request('POST', 'pact/spend/request', spend_data)
