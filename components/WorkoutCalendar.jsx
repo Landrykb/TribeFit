@@ -12,9 +12,16 @@ export function WorkoutCalendar({ isOpen, onClose }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showTribeWorkouts, setShowTribeWorkouts] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    date: '',
+    time: '07:00',
+    workoutName: '',
+    shareWithTribe: true
+  });
   
   // Mock workout data for tribe members
-  const workoutSchedule = {
+  const [workoutSchedule, setWorkoutSchedule] = useState({
     '2024-01-15': [
       { user: 'Alex Chen', time: '07:00', workout: 'Push/Pull/Legs', shared: true },
       { user: 'Jordan Kim', time: '18:30', workout: 'Cardio HIIT', shared: true }
@@ -27,7 +34,7 @@ export function WorkoutCalendar({ isOpen, onClose }) {
       { user: 'Mike Torres', time: '12:00', workout: 'Full Body', shared: true },
       { user: 'Jordan Kim', time: '17:00', workout: 'Lower Body', shared: true }
     ]
-  };
+  });
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
