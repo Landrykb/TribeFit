@@ -904,30 +904,107 @@ class TribeFitAPITester:
         print(f"📍 Base URL: {BASE_URL}")
         print("=" * 60)
         
-        tests = [
+        # Core Features (High Priority)
+        core_tests = [
             self.test_get_current_user,
             self.test_skip_with_payment,
             self.test_skip_with_ad,
             self.test_pact_wallet,
             self.test_pact_transactions,
-            self.test_wallet_topup
+            self.test_wallet_topup,
+            self.test_wallet_balance,
         ]
         
-        passed = 0
-        total = len(tests)
+        # Tribe Management
+        tribe_tests = [
+            self.test_tribes_list,
+            self.test_tribe_create,
+            self.test_tribe_join,
+            self.test_tribe_switch,
+        ]
         
-        for test in tests:
-            try:
-                if test():
-                    passed += 1
-            except Exception as e:
-                print(f"❌ FAIL: {test.__name__} - Unexpected error: {str(e)}")
+        # Workout System
+        workout_tests = [
+            self.test_workout_today,
+            self.test_workout_start,
+            self.test_workout_set,
+            self.test_workout_finish,
+            self.test_workout_shrink,
+        ]
+        
+        # Pact Wallet Operations
+        pact_tests = [
+            self.test_pact_ledger,
+            self.test_pact_spend_request,
+            self.test_pact_spend_approve,
+        ]
+        
+        # Posts & Feed
+        posts_tests = [
+            self.test_posts_create,
+            self.test_posts_feed,
+        ]
+        
+        # Coach System
+        coach_tests = [
+            self.test_coach_list,
+            self.test_coach_apply,
+            self.test_coach_approve,
+        ]
+        
+        # Notifications
+        notification_tests = [
+            self.test_notifications,
+            self.test_notifications_read,
+        ]
+        
+        # Combine all tests
+        all_tests = core_tests + tribe_tests + workout_tests + pact_tests + posts_tests + coach_tests + notification_tests
+        
+        passed = 0
+        total = len(all_tests)
+        failed_tests = []
+        
+        print(f"🧪 Running {total} comprehensive API tests...")
+        print()
+        
+        # Run tests by category
+        categories = [
+            ("Core Features", core_tests),
+            ("Tribe Management", tribe_tests),
+            ("Workout System", workout_tests),
+            ("Pact Wallet Operations", pact_tests),
+            ("Posts & Feed", posts_tests),
+            ("Coach System", coach_tests),
+            ("Notifications", notification_tests),
+        ]
+        
+        for category_name, tests in categories:
+            print(f"📋 {category_name}:")
+            category_passed = 0
+            
+            for test in tests:
+                try:
+                    if test():
+                        passed += 1
+                        category_passed += 1
+                    else:
+                        failed_tests.append(test.__name__)
+                except Exception as e:
+                    print(f"❌ FAIL: {test.__name__} - Unexpected error: {str(e)}")
+                    failed_tests.append(test.__name__)
+                    
+            print(f"   {category_passed}/{len(tests)} tests passed")
+            print()
                 
         print("=" * 60)
-        print(f"📊 Test Results: {passed}/{total} tests passed")
+        print(f"📊 Overall Results: {passed}/{total} tests passed")
+        
+        if failed_tests:
+            print(f"❌ Failed tests: {', '.join(failed_tests)}")
         
         if passed == total:
-            print("🎉 All tests passed! Backend APIs are working correctly.")
+            print("🎉 All tests passed! TribeFit backend APIs are working correctly.")
             return True
         else:
             print(f"⚠️  {total - passed} tests failed. Check the details above.")
