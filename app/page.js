@@ -310,6 +310,7 @@ export default function TribeFitApp() {
 
   // Handler for sharing posts
   const handleSharePost = async (caption = 'Just completed my workout! 💪') => {
+    console.log('Sharing post with caption:', caption);
     try {
       const response = await fetch('/api/posts/create', {
         method: 'POST',
@@ -321,19 +322,21 @@ export default function TribeFitApp() {
         })
       });
 
+      const data = await response.json();
+      console.log('Post create response:', data);
+
       if (response.ok) {
-        alert('Post shared to feed!');
+        alert('Post shared to feed! 🎉');
         // Reload posts
         const postsResponse = await fetch('/api/posts/feed');
         const postsData = await postsResponse.json();
         setPosts(postsData);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to share post');
+        alert(data.error || 'Failed to share post');
       }
     } catch (error) {
       console.error('Post share failed:', error);
-      alert('Failed to share post');
+      alert('Failed to share post: ' + error.message);
     }
   };
 
