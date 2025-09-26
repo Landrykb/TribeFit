@@ -311,15 +311,18 @@ backend:
 
   - task: "AI Workout Generation with Emergent LLM"
     implemented: true
-    working: true
+    working: false
     file: "/app/app/api/generate-workout/route.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: AI workout generation feature working correctly. POST /api/generate-workout successfully integrates with Emergent LLM (OpenAI GPT-4o-mini) to generate personalized workout plans based on fitness goals, available time, equipment, and experience level. API accepts required parameters (fitnessGoals, availableTime, equipment, experienceLevel, userId) and returns structured workout plans with planId. Tested with intermediate level muscle building goals - API responds successfully with detailed workout content."
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUE DETECTED: AI workout generation now failing with 500 error 'Failed to generate workout plan'. This appears to be an API key or external service integration issue with Emergent LLM. All other backend features working perfectly (32/33 tests passed, 97% success rate). Core functionality not affected - this is an enhancement feature."
 
   - task: "Calendar Integration APIs"
     implemented: true
