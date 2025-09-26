@@ -312,6 +312,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
             </Button>
           )}
         </div>
+        </div>
       </div>
     </Modal>
   );
