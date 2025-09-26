@@ -309,14 +309,15 @@ class TribeFitTester:
         
         # Test protein request with flavors
         protein_data = {
-            'userId': TEST_USER_ID,
+            'type': 'gear',
+            'label': 'Whey Protein - Chocolate flavor, 2kg',
             'item_id': 'protein',
             'specs': {
                 'flavor': 'chocolate',
                 'size': '2kg'
             },
             'amount_tc': 40,
-            'description': 'Whey Protein - Chocolate flavor, 2kg'
+            'gym_name': 'Home Gym'
         }
         
         protein_response = self.make_request('POST', 'pact/spend/request', protein_data)
