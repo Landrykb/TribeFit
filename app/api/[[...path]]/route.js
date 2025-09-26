@@ -25,23 +25,34 @@ let mockData = {
       id: '00000000-0000-0000-0000-000000000001',
       email: 'demo1@tribefit.app', 
       name: 'Alex Chen',
-      wallet_balance_tc: 500,
-      settings: { snitch: true, privacy: 'friends' }
+      wallet_balance_tc: 400, // Updated from previous skip
+      settings: { snitch: true, privacy: 'friends', active_tribe_id: '10000000-0000-0000-0000-000000000001' }
     },
     {
       id: '00000000-0000-0000-0000-000000000002',
       email: 'demo2@tribefit.app',
       name: 'Jordan Kim', 
       wallet_balance_tc: 250,
-      settings: { snitch: true, privacy: 'friends' }
+      settings: { snitch: true, privacy: 'friends', active_tribe_id: '10000000-0000-0000-0000-000000000001' }
+    }
+  ],
+  tribes: [
+    {
+      id: '10000000-0000-0000-0000-000000000001',
+      name: 'Founders Tribe',
+      description: 'The original TribeFit crew',
+      owner_id: '00000000-0000-0000-0000-000000000001',
+      invite_code: 'FOUNDERS',
+      created_at: new Date().toISOString()
     }
   ],
   pact_wallets: [
     {
       id: '20000000-0000-0000-0000-000000000001',
       tribe_id: '10000000-0000-0000-0000-000000000001',
-      balance_tc: 300,
-      goal_label: 'Dumbbells 20kg Set'
+      balance_tc: 500, // Updated from skips
+      goal_label: 'Dumbbells 20kg Set',
+      goal_amount_tc: 800
     }
   ],
   pact_tx: [
@@ -60,11 +71,94 @@ let mockData = {
       user_id: '00000000-0000-0000-0000-000000000001',
       type: 'skip',
       amount_tc: 100,
-      meta: { method: 'ad' },
+      meta: { method: 'pay' },
       created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
-  notifications: []
+  notifications: [
+    {
+      id: 'notif-1',
+      user_id: '00000000-0000-0000-0000-000000000002',
+      type: 'snitch',
+      title: 'Tribe Update',
+      body: 'Alex Chen PAID to skip 💸. Your tribe is stronger than excuses.',
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      read: false
+    }
+  ],
+  exercises: [
+    {
+      id: 'ex-1',
+      name: 'Push-up',
+      category: 'bodyweight',
+      equipment: 'none',
+      muscles: ['chest', 'triceps', 'shoulders'],
+      cues: ['Keep core tight', 'Full range of motion'],
+      difficulty_level: 2
+    },
+    {
+      id: 'ex-2',
+      name: 'Squat',
+      category: 'bodyweight',
+      equipment: 'none', 
+      muscles: ['quads', 'glutes', 'hamstrings'],
+      cues: ['Chest up', 'Knees track over toes'],
+      difficulty_level: 2
+    },
+    {
+      id: 'ex-3',
+      name: 'Plank',
+      category: 'bodyweight',
+      equipment: 'none',
+      muscles: ['core', 'shoulders'],
+      cues: ['Straight line from head to toe'],
+      difficulty_level: 1
+    }
+  ],
+  programs: [
+    {
+      id: 'prog-1',
+      title: 'Full Body Strength',
+      description: '45-minute full body workout',
+      days: {
+        monday: {
+          exercises: [
+            { exercise_id: 'ex-1', sets: 3, reps_target: 10, rest_s: 60 },
+            { exercise_id: 'ex-2', sets: 3, reps_target: 15, rest_s: 60 },
+            { exercise_id: 'ex-3', sets: 2, reps_target: 30, rest_s: 30 }
+          ]
+        }
+      },
+      difficulty_level: 2,
+      public: true
+    }
+  ],
+  posts: [],
+  sessions: [],
+  pact_spend_requests: [],
+  coach_profiles: [
+    {
+      user_id: '00000000-0000-0000-0000-000000000001',
+      tier: 'certified',
+      bio: 'Certified trainer specializing in strength and conditioning',
+      specialties: ['strength', 'bodyweight'],
+      languages: ['en', 'fr'],
+      pricing: { '1on1': 50, 'plan': 25 },
+      rating_avg: 4.8,
+      rating_count: 24
+    }
+  ],
+  coach_offerings: [
+    {
+      id: 'offer-1',
+      coach_id: '00000000-0000-0000-0000-000000000001',
+      type: '1on1',
+      title: 'Personal Training (4 weeks)',
+      description: 'Customized workout plan with weekly check-ins',
+      price_tc: 200,
+      duration_weeks: 4
+    }
+  ]
 };
 
 // Helper to send snitch notification
@@ -76,11 +170,14 @@ const sendSnitchNotification = async (actorName, recipientIds, method, locale = 
     // Mock mode - just add to array
     const notification = {
       id: `notif-${Date.now()}`,
-      message,
-      timestamp: new Date().toISOString(),
-      recipients: recipientIds
+      user_id: recipientIds[0], // Just add to first recipient for demo
+      type: 'snitch',
+      title: 'Tribe Update',
+      body: message,
+      created_at: new Date().toISOString(),
+      read: false
     };
-    mockData.notifications.push(notification);
+    mockData.notifications.unshift(notification);
     return notification;
   } else {
     // Real mode - insert into database
@@ -183,6 +280,34 @@ export async function GET(request, { params }) {
         const transactions = await getPactTransactions(walletId);
         return NextResponse.json(transactions);
         
+      case 'pact/ledger':
+        const ledgerTribeId = new URL(request.url).searchParams.get('tribe_id');
+        if (!ledgerTribeId) {
+          return NextResponse.json({ error: 'tribe_id required' }, { status: 400 });
+        }
+        
+        const wallet = await getPactWallet(ledgerTribeId);
+        const txHistory = wallet ? await getPactTransactions(wallet.id) : [];
+        
+        // Get spend requests
+        let spendRequests = [];
+        if (isUsingMockData) {
+          spendRequests = mockData.pact_spend_requests.filter(r => r.wallet_id === wallet?.id);
+        } else {
+          const { data } = await supabase
+            .from('pact_spend_requests')
+            .select('*')
+            .eq('wallet_id', wallet?.id)
+            .order('created_at', { ascending: false });
+          spendRequests = data || [];
+        }
+        
+        return NextResponse.json({
+          wallet,
+          transactions: txHistory,
+          spend_requests: spendRequests
+        });
+        
       case 'notifications':
         if (isUsingMockData) {
           return NextResponse.json(mockData.notifications.slice(-10));
@@ -211,6 +336,119 @@ export async function GET(request, { params }) {
         
         const userTribes = await getUserTribes(userForTribes.id);
         return NextResponse.json(userTribes);
+        
+      case 'exercises':
+        if (isUsingMockData) {
+          return NextResponse.json(mockData.exercises);
+        }
+        
+        const { data: exercises } = await supabase
+          .from('exercises')
+          .select('*')
+          .order('name');
+          
+        return NextResponse.json(exercises || []);
+        
+      case 'workout/today':
+        // Return today's workout plan
+        if (isUsingMockData) {
+          return NextResponse.json({
+            program: mockData.programs[0],
+            exercises: mockData.exercises,
+            day: 'monday' // Mock today as Monday
+          });
+        }
+        
+        // For real implementation, get user's active program
+        // This would typically look at user's current program and day of week
+        const { data: defaultPrograms } = await supabase
+          .from('programs')
+          .select('*')
+          .eq('public', true)
+          .limit(1);
+          
+        const { data: allExercises } = await supabase
+          .from('exercises')
+          .select('*');
+        
+        return NextResponse.json({
+          program: defaultPrograms?.[0] || null,
+          exercises: allExercises || [],
+          day: 'monday' // Could be computed from current day
+        });
+        
+      case 'posts/feed':
+        const feedTribeId = new URL(request.url).searchParams.get('tribe_id');
+        
+        if (isUsingMockData) {
+          return NextResponse.json(mockData.posts);
+        }
+        
+        let postsQuery = supabase
+          .from('posts')
+          .select(`
+            *,
+            users (name, avatar_url)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(20);
+          
+        if (feedTribeId) {
+          postsQuery = postsQuery.eq('tribe_id', feedTribeId);
+        }
+        
+        const { data: posts } = await postsQuery;
+        return NextResponse.json(posts || []);
+        
+      case 'coach/list':
+        const lang = new URL(request.url).searchParams.get('lang') || 'en';
+        const goal = new URL(request.url).searchParams.get('goal');
+        
+        if (isUsingMockData) {
+          let coaches = mockData.coach_profiles.filter(c => c.tier !== 'candidate');
+          if (goal) {
+            coaches = coaches.filter(c => c.specialties?.includes(goal));
+          }
+          return NextResponse.json(coaches.map(coach => ({
+            ...coach,
+            user: mockData.users.find(u => u.id === coach.user_id)
+          })));
+        }
+        
+        let coachQuery = supabase
+          .from('coach_profiles')
+          .select(`
+            *,
+            users (id, name, avatar_url)
+          `)
+          .in('tier', ['certified', 'pro'])
+          .order('rating_avg', { ascending: false });
+          
+        if (goal) {
+          coachQuery = coachQuery.contains('specialties', [goal]);
+        }
+        
+        const { data: coaches } = await coachQuery;
+        return NextResponse.json(coaches || []);
+        
+      case 'coach/offerings':
+        const coachId = new URL(request.url).searchParams.get('coach_id');
+        if (!coachId) {
+          return NextResponse.json({ error: 'coach_id required' }, { status: 400 });
+        }
+        
+        if (isUsingMockData) {
+          const offerings = mockData.coach_offerings.filter(o => o.coach_id === coachId);
+          return NextResponse.json(offerings);
+        }
+        
+        const { data: offerings } = await supabase
+          .from('coach_offerings')
+          .select('*')
+          .eq('coach_id', coachId)
+          .eq('active', true);
+          
+        return NextResponse.json(offerings || []);
         
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
@@ -323,7 +561,7 @@ export async function POST(request, { params }) {
         return NextResponse.json({
           success: true,
           transaction,
-          notification: notification?.message,
+          notification: notification?.message || notification?.body,
           new_balance: updatedUser?.wallet_balance_tc || user.wallet_balance_tc,
           pact_balance: pactWallet.balance_tc + (method === 'pay' ? feeTc : 0)
         });
@@ -450,7 +688,7 @@ export async function POST(request, { params }) {
         
         try {
           const newTribe = await createTribe(owner.id, name.trim(), description.trim());
-          return NextResponse.json({ tribe: newTribe });
+          return NextResponse.json({ tribe: newTribe, invite_code: newTribe.invite_code });
         } catch (error) {
           return NextResponse.json({ 
             error: 'Failed to create tribe',
@@ -483,6 +721,474 @@ export async function POST(request, { params }) {
         } catch (error) {
           return NextResponse.json({ 
             error: 'Failed to join tribe',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'tribe/switch':
+        const { tribeId: switchTribeId } = body;
+        const switchUser = await getCurrentUser();
+        
+        if (!switchUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          // Update user's active tribe
+          const newSettings = { 
+            ...switchUser.settings, 
+            active_tribe_id: switchTribeId 
+          };
+          
+          if (isUsingMockData) {
+            const mockUser = mockData.users.find(u => u.id === switchUser.id);
+            if (mockUser) {
+              mockUser.settings = newSettings;
+            }
+          } else {
+            await supabase
+              .from('users')
+              .update({ settings: newSettings })
+              .eq('id', switchUser.id);
+          }
+          
+          return NextResponse.json({ success: true, active_tribe_id: switchTribeId });
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to switch tribe',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'workout/start':
+        const { programId } = body;
+        const workoutUser = await getCurrentUser();
+        
+        if (!workoutUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          // Create new session
+          const sessionData = {
+            user_id: workoutUser.id,
+            program_id: programId,
+            date: new Date().toISOString().split('T')[0],
+            completed: false
+          };
+          
+          if (isUsingMockData) {
+            const session = {
+              id: `session-${Date.now()}`,
+              ...sessionData,
+              created_at: new Date().toISOString()
+            };
+            mockData.sessions.push(session);
+            return NextResponse.json({ session });
+          } else {
+            const { data: session, error } = await (supabaseAdmin || supabase)
+              .from('sessions')
+              .insert(sessionData)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ session });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to start workout',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'workout/set':
+        const { sessionId, exerciseId, load_kg, reps_done, rpe, ai_rep_count } = body;
+        
+        try {
+          const setData = {
+            session_id: sessionId,
+            exercise_id: exerciseId,
+            load_kg: load_kg || null,
+            reps_done: parseInt(reps_done),
+            rpe: rpe || null,
+            ai_rep_count: ai_rep_count || null,
+            set_number: 1 // This should be incremented based on existing sets
+          };
+          
+          if (isUsingMockData) {
+            const set = {
+              id: `set-${Date.now()}`,
+              ...setData,
+              created_at: new Date().toISOString()
+            };
+            return NextResponse.json({ set });
+          } else {
+            const { data: set, error } = await (supabaseAdmin || supabase)
+              .from('sets')
+              .insert(setData)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ set });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to log set',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'workout/finish':
+        const { sessionId: finishSessionId, duration_s, kcal } = body;
+        
+        try {
+          const updateData = {
+            completed: true,
+            duration_s: duration_s || null,
+            kcal: kcal || null
+          };
+          
+          if (isUsingMockData) {
+            return NextResponse.json({ 
+              success: true, 
+              session: { id: finishSessionId, ...updateData } 
+            });
+          } else {
+            const { data: session, error } = await (supabaseAdmin || supabase)
+              .from('sessions')
+              .update(updateData)
+              .eq('id', finishSessionId)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ success: true, session });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to finish workout',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'workout/shrink':
+        const { minutes } = body;
+        
+        if (!minutes || minutes <= 0) {
+          return NextResponse.json({ error: 'Invalid minutes' }, { status: 400 });
+        }
+        
+        // Simple shrinking algorithm: reduce sets and rest times
+        const shrinkFactor = Math.max(0.5, minutes / 45); // Assume 45min default
+        
+        if (isUsingMockData) {
+          const originalPlan = mockData.programs[0].days.monday;
+          const shrunkenPlan = {
+            ...originalPlan,
+            exercises: originalPlan.exercises.map(ex => ({
+              ...ex,
+              sets: Math.max(1, Math.floor(ex.sets * shrinkFactor)),
+              rest_s: Math.floor(ex.rest_s * 0.75) // Reduce rest time
+            }))
+          };
+          
+          return NextResponse.json({ 
+            original_minutes: 45,
+            target_minutes: minutes,
+            shrunk_plan: shrunkenPlan
+          });
+        }
+        
+        // For real implementation, this would fetch user's current plan and shrink it
+        return NextResponse.json({ 
+          message: 'Workout shrinking not fully implemented yet',
+          target_minutes: minutes
+        });
+        
+      case 'posts/create':
+        const { tribeId: postTribeId, media_url, caption } = body;
+        const postUser = await getCurrentUser();
+        
+        if (!postUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          const postData = {
+            user_id: postUser.id,
+            tribe_id: postTribeId || null,
+            media_url: media_url || null,
+            caption: caption || ''
+          };
+          
+          if (isUsingMockData) {
+            const post = {
+              id: `post-${Date.now()}`,
+              ...postData,
+              likes_count: 0,
+              comments_count: 0,
+              created_at: new Date().toISOString()
+            };
+            mockData.posts.unshift(post);
+            return NextResponse.json({ post });
+          } else {
+            const { data: post, error } = await (supabaseAdmin || supabase)
+              .from('posts')
+              .insert(postData)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ post });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to create post',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'pact/spend/request':
+        const { type, label, amount_tc, gym_name } = body;
+        const requester = await getCurrentUser();
+        
+        if (!requester) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        // Get user's active tribe wallet
+        const activeTribeId = requester.settings?.active_tribe_id;
+        if (!activeTribeId) {
+          return NextResponse.json({ error: 'No active tribe' }, { status: 400 });
+        }
+        
+        const requestWallet = await getPactWallet(activeTribeId);
+        if (!requestWallet) {
+          return NextResponse.json({ error: 'Tribe wallet not found' }, { status: 404 });
+        }
+        
+        try {
+          const requestData = {
+            wallet_id: requestWallet.id,
+            type,
+            label,
+            amount_tc: parseFloat(amount_tc),
+            gym_name: gym_name || null,
+            created_by: requester.id,
+            status: 'requested'
+          };
+          
+          if (isUsingMockData) {
+            const request = {
+              id: `req-${Date.now()}`,
+              ...requestData,
+              created_at: new Date().toISOString()
+            };
+            mockData.pact_spend_requests.push(request);
+            return NextResponse.json({ request });
+          } else {
+            const { data: request, error } = await (supabaseAdmin || supabase)
+              .from('pact_spend_requests')
+              .insert(requestData)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ request });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to create spend request',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'pact/spend/approve':
+        const { requestId } = body;
+        const approver = await getCurrentUser();
+        
+        if (!approver) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          // Find the request
+          let spendRequest;
+          if (isUsingMockData) {
+            spendRequest = mockData.pact_spend_requests.find(r => r.id === requestId);
+          } else {
+            const { data } = await supabase
+              .from('pact_spend_requests')
+              .select('*')
+              .eq('id', requestId)
+              .single();
+            spendRequest = data;
+          }
+          
+          if (!spendRequest) {
+            return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+          }
+          
+          if (spendRequest.status !== 'requested') {
+            return NextResponse.json({ error: 'Request already processed' }, { status: 400 });
+          }
+          
+          // Update request status
+          if (isUsingMockData) {
+            spendRequest.status = 'approved';
+            spendRequest.approved_by = approver.id;
+            spendRequest.approved_at = new Date().toISOString();
+            
+            // Deduct from pact wallet
+            const wallet = mockData.pact_wallets.find(w => w.id === spendRequest.wallet_id);
+            if (wallet) {
+              wallet.balance_tc -= spendRequest.amount_tc;
+            }
+            
+            // Add transaction record
+            const transaction = {
+              id: `tx-${Date.now()}`,
+              wallet_id: spendRequest.wallet_id,
+              user_id: spendRequest.created_by,
+              type: spendRequest.type === 'gear' ? 'spend' : 'donate',
+              amount_tc: -spendRequest.amount_tc, // Negative for outgoing
+              meta: { 
+                request_id: requestId,
+                label: spendRequest.label,
+                gym_name: spendRequest.gym_name
+              },
+              created_at: new Date().toISOString()
+            };
+            mockData.pact_tx.unshift(transaction);
+          } else {
+            // Update request
+            await (supabaseAdmin || supabase)
+              .from('pact_spend_requests')
+              .update({
+                status: 'approved',
+                approved_by: approver.id,
+                approved_at: new Date().toISOString()
+              })
+              .eq('id', requestId);
+              
+            // Deduct from wallet
+            await (supabaseAdmin || supabase)
+              .from('pact_wallets')
+              .update({
+                balance_tc: supabase.raw(`balance_tc - ${spendRequest.amount_tc}`)
+              })
+              .eq('id', spendRequest.wallet_id);
+              
+            // Add transaction
+            await (supabaseAdmin || supabase)
+              .from('pact_tx')
+              .insert({
+                wallet_id: spendRequest.wallet_id,
+                user_id: spendRequest.created_by,
+                type: spendRequest.type === 'gear' ? 'spend' : 'donate',
+                amount_tc: spendRequest.amount_tc,
+                meta: {
+                  request_id: requestId,
+                  label: spendRequest.label,
+                  gym_name: spendRequest.gym_name
+                }
+              });
+          }
+          
+          return NextResponse.json({ success: true });
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to approve request',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'coach/apply':
+        const applicant = await getCurrentUser();
+        
+        if (!applicant) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          // Check eligibility (mock: just check if user exists)
+          const applicationData = {
+            user_id: applicant.id,
+            status: 'pending',
+            eligibility_score: 75 // Mock score
+          };
+          
+          if (isUsingMockData) {
+            return NextResponse.json({ 
+              success: true,
+              message: 'Application submitted successfully'
+            });
+          } else {
+            const { data: application, error } = await (supabaseAdmin || supabase)
+              .from('coach_applications')
+              .insert(applicationData)
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ application });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to submit application',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'coach/approve':
+        const { userId: approveUserId } = body;
+        const adminUser = await getCurrentUser();
+        
+        if (!adminUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          if (isUsingMockData) {
+            // Add to coach profiles
+            const newCoach = {
+              user_id: approveUserId,
+              tier: 'certified',
+              bio: '',
+              specialties: [],
+              languages: ['en'],
+              pricing: {},
+              rating_avg: 0,
+              rating_count: 0
+            };
+            mockData.coach_profiles.push(newCoach);
+            return NextResponse.json({ success: true });
+          } else {
+            // Update application
+            await (supabaseAdmin || supabase)
+              .from('coach_applications')
+              .update({ 
+                status: 'approved',
+                reviewer_id: adminUser.id,
+                reviewed_at: new Date().toISOString()
+              })
+              .eq('user_id', approveUserId);
+              
+            // Create coach profile
+            await (supabaseAdmin || supabase)
+              .from('coach_profiles')
+              .insert({
+                user_id: approveUserId,
+                tier: 'certified'
+              });
+              
+            return NextResponse.json({ success: true });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to approve coach',
             message: error.message
           }, { status: 500 });
         }
@@ -581,6 +1287,37 @@ export async function PUT(request, { params }) {
         }
         
         return NextResponse.json({ success: true, settings: newSettings });
+        
+      case 'notifications/read':
+        const { notificationIds } = body;
+        const notifUser = await getCurrentUser();
+        
+        if (!notifUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        try {
+          if (isUsingMockData) {
+            mockData.notifications.forEach(n => {
+              if (notificationIds.includes(n.id)) {
+                n.read = true;
+              }
+            });
+          } else {
+            await supabase
+              .from('notifications')
+              .update({ read: true })
+              .in('id', notificationIds)
+              .eq('user_id', notifUser.id);
+          }
+          
+          return NextResponse.json({ success: true });
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to mark notifications as read',
+            message: error.message
+          }, { status: 500 });
+        }
         
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
