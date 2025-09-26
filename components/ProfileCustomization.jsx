@@ -47,7 +47,7 @@ export function ProfileCustomization({ isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Customize Profile" size="lg">
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-96 overflow-y-auto">{/* Made scrollable */}
         {/* Display Name */}
         <div>
           <label className="block text-sm font-medium text-surface-200 mb-2">
