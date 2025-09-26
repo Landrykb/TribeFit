@@ -1270,6 +1270,131 @@ export async function POST(request, { params }) {
           }, { status: 500 });
         }
         
+      case 'coach/hire':
+        const { clientId, coachId: hireCoachId, offeringId, priceTc } = body;
+        const hireClient = await getCurrentUser();
+        
+        if (!hireClient) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        if (!hireCoachId || !priceTc) {
+          return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+        
+        // Check if client has enough TC
+        if (hireClient.wallet_balance_tc < priceTc) {
+          return NextResponse.json({ 
+            error: 'Insufficient TribeCoins',
+            needed: priceTc,
+            current: hireClient.wallet_balance_tc 
+          }, { status: 402 });
+        }
+        
+        try {
+          // Deduct from client wallet
+          await adjustWalletTc(hireClient.id, priceTc, 'subtract');
+          
+          // Credit coach wallet (in real implementation)
+          await adjustWalletTc(hireCoachId, priceTc, 'add');
+          
+          // Create hire record
+          if (isUsingMockData) {
+            const hire = {
+              id: `hire-${Date.now()}`,
+              coach_id: hireCoachId,
+              client_id: hireClient.id,
+              offering_id: offeringId,
+              price_tc: priceTc,
+              status: 'active',
+              started_at: new Date().toISOString()
+            };
+            mockData.coach_hires.push(hire);
+            return NextResponse.json({ success: true, hire });
+          } else {
+            const { data: hire, error } = await (supabaseAdmin || supabase)
+              .from('coach_hires')
+              .insert({
+                coach_id: hireCoachId,
+                client_id: hireClient.id,
+                offering_id: offeringId,
+                price_tc: priceTc
+              })
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ success: true, hire });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to hire coach',
+            message: error.message
+          }, { status: 500 });
+        }
+        
+      case 'coach/rate':
+        const { hireId, coachId: rateCoachId, clientId: rateClientId, stars, text: ratingText } = body;
+        const ratingUser = await getCurrentUser();
+        
+        if (!ratingUser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        if (!hireId || !rateCoachId || !stars) {
+          return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+        
+        if (stars < 1 || stars > 5) {
+          return NextResponse.json({ error: 'Stars must be between 1-5' }, { status: 400 });
+        }
+        
+        try {
+          if (isUsingMockData) {
+            const rating = {
+              id: `rating-${Date.now()}`,
+              hire_id: hireId,
+              coach_id: rateCoachId,
+              client_id: ratingUser.id,
+              stars,
+              text: ratingText || '',
+              created_at: new Date().toISOString()
+            };
+            mockData.coach_ratings.push(rating);
+            
+            // Update coach avg rating
+            const coachProfile = mockData.coach_profiles.find(p => p.user_id === rateCoachId);
+            if (coachProfile) {
+              const coachRatings = mockData.coach_ratings.filter(r => r.coach_id === rateCoachId);
+              const avgRating = coachRatings.reduce((sum, r) => sum + r.stars, 0) / coachRatings.length;
+              coachProfile.rating_avg = Math.round(avgRating * 10) / 10;
+              coachProfile.rating_count = coachRatings.length;
+            }
+            
+            return NextResponse.json({ success: true, rating });
+          } else {
+            const { data: rating, error } = await (supabaseAdmin || supabase)
+              .from('coach_ratings')
+              .insert({
+                hire_id: hireId,
+                coach_id: rateCoachId,
+                client_id: ratingUser.id,
+                stars,
+                text: ratingText
+              })
+              .select()
+              .single();
+              
+            if (error) throw error;
+            return NextResponse.json({ success: true, rating });
+          }
+        } catch (error) {
+          return NextResponse.json({ 
+            error: 'Failed to rate coach',
+            message: error.message
+          }, { status: 500 });
+        }
+        
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
