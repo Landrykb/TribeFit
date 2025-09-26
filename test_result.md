@@ -317,7 +317,11 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Coach System (hire/rate endpoints)"
+    - "Equipment Catalog API"
+    - "Pact Spend Request system"
+    - "Feed Share and Tip functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
