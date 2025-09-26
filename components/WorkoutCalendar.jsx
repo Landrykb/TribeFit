@@ -177,10 +177,17 @@ export function WorkoutCalendar({ isOpen, onClose }) {
                       </span>
                       {isCurrentMonth && (
                         <button
-                          onClick={() => addWorkout(date)}
-                          className="p-1 hover:bg-surface-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => {
+                            setScheduleForm({
+                              ...scheduleForm,
+                              date: formatDate(date)
+                            });
+                            setShowScheduleModal(true);
+                          }}
+                          className="p-1 hover:bg-surface-700 rounded text-primary hover:text-primary-400 transition-colors"
+                          title="Schedule workout"
                         >
-                          <Plus size={12} className="text-surface-400" />
+                          <Plus size={10} />
                         </button>
                       )}
                     </div>
