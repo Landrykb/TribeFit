@@ -261,6 +261,54 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Notifications system working correctly. GET /api/notifications returns user notifications, PUT /api/notifications/read marks notifications as read. Snitch notifications are properly generated and displayed."
 
+  - task: "Coach System APIs (hire/rate)"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Coach hire and rating system fully functional. POST /api/coach/hire successfully deducts TribeCoins from client and credits coach, creates hire record with proper validation. POST /api/coach/rate allows rating coaches with 1-5 stars, updates average ratings, includes proper validation (rejects ratings > 5). Both endpoints handle authentication and error cases correctly."
+
+  - task: "Equipment Catalog API"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Equipment catalog working perfectly. GET /api/catalog/list returns 10 equipment items including dumbbells, barbells, kettlebells, resistance bands, jump ropes, and protein supplements. Each item includes proper specs (weights for dumbbells [5-30kg], flavors for protein [vanilla, chocolate, strawberry], etc.) and pricing in TribeCoins."
+
+  - task: "Pact Spend Request System Enhanced"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Pact spend request system enhanced and working correctly. POST /api/pact/spend/request now properly handles item_id and specs for equipment purchases. Successfully tested with dumbbell request (item_id: 'dumbbell', specs: {weight: '20kg', quantity: 2}) and protein request (item_id: 'protein', specs: {flavor: 'chocolate', size: '2kg'}). Both item_id and specs are correctly stored and preserved in request records."
+
+  - task: "Tip Functionality"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Tip functionality working perfectly. POST /api/tip successfully transfers TribeCoins between users with proper balance validation. Tested tipping 50 TC from Alex Chen to Jordan Kim - sender balance correctly deducted (400 -> 350 TC), includes proper validation (rejects negative amounts), handles insufficient balance errors with 402 status code."
+
 frontend:
   - task: "TribeFit Main UI"
     implemented: true
