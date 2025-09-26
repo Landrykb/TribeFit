@@ -978,18 +978,19 @@ export async function POST(request, { params }) {
         }
         
       case 'pact/spend/request':
-        const { type, label, amount_tc, gym_name } = body;
+        const { type, label, amount_tc, gym_name, item_id, specs } = body;
         const requester = await getCurrentUser();
         
         if (!requester) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         
-        // Get user's active tribe wallet
-        const activeTribeId = requester.settings?.active_tribe_id;
-        if (!activeTribeId) {
-          return NextResponse.json({ error: 'No active tribe' }, { status: 400 });
+        if (!type || !label || !amount_tc) {
+          return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
+        
+        // Get user's active tribe wallet
+        const activeTribeId = requester.settings?.active_tribe_id || '10000000-0000-0000-0000-000000000001'; // Default to mock tribe
         
         const requestWallet = await getPactWallet(activeTribeId);
         if (!requestWallet) {
@@ -999,9 +1000,11 @@ export async function POST(request, { params }) {
         try {
           const requestData = {
             wallet_id: requestWallet.id,
-            type,
+            type, // 'gear' or 'donation'
             label,
             amount_tc: parseFloat(amount_tc),
+            item_id: item_id || null,
+            specs: specs || null,
             gym_name: gym_name || null,
             created_by: requester.id,
             status: 'requested'
@@ -1014,7 +1017,7 @@ export async function POST(request, { params }) {
               created_at: new Date().toISOString()
             };
             mockData.pact_spend_requests.push(request);
-            return NextResponse.json({ request });
+            return NextResponse.json({ success: true, request });
           } else {
             const { data: request, error } = await (supabaseAdmin || supabase)
               .from('pact_spend_requests')
@@ -1023,7 +1026,7 @@ export async function POST(request, { params }) {
               .single();
               
             if (error) throw error;
-            return NextResponse.json({ request });
+            return NextResponse.json({ success: true, request });
           }
         } catch (error) {
           return NextResponse.json({ 
