@@ -15,6 +15,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule }) 
     time: '07:00',
     workout_name: '',
     workout_type: 'custom',
+    duration: '45 min',
     shared: true,
     user_name: 'You'
   });
