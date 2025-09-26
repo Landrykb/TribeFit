@@ -15,19 +15,22 @@ export function WorkoutCalendar({ isOpen, onClose }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [showScheduler, setShowScheduler] = useState(false);
   
-  // Mock workout data for tribe members
+  // Enhanced mock workout data - multiple entries per day
   const [workoutSchedule, setWorkoutSchedule] = useState({
     '2024-01-15': [
-      { user: 'Alex Chen', time: '07:00', workout: 'Push/Pull/Legs', shared: true },
-      { user: 'Jordan Kim', time: '18:30', workout: 'Cardio HIIT', shared: true }
+      { id: 1, user: 'Alex Chen', time: '07:00', workout: 'Push/Pull/Legs', shared: true, duration: '45 min' },
+      { id: 2, user: 'Alex Chen', time: '12:00', workout: 'Cardio Walk', shared: false, duration: '20 min' },
+      { id: 3, user: 'Jordan Kim', time: '18:30', workout: 'Cardio HIIT', shared: true, duration: '30 min' }
     ],
     '2024-01-16': [
-      { user: 'Sarah Wilson', time: '06:30', workout: 'Yoga Flow', shared: true },
-      { user: 'Alex Chen', time: '19:00', workout: 'Upper Body', shared: false }
+      { id: 4, user: 'Sarah Wilson', time: '06:30', workout: 'Yoga Flow', shared: true, duration: '60 min' },
+      { id: 5, user: 'Alex Chen', time: '19:00', workout: 'Upper Body', shared: false, duration: '40 min' },
+      { id: 6, user: 'Alex Chen', time: '20:30', workout: 'Stretching', shared: true, duration: '15 min' }
     ],
     '2024-01-17': [
-      { user: 'Mike Torres', time: '12:00', workout: 'Full Body', shared: true },
-      { user: 'Jordan Kim', time: '17:00', workout: 'Lower Body', shared: true }
+      { id: 7, user: 'Mike Torres', time: '12:00', workout: 'Full Body', shared: true, duration: '50 min' },
+      { id: 8, user: 'Jordan Kim', time: '17:00', workout: 'Lower Body', shared: true, duration: '35 min' },
+      { id: 9, user: 'Mike Torres', time: '17:30', workout: 'Core Blast', shared: false, duration: '15 min' }
     ]
   });
 
@@ -82,14 +85,17 @@ export function WorkoutCalendar({ isOpen, onClose }) {
           workoutSchedule[dateStr] = [];
         }
         workoutSchedule[dateStr].push({
+          id: Date.now(),
           user: scheduleData.user_name,
           time: scheduleData.time,
           workout: scheduleData.workout_name,
-          shared: scheduleData.shared
+          shared: scheduleData.shared,
+          duration: scheduleData.duration || '45 min'
         });
         
         setWorkoutSchedule({...workoutSchedule});
         toast.success(`Workout scheduled for ${scheduleData.date}! 📅`);
+        setShowScheduler(false);
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to schedule workout');
@@ -98,32 +104,6 @@ export function WorkoutCalendar({ isOpen, onClose }) {
       console.error('Schedule workout failed:', error);
       toast.error('Failed to schedule workout');
     }
-  };
-
-  const addWorkout = (date) => {
-    const timeInput = prompt('Enter workout time (HH:MM):', '07:00');
-    if (!timeInput) return;
-    
-    const workoutInput = prompt('Enter workout name:', 'Morning Workout');
-    if (!workoutInput) return;
-    
-    const shareWithTribe = confirm('Share with tribe members?');
-    
-    const dateStr = formatDate(date);
-    const newWorkout = {
-      user: 'You',
-      time: timeInput,
-      workout: workoutInput,
-      shared: shareWithTribe
-    };
-    
-    // In a real app, this would save to backend
-    if (!workoutSchedule[dateStr]) {
-      workoutSchedule[dateStr] = [];
-    }
-    workoutSchedule[dateStr].push(newWorkout);
-    
-    toast.success(`Workout scheduled for ${date.toLocaleDateString()}! 📅`);
   };
 
   const monthNames = [
@@ -135,44 +115,46 @@ export function WorkoutCalendar({ isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Tribe Workout Calendar" size="2xl">
-      <div className="space-y-4">
-        {/* Calendar Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h3 className="text-xl font-bold text-surface-50">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h3>
-            <div className="flex space-x-1">
+      <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+        {/* Calendar Header - Fixed at top */}
+        <div className="sticky top-0 bg-surface-900 z-10 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h3 className="text-xl font-bold text-surface-50">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h3>
+              <div className="flex space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth(-1)}
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth(1)}
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigateMonth(-1)}
+                onClick={() => setShowTribeWorkouts(!showTribeWorkouts)}
               >
-                <ChevronLeft size={16} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigateMonth(1)}
-              >
-                <ChevronRight size={16} />
+                {showTribeWorkouts ? <Eye size={16} /> : <EyeOff size={16} />}
+                Tribe Workouts
               </Button>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTribeWorkouts(!showTribeWorkouts)}
-            >
-              {showTribeWorkouts ? <Eye size={16} /> : <EyeOff size={16} />}
-              Tribe Workouts
-            </Button>
-          </div>
         </div>
 
-        {/* Calendar Grid */}
+        {/* Calendar Grid - Scrollable */}
         <div className="border border-surface-700 rounded-lg overflow-hidden">
           {/* Day Headers */}
           <div className="grid grid-cols-7 bg-surface-800">
@@ -194,7 +176,7 @@ export function WorkoutCalendar({ isOpen, onClose }) {
               return (
                 <div
                   key={index}
-                  className={`relative h-20 border-r border-b border-surface-700 last:border-r-0 ${
+                  className={`relative h-24 border-r border-b border-surface-700 last:border-r-0 ${
                     isCurrentMonth ? 'bg-surface-900' : 'bg-surface-800/50'
                   } ${isToday ? 'ring-2 ring-primary ring-inset' : ''}`}
                 >
@@ -219,27 +201,30 @@ export function WorkoutCalendar({ isOpen, onClose }) {
                       )}
                     </div>
                     
-                    {/* Workout indicators */}
+                    {/* Enhanced workout indicators - Shows more workouts */}
                     <div className="flex-1 overflow-hidden">
-                      {showTribeWorkouts && workouts.slice(0, 2).map((workout, i) => (
+                      {showTribeWorkouts && workouts.slice(0, 3).map((workout, i) => (
                         <div
-                          key={i}
+                          key={workout.id || i}
                           className={`text-xs p-1 mb-1 rounded truncate ${
                             workout.shared 
                               ? 'bg-primary/20 text-primary border border-primary/30' 
                               : 'bg-surface-700 text-surface-300'
                           }`}
-                          title={`${workout.user} - ${workout.workout} at ${workout.time}`}
+                          title={`${workout.user} - ${workout.workout} at ${workout.time} (${workout.duration})`}
                         >
                           <div className="flex items-center space-x-1">
-                            {workout.shared && <Users size={8} />}
-                            <span className="truncate">{workout.time}</span>
+                            {workout.shared && <Users size={6} />}
+                            <span className="truncate font-medium">{workout.time}</span>
+                          </div>
+                          <div className="truncate text-[10px] opacity-75">
+                            {workout.workout}
                           </div>
                         </div>
                       ))}
-                      {workouts.length > 2 && (
-                        <div className="text-xs text-surface-400">
-                          +{workouts.length - 2} more
+                      {workouts.length > 3 && (
+                        <div className="text-xs text-surface-400 text-center">
+                          +{workouts.length - 3} more
                         </div>
                       )}
                     </div>
@@ -267,21 +252,25 @@ export function WorkoutCalendar({ isOpen, onClose }) {
             Click + to schedule a workout
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="flex space-x-3 pt-4 border-t border-surface-700">
+      {/* Fixed Action Buttons at Bottom */}
+      <div className="sticky bottom-0 bg-surface-900 pt-4 border-t border-surface-700">
+        <div className="flex space-x-3">
           <Button
             variant="ghost"
             onClick={onClose}
             className="flex-1"
           >
+            <ArrowLeft size={16} />
             Close
           </Button>
           <Button
             variant="primary"
             onClick={() => {
               const today = new Date();
-              addWorkout(today);
+              setSelectedDate(formatDate(today));
+              setShowScheduler(true);
             }}
             className="flex-1"
           >
