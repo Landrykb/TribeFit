@@ -899,33 +899,36 @@ function TribeFitApp() {
         coaches.map((coach, index) => (
           <div key={index} className="card-interactive animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
+              <div className="flex items-start space-x-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-gradient-tribal rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">
                     {coach.user?.name?.charAt(0) || coach.name?.charAt(0) || 'C'}
                   </span>
                 </div>
-                <div>
-                  <h3 className="text-surface-50 font-bold">{coach.user?.name || coach.name || 'Coach'}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-surface-50 font-bold text-sm truncate">{coach.user?.name || coach.name || 'Coach'}</h3>
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="bg-primary/20 text-primary px-2 py-1 rounded text-xs">
+                    <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs">
                       {coach.tier || 'Certified'}
                     </span>
-                    <StarDisplay rating={coach.rating_avg || 0} size={14} />
+                    <StarDisplay rating={coach.rating_avg || 0} size={12} />
                   </div>
-                  <p className="text-surface-400 text-sm">{coach.bio || 'Professional fitness coach'}</p>
+                  <p className="text-surface-400 text-xs line-clamp-2 leading-tight">
+                    {coach.bio || 'Professional fitness coach specializing in strength training'}
+                  </p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-accent font-bold">{coach.pricing?.['1on1'] || 200} TC</div>
-                <div className="text-surface-400 text-sm">per session</div>
+              <div className="text-right flex-shrink-0 ml-3">
+                <div className="text-accent font-bold text-sm">{coach.pricing?.['1on1'] || 200} TC</div>
+                <div className="text-surface-400 text-xs">per session</div>
               </div>
             </div>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
               <Button
                 onClick={() => handleHireCoach(coach)}
                 variant="primary"
+                size="sm"
                 className="flex-1"
               >
                 Hire Coach
@@ -937,9 +940,9 @@ function TribeFitApp() {
                   setShowCoachRating(true);
                 }}
                 variant="ghost"
+                size="sm"
               >
-                <Star size={16} />
-                Rate
+                <Star size={14} />
               </Button>
             </div>
           </div>
