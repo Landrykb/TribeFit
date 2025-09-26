@@ -678,7 +678,37 @@ export default function TribeFitApp() {
     </div>
   );
 
-  const renderProfile = () => (
+  const renderNotifications = () => (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-white">Notifications</h2>
+      
+      {notifications.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">No notifications yet</div>
+          <p className="text-sm text-gray-500">Stay active and you'll see updates here!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notifications.map((notification) => (
+            <div key={notification.id} className="bg-gray-800 rounded-2xl p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-medium text-white">{notification.title}</h3>
+                  <p className="text-gray-300 text-sm mt-1">{notification.body}</p>
+                  <div className="text-gray-500 text-xs mt-2">
+                    {new Date(notification.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                {!notification.read && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
     <div className="space-y-6">
       <div className="bg-gray-800 rounded-2xl p-6">
         <div className="flex items-center space-x-4 mb-6">
