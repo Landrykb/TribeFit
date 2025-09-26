@@ -251,8 +251,58 @@ export default function TribeFitApp() {
     }
   };
 
+  // Handler for starting workout
+  const handleStartWorkout = async () => {
+    try {
+      const response = await fetch('/api/workout/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          programId: workoutPlan?.program?.id || 'prog-1',
+          userId: user?.id
+        })
+      });
+
+      if (response.ok) {
+        alert('Workout started! Let\'s crush it! 💪');
+        // Here you would navigate to workout session page
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to start workout');
+      }
+    } catch (error) {
+      console.error('Start workout failed:', error);
+      alert('Failed to start workout');
+    }
+  };
+
+  // Handler for shrinking workout
+  const handleShrinkWorkout = async () => {
+    const minutes = prompt('How many minutes do you have?', '30');
+    if (!minutes) return;
+
+    try {
+      const response = await fetch('/api/workout/shrink', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes: parseInt(minutes) })
+      });
+
+      if (response.ok) {
+        alert(`Workout adjusted to ${minutes} minutes! Starting now...`);
+        handleStartWorkout();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to shrink workout');
+      }
+    } catch (error) {
+      console.error('Shrink workout failed:', error);
+      alert('Failed to shrink workout');
+    }
+  };
+
   // Handler for sharing posts
-  const handleSharePost = async () => {
+  const handleSharePost = async (caption = 'Just completed my workout! 💪') => {
     try {
       const response = await fetch('/api/posts/create', {
         method: 'POST',
@@ -260,7 +310,7 @@ export default function TribeFitApp() {
         body: JSON.stringify({
           userId: user?.id,
           tribeId: '10000000-0000-0000-0000-000000000001',
-          caption: 'Just completed my workout! 💪'
+          caption
         })
       });
 
@@ -278,6 +328,16 @@ export default function TribeFitApp() {
       console.error('Post share failed:', error);
       alert('Failed to share post');
     }
+  };
+
+  // Handler for liking posts
+  const handleLikePost = async (postId) => {
+    // For now, just update local state
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { ...post, likes_count: (post.likes_count || 0) + 1 }
+        : post
+    ));
   };
 
   // Handler for tipping TribeCoins
