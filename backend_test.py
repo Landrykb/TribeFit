@@ -216,6 +216,31 @@ class TribeFitTester:
             self.log_result("POST /api/coach/hire (Hire Coach Button)", False, 
                            f"Failed: {response['data']}")
 
+    def test_ai_workout_generation(self):
+        """Test the new AI workout generation feature using Emergent LLM"""
+        print("\n=== Testing AI Workout Generation (NEW FEATURE) ===")
+        
+        # Test AI workout generation with Emergent LLM
+        print("\n🤖 Testing AI Workout Generation")
+        workout_gen_data = {
+            'fitnessGoals': 'Build muscle and improve strength',
+            'availableTime': 45,
+            'equipment': 'Dumbbells, resistance bands, bodyweight',
+            'experienceLevel': 'intermediate',
+            'userId': TEST_USER_ID
+        }
+        
+        response = self.make_request('POST', 'generate-workout', workout_gen_data)
+        if response['success'] and response['data'].get('success') and 'workoutPlan' in response['data']:
+            plan_id = response['data'].get('planId', 'unknown')
+            plan_content = response['data']['workoutPlan'][:100] + "..." if len(response['data']['workoutPlan']) > 100 else response['data']['workoutPlan']
+            self.log_result("POST /api/generate-workout (AI Workout Generation)", True, 
+                           f"AI workout plan generated successfully (ID: {plan_id})")
+            print(f"   Preview: {plan_content}")
+        else:
+            self.log_result("POST /api/generate-workout (AI Workout Generation)", False, 
+                           f"Failed: {response['data']}")
+
     def test_additional_core_functionality(self):
         """Test additional core functionality to ensure system is working"""
         print("\n=== Testing Additional Core Functionality ===")
@@ -261,6 +286,71 @@ class TribeFitTester:
                            f"Topup successful, new balance: {new_balance} TC")
         else:
             self.log_result("POST /api/wallet/topup", False, 
+                           f"Failed: {response['data']}")
+
+        # Test equipment catalog
+        print("\n🏪 Testing Equipment Catalog")
+        response = self.make_request('GET', 'catalog/list')
+        if response['success']:
+            items = response['data'] if isinstance(response['data'], list) else []
+            self.log_result("GET /api/catalog/list", True, 
+                           f"Found {len(items)} equipment items")
+        else:
+            self.log_result("GET /api/catalog/list", False, 
+                           f"Failed: {response['data']}")
+
+        # Test pact spend request system
+        print("\n💰 Testing Pact Spend Request System")
+        spend_request_data = {
+            'tribeId': '10000000-0000-0000-0000-000000000001',
+            'amountTc': 80,
+            'description': 'Dumbbells for home gym',
+            'item_id': 'dumbbell',
+            'specs': {'weight': '20kg', 'quantity': 2}
+        }
+        response = self.make_request('POST', 'pact/spend/request', spend_request_data)
+        if response['success'] and response['data'].get('success'):
+            request_id = response['data'].get('request', {}).get('id', 'unknown')
+            self.log_result("POST /api/pact/spend/request", True, 
+                           f"Spend request created: {request_id}")
+        else:
+            self.log_result("POST /api/pact/spend/request", False, 
+                           f"Failed: {response['data']}")
+
+        # Test tip functionality
+        print("\n🎁 Testing Tip Functionality")
+        tip_data = {
+            'fromUserId': TEST_USER_ID,
+            'toUserId': TEST_USER_ID_2,
+            'amountTc': 25,
+            'message': 'Great workout motivation! 💪'
+        }
+        response = self.make_request('POST', 'tip', tip_data)
+        if response['success'] and response['data'].get('success'):
+            self.log_result("POST /api/tip", True, 
+                           f"Tip sent successfully: 25 TC")
+        elif response['status_code'] == 402:
+            self.log_result("POST /api/tip", False, 
+                           "Insufficient balance for tip")
+        else:
+            self.log_result("POST /api/tip", False, 
+                           f"Failed: {response['data']}")
+
+        # Test coach rating system
+        print("\n⭐ Testing Coach Rating System")
+        rating_data = {
+            'coachId': TEST_COACH_ID,
+            'clientId': TEST_USER_ID_2,
+            'rating': 5,
+            'comment': 'Excellent coaching and motivation!'
+        }
+        response = self.make_request('POST', 'coach/rate', rating_data)
+        if response['success'] and response['data'].get('success'):
+            avg_rating = response['data'].get('coach', {}).get('rating_avg', 0)
+            self.log_result("POST /api/coach/rate", True, 
+                           f"Coach rated successfully, new avg: {avg_rating}")
+        else:
+            self.log_result("POST /api/coach/rate", False, 
                            f"Failed: {response['data']}")
 
     def run_all_tests(self):
