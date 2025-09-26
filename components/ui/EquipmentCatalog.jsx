@@ -122,7 +122,7 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest }) {
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        <div className="p-6 max-h-96 overflow-y-auto">
           {!selectedItem ? (
             <div className="grid grid-cols-2 gap-3">
               {items.map((item) => {
@@ -131,13 +131,13 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest }) {
                   <button
                     key={item.slug}
                     onClick={() => handleItemSelect(item)}
-                    className="p-4 bg-gray-800 hover:bg-gray-750 rounded-xl border border-gray-700 hover:border-gray-600 transition-all group"
+                    className="p-4 bg-surface-800 hover:bg-surface-750 rounded-xl border border-surface-700 hover:border-surface-600 transition-all group"
                   >
                     <div className="flex flex-col items-center text-center space-y-2">
-                      <IconComponent size={32} className="text-blue-400 group-hover:text-blue-300" />
-                      <div className="font-medium text-white text-sm">{item.title}</div>
+                      <IconComponent size={32} className="text-primary group-hover:text-primary-400" />
+                      <div className="font-medium text-surface-100 text-sm">{item.title}</div>
                       {item.price_tc && (
-                        <div className="text-xs text-gray-400">{item.price_tc} TC</div>
+                        <div className="text-xs text-surface-400">{item.price_tc} TC</div>
                       )}
                     </div>
                   </button>
