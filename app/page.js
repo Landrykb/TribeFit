@@ -709,6 +709,8 @@ export default function TribeFitApp() {
       )}
     </div>
   );
+
+  const renderProfile = () => (
     <div className="space-y-6">
       <div className="bg-gray-800 rounded-2xl p-6">
         <div className="flex items-center space-x-4 mb-6">
