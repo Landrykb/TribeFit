@@ -16,10 +16,14 @@ import { LoginModal } from '../components/auth/LoginModal';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { WorkoutGenerator, WorkoutPlanModal } from '../components/WorkoutGenerator';
+import { WorkoutSession } from '../components/WorkoutSession';
+import { ShrinkWorkoutModal } from '../components/ShrinkWorkoutModal';
+import { WorkoutCalendar } from '../components/WorkoutCalendar';
 import { EquipmentCatalog } from '../components/ui/EquipmentCatalog';
 import { DonationModal } from '../components/ui/DonationModal';
 import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
 import { TipModal } from '../components/ui/TipModal';
+import { ProfileCustomization } from '../components/ProfileCustomization';
 
 function TribeFitApp() {
   const { user, logout, isAuthenticated } = useAuth();
