@@ -1,1 +1,360 @@
-'use client';\n\nimport { useState } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Label } from '@/components/ui/label';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport { useToast } from '@/hooks/use-toast';\nimport { supabase } from '@/lib/supabase';\nimport { t } from '@/lib/i18n';\nimport { Mail, Eye, EyeOff, Users } from 'lucide-react';\n\nexport default function AuthForm({ onAuthSuccess }) {\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const [name, setName] = useState('');\n  const [showPassword, setShowPassword] = useState(false);\n  const [loading, setLoading] = useState(false);\n  const [magicLinkSent, setMagicLinkSent] = useState(false);\n  const { toast } = useToast();\n\n  const handleSignUp = async (e) => {\n    e.preventDefault();\n    if (!email || !password || !name) {\n      toast({\n        title: 'Missing Information',\n        description: 'Please fill in all fields',\n        variant: 'destructive'\n      });\n      return;\n    }\n\n    setLoading(true);\n    try {\n      const { data, error } = await supabase.auth.signUp({\n        email,\n        password,\n        options: {\n          data: {\n            name,\n            locale: 'en'\n          }\n        }\n      });\n\n      if (error) throw error;\n\n      if (data.user && !data.user.email_confirmed_at) {\n        toast({\n          title: 'Check Your Email',\n          description: 'We sent you a confirmation link. Please check your email and click the link to continue.'\n        });\n      } else if (data.user) {\n        // Create user profile\n        await createUserProfile(data.user);\n        toast({\n          title: 'Welcome to TribeFit!',\n          description: 'Your account has been created successfully.'\n        });\n        onAuthSuccess?.(data.user);\n      }\n    } catch (error) {\n      toast({\n        title: 'Sign Up Failed',\n        description: error.message,\n        variant: 'destructive'\n      });\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const handleSignIn = async (e) => {\n    e.preventDefault();\n    if (!email || !password) {\n      toast({\n        title: 'Missing Information',\n        description: 'Please enter your email and password',\n        variant: 'destructive'\n      });\n      return;\n    }\n\n    setLoading(true);\n    try {\n      const { data, error } = await supabase.auth.signInWithPassword({\n        email,\n        password\n      });\n\n      if (error) throw error;\n\n      toast({\n        title: 'Welcome Back!',\n        description: 'Successfully signed in to TribeFit'\n      });\n      onAuthSuccess?.(data.user);\n    } catch (error) {\n      toast({\n        title: 'Sign In Failed',\n        description: error.message,\n        variant: 'destructive'\n      });\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const handleMagicLink = async (e) => {\n    e.preventDefault();\n    if (!email) {\n      toast({\n        title: 'Email Required',\n        description: 'Please enter your email address',\n        variant: 'destructive'\n      });\n      return;\n    }\n\n    setLoading(true);\n    try {\n      const { error } = await supabase.auth.signInWithOtp({\n        email,\n        options: {\n          emailRedirectTo: `${window.location.origin}/auth/callback`\n        }\n      });\n\n      if (error) throw error;\n\n      setMagicLinkSent(true);\n      toast({\n        title: 'Magic Link Sent!',\n        description: 'Check your email and click the link to sign in'\n      });\n    } catch (error) {\n      toast({\n        title: 'Failed to Send Magic Link',\n        description: error.message,\n        variant: 'destructive'\n      });\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const createUserProfile = async (user) => {\n    try {\n      const { error } = await supabase\n        .from('users')\n        .insert({\n          id: user.id,\n          email: user.email,\n          name: user.user_metadata?.name || name,\n          locale: user.user_metadata?.locale || 'en',\n          settings: { snitch: true, privacy: 'friends' },\n          wallet_balance_tc: 0\n        });\n\n      if (error && error.code !== '23505') { // Ignore duplicate key error\n        throw error;\n      }\n    } catch (error) {\n      console.error('Error creating user profile:', error);\n      // Don't throw - profile creation failure shouldn't block auth\n    }\n  };\n\n  if (magicLinkSent) {\n    return (\n      <div className=\"min-h-screen flex items-center justify-center bg-background\">\n        <Card className=\"w-full max-w-md\">\n          <CardHeader className=\"text-center\">\n            <div className=\"w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4\">\n              <Mail className=\"w-8 h-8 text-primary-foreground\" />\n            </div>\n            <CardTitle>Check Your Email</CardTitle>\n            <CardDescription>\n              We sent a magic link to <strong>{email}</strong>. Click the link in your email to sign in.\n            </CardDescription>\n          </CardHeader>\n          <CardContent>\n            <Button \n              variant=\"outline\" \n              className=\"w-full\"\n              onClick={() => setMagicLinkSent(false)}\n            >\n              Back to Sign In\n            </Button>\n          </CardContent>\n        </Card>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"min-h-screen flex items-center justify-center bg-background\">\n      <div className=\"w-full max-w-md\">\n        {/* Header */}\n        <div className=\"text-center mb-8\">\n          <div className=\"w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4\">\n            <Users className=\"w-8 h-8 text-primary-foreground\" />\n          </div>\n          <h1 className=\"text-3xl font-bold\">TribeFit</h1>\n          <p className=\"text-muted-foreground\">{t('app.tagline')}</p>\n        </div>\n\n        <Tabs defaultValue=\"signin\" className=\"w-full\">\n          <TabsList className=\"grid w-full grid-cols-2\">\n            <TabsTrigger value=\"signin\">Sign In</TabsTrigger>\n            <TabsTrigger value=\"signup\">Sign Up</TabsTrigger>\n          </TabsList>\n          \n          <TabsContent value=\"signin\">\n            <Card>\n              <CardHeader>\n                <CardTitle>Welcome Back</CardTitle>\n                <CardDescription>Sign in to your TribeFit account</CardDescription>\n              </CardHeader>\n              <CardContent>\n                <form onSubmit={handleSignIn} className=\"space-y-4\">\n                  <div className=\"space-y-2\">\n                    <Label htmlFor=\"signin-email\">Email</Label>\n                    <Input\n                      id=\"signin-email\"\n                      type=\"email\"\n                      placeholder=\"alex@example.com\"\n                      value={email}\n                      onChange={(e) => setEmail(e.target.value)}\n                      required\n                    />\n                  </div>\n                  <div className=\"space-y-2\">\n                    <Label htmlFor=\"signin-password\">Password</Label>\n                    <div className=\"relative\">\n                      <Input\n                        id=\"signin-password\"\n                        type={showPassword ? 'text' : 'password'}\n                        placeholder=\"••••••••\"\n                        value={password}\n                        onChange={(e) => setPassword(e.target.value)}\n                        required\n                      />\n                      <Button\n                        type=\"button\"\n                        variant=\"ghost\"\n                        size=\"sm\"\n                        className=\"absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent\"\n                        onClick={() => setShowPassword(!showPassword)}\n                      >\n                        {showPassword ? (\n                          <EyeOff className=\"h-4 w-4\" />\n                        ) : (\n                          <Eye className=\"h-4 w-4\" />\n                        )}\n                      </Button>\n                    </div>\n                  </div>\n                  <Button type=\"submit\" className=\"w-full\" disabled={loading}>\n                    {loading ? 'Signing In...' : 'Sign In'}\n                  </Button>\n                </form>\n                \n                <div className=\"mt-4\">\n                  <div className=\"relative\">\n                    <div className=\"absolute inset-0 flex items-center\">\n                      <span className=\"w-full border-t\" />\n                    </div>\n                    <div className=\"relative flex justify-center text-xs uppercase\">\n                      <span className=\"bg-background px-2 text-muted-foreground\">Or</span>\n                    </div>\n                  </div>\n                  <Button \n                    type=\"button\" \n                    variant=\"outline\" \n                    className=\"w-full mt-4\"\n                    onClick={handleMagicLink}\n                    disabled={loading}\n                  >\n                    <Mail className=\"w-4 h-4 mr-2\" />\n                    Send Magic Link\n                  </Button>\n                </div>\n              </CardContent>\n            </Card>\n          </TabsContent>\n          \n          <TabsContent value=\"signup\">\n            <Card>\n              <CardHeader>\n                <CardTitle>Join TribeFit</CardTitle>\n                <CardDescription>Create your account and find your tribe</CardDescription>\n              </CardHeader>\n              <CardContent>\n                <form onSubmit={handleSignUp} className=\"space-y-4\">\n                  <div className=\"space-y-2\">\n                    <Label htmlFor=\"signup-name\">Full Name</Label>\n                    <Input\n                      id=\"signup-name\"\n                      type=\"text\"\n                      placeholder=\"Alex Chen\"\n                      value={name}\n                      onChange={(e) => setName(e.target.value)}\n                      required\n                    />\n                  </div>\n                  <div className=\"space-y-2\">\n                    <Label htmlFor=\"signup-email\">Email</Label>\n                    <Input\n                      id=\"signup-email\"\n                      type=\"email\"\n                      placeholder=\"alex@example.com\"\n                      value={email}\n                      onChange={(e) => setEmail(e.target.value)}\n                      required\n                    />\n                  </div>\n                  <div className=\"space-y-2\">\n                    <Label htmlFor=\"signup-password\">Password</Label>\n                    <div className=\"relative\">\n                      <Input\n                        id=\"signup-password\"\n                        type={showPassword ? 'text' : 'password'}\n                        placeholder=\"••••••••\"\n                        value={password}\n                        onChange={(e) => setPassword(e.target.value)}\n                        required\n                        minLength={6}\n                      />\n                      <Button\n                        type=\"button\"\n                        variant=\"ghost\"\n                        size=\"sm\"\n                        className=\"absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent\"\n                        onClick={() => setShowPassword(!showPassword)}\n                      >\n                        {showPassword ? (\n                          <EyeOff className=\"h-4 w-4\" />\n                        ) : (\n                          <Eye className=\"h-4 w-4\" />\n                        )}\n                      </Button>\n                    </div>\n                    <p className=\"text-xs text-muted-foreground\">\n                      Password must be at least 6 characters long\n                    </p>\n                  </div>\n                  <Button type=\"submit\" className=\"w-full\" disabled={loading}>\n                    {loading ? 'Creating Account...' : 'Create Account'}\n                  </Button>\n                </form>\n              </CardContent>\n            </Card>\n          </TabsContent>\n        </Tabs>\n      </div>\n    </div>\n  );\n}"
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { t } from '@/lib/i18n';
+import { Mail, Eye, EyeOff, Users } from 'lucide-react';
+
+export default function AuthForm({ onAuthSuccess }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const { toast } = useToast();
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (!email || !password || !name) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all fields',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            locale: 'en'
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: 'Check Your Email',
+          description: 'We sent you a confirmation link. Please check your email and click the link to continue.'
+        });
+      } else if (data.user) {
+        // Create user profile
+        await createUserProfile(data.user);
+        toast({
+          title: 'Welcome to TribeFit!',
+          description: 'Your account has been created successfully.'
+        });
+        onAuthSuccess?.(data.user);
+      }
+    } catch (error) {
+      toast({
+        title: 'Sign Up Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please enter your email and password',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Welcome Back!',
+        description: 'Successfully signed in to TribeFit'
+      });
+      onAuthSuccess?.(data.user);
+    } catch (error) {
+      toast({
+        title: 'Sign In Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLink = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      setMagicLinkSent(true);
+      toast({
+        title: 'Magic Link Sent!',
+        description: 'Check your email and click the link to sign in'
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to Send Magic Link',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createUserProfile = async (user) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || name,
+          locale: user.user_metadata?.locale || 'en',
+          settings: { snitch: true, privacy: 'friends' },
+          wallet_balance_tc: 0
+        });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key error
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      // Don't throw - profile creation failure shouldn't block auth
+    }
+  };
+
+  if (magicLinkSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <CardTitle>Check Your Email</CardTitle>
+            <CardDescription>
+              We sent a magic link to <strong>{email}</strong>. Click the link in your email to sign in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setMagicLinkSent(false)}
+            >
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-primary-foreground" />
+          </div>
+          <h1 className="text-3xl font-bold">TribeFit</h1>
+          <p className="text-muted-foreground">{t('app.tagline')}</p>
+        </div>
+
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="signin">
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome Back</CardTitle>
+                <CardDescription>Sign in to your TribeFit account</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">Email</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="alex@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="signin-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
+                  </Button>
+                </form>
+                
+                <div className="mt-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full mt-4"
+                    onClick={handleMagicLink}
+                    disabled={loading}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Magic Link
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle>Join TribeFit</CardTitle>
+                <CardDescription>Create your account and find your tribe</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Alex Chen"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="alex@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 6 characters long
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Creating Account...' : 'Create Account'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}"
