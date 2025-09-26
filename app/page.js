@@ -8,15 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { 
   Home, Rss, Users, TrophyIcon, User, 
   Zap, Play, SkipForward, Coins, 
   Settings, Bell, ChevronRight,
-  DollarSign, Clock, Target
+  DollarSign, Clock, Target, Plus,
+  Gift, Share2, Timer, Dumbbell,
+  Award, UserCheck, LogOut
 } from 'lucide-react';
 import { t, formatTC, showLocalEquivalent, getUserLocale } from '@/lib/i18n';
+import { supabase, isUsingMockData } from '@/lib/supabase';
+import AuthForm from '@/components/auth/AuthForm';
 
 export default function TribeFitApp() {
   const [currentTab, setCurrentTab] = useState('home');
