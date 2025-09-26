@@ -19,6 +19,7 @@ import { WorkoutGenerator, WorkoutPlanModal } from '../components/WorkoutGenerat
 import { WorkoutSession } from '../components/WorkoutSession';
 import { ShrinkWorkoutModal } from '../components/ShrinkWorkoutModal';
 import { WorkoutCalendar } from '../components/WorkoutCalendar';
+import { WorkoutScheduler } from '../components/WorkoutScheduler';
 import { EquipmentCatalog } from '../components/ui/EquipmentCatalog';
 import { DonationModal } from '../components/ui/DonationModal';
 import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
