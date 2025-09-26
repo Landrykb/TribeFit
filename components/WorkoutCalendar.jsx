@@ -208,11 +208,8 @@ export function WorkoutCalendar({ isOpen, onClose }) {
                       {isCurrentMonth && (
                         <button
                           onClick={() => {
-                            setScheduleForm({
-                              ...scheduleForm,
-                              date: formatDate(date)
-                            });
-                            setShowScheduleModal(true);
+                            setSelectedDate(formatDate(date));
+                            setShowScheduler(true);
                           }}
                           className="p-1 hover:bg-surface-700 rounded text-primary hover:text-primary-400 transition-colors"
                           title="Schedule workout"
