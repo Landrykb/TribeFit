@@ -502,7 +502,7 @@ export default function TribeFitApp() {
           <TabsContent value="home">{renderHome()}</TabsContent>
           <TabsContent value="feed">
             <div className="text-center py-12">
-              <Feed className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <Rss className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-semibold mb-2">Feed Coming Soon</h3>
               <p className="text-muted-foreground">Share your workouts and see your tribe's progress</p>
             </div>
