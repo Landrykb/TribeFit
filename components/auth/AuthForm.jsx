@@ -357,4 +357,4 @@ export default function AuthForm({ onAuthSuccess }) {
       </div>
     </div>
   );
-}"
+}
