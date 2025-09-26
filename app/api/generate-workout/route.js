@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request) {
   try {
@@ -14,7 +15,15 @@ export async function POST(request) {
     }
 
     // Use Emergent LLM key for AI generation
-    const apiKey = 'sk-emergent-fAc903a6cDd114dDc4';
+    const apiKey = process.env.EMERGENT_LLM_KEY;
+    
+    if (!apiKey) {
+      console.error('EMERGENT_LLM_KEY not found in environment variables');
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 500 }
+      );
+    }
     
     // Construct prompt for AI
     const prompt = `
@@ -67,7 +76,9 @@ Keep it practical and achievable for someone with ${experienceLevel} experience 
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate workout plan');
+      const errorText = await response.text();
+      console.error('OpenAI API Error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -94,7 +105,7 @@ Keep it practical and achievable for someone with ${experienceLevel} experience 
   } catch (error) {
     console.error('Error generating workout plan:', error);
     return NextResponse.json(
-      { error: 'Failed to generate workout plan' },
+      { error: `Failed to generate workout plan: ${error.message}` },
       { status: 500 }
     );
   }
