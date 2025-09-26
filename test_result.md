@@ -177,6 +177,90 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Snitch notifications working perfectly. When users skip (both pay and ad methods), proper localized notifications are generated. Pay method: 'Alex Chen PAID to skip 💸. Your tribe is stronger than excuses.' Ad method: 'Alex Chen watched an ad to skip 📺. Still training tomorrow?' Notifications include user names and appropriate emojis."
 
+  - task: "Wallet Balance API"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: GET /api/wallet/balance returns current balance and formatted string correctly. Provides both numeric balance_tc and formatted display string."
+
+  - task: "Tribe Management APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Tribe management working well. GET /api/tribes lists user tribes, POST /api/tribe/create creates new tribes with invite codes, POST /api/tribe/switch changes active tribe. Minor: POST /api/tribe/join returns 404 for existing member (expected behavior)."
+
+  - task: "Workout System APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Complete workout system working perfectly. GET /api/workout/today returns workout plan with exercises, POST /api/workout/start creates session, POST /api/workout/set logs exercise sets, POST /api/workout/finish completes workout, POST /api/workout/shrink adjusts workout duration."
+
+  - task: "Pact Wallet Operations"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Pact wallet operations mostly working. GET /api/pact/ledger returns wallet, transactions, and spend requests. POST /api/pact/spend/approve handles request approval. Minor: POST /api/pact/spend/request requires active_tribe_id to be properly set in user settings."
+
+  - task: "Posts & Feed APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Posts and feed system working correctly. POST /api/posts/create creates new posts with media and captions, GET /api/posts/feed returns tribe-filtered post feed."
+
+  - task: "Coach System APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Coach system fully functional. GET /api/coach/list returns filtered coaches by language and goals, POST /api/coach/apply submits applications, POST /api/coach/approve approves coach candidates."
+
+  - task: "Notifications System"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Notifications system working correctly. GET /api/notifications returns user notifications, PUT /api/notifications/read marks notifications as read. Snitch notifications are properly generated and displayed."
+
 frontend:
   - task: "TribeFit Main UI"
     implemented: true
