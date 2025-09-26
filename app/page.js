@@ -445,14 +445,14 @@ export default function TribeFitApp() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <button 
-          onClick={handleSharePost}
+          onClick={() => handleSharePost('Share today\'s progress! 💪')}
           className="bg-green-600 hover:bg-green-500 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all"
         >
           <Share size={20} />
-          <span>Share Victory</span>
+          <span>Share Today's Progress</span>
         </button>
         <button 
-          onClick={() => alert('Opening tip modal...')}
+          onClick={() => setShowTipModal(true)}
           className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all"
         >
           <Gift size={20} />
