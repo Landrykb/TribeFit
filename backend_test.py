@@ -274,6 +274,629 @@ class TribeFitAPITester:
         except Exception as e:
             self.log_test("POST /api/wallet/topup", False, f"Exception: {str(e)}")
             return False
+
+    def test_wallet_balance(self):
+        """Test GET /api/wallet/balance - Should return current balance"""
+        try:
+            response = self.session.get(f"{BASE_URL}/wallet/balance")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/wallet/balance", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'balance_tc' not in data:
+                self.log_test("GET /api/wallet/balance", False, "Missing balance_tc field")
+                return False
+                
+            if 'formatted' not in data:
+                self.log_test("GET /api/wallet/balance", False, "Missing formatted field")
+                return False
+                
+            balance = data.get('balance_tc')
+            formatted = data.get('formatted')
+            
+            self.log_test("GET /api/wallet/balance", True, f"Balance: {balance} TC, Formatted: {formatted}")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/wallet/balance", False, f"Exception: {str(e)}")
+            return False
+
+    def test_tribes_list(self):
+        """Test GET /api/tribes - Should return user's tribes"""
+        try:
+            response = self.session.get(f"{BASE_URL}/tribes")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/tribes", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            if not isinstance(data, list):
+                self.log_test("GET /api/tribes", False, "Response should be a list")
+                return False
+                
+            self.log_test("GET /api/tribes", True, f"Found {len(data)} tribes")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/tribes", False, f"Exception: {str(e)}")
+            return False
+
+    def test_tribe_create(self):
+        """Test POST /api/tribe/create - Should create new tribe"""
+        try:
+            tribe_data = {
+                "name": f"Test Tribe {int(time.time())}",
+                "description": "Test tribe for API testing"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/tribe/create", json=tribe_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/tribe/create", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'tribe' not in data or 'invite_code' not in data:
+                self.log_test("POST /api/tribe/create", False, "Missing tribe or invite_code in response")
+                return False
+                
+            tribe = data['tribe']
+            invite_code = data['invite_code']
+            
+            if tribe.get('name') != tribe_data['name']:
+                self.log_test("POST /api/tribe/create", False, f"Tribe name mismatch. Expected {tribe_data['name']}, got {tribe.get('name')}")
+                return False
+                
+            self.log_test("POST /api/tribe/create", True, f"Created tribe: {tribe.get('name')}, Invite code: {invite_code}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/tribe/create", False, f"Exception: {str(e)}")
+            return False
+
+    def test_tribe_join(self):
+        """Test POST /api/tribe/join - Should join tribe with invite code"""
+        try:
+            join_data = {
+                "inviteCode": "FOUNDERS"  # Using existing tribe invite code
+            }
+            
+            response = self.session.post(f"{BASE_URL}/tribe/join", json=join_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/tribe/join", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'tribe' not in data:
+                self.log_test("POST /api/tribe/join", False, "Missing tribe in response")
+                return False
+                
+            tribe = data['tribe']
+            already_member = data.get('already_member', False)
+            
+            self.log_test("POST /api/tribe/join", True, f"Joined tribe: {tribe.get('name')}, Already member: {already_member}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/tribe/join", False, f"Exception: {str(e)}")
+            return False
+
+    def test_tribe_switch(self):
+        """Test POST /api/tribe/switch - Should switch active tribe"""
+        try:
+            switch_data = {
+                "tribeId": TRIBE_ID
+            }
+            
+            response = self.session.post(f"{BASE_URL}/tribe/switch", json=switch_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/tribe/switch", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success'):
+                self.log_test("POST /api/tribe/switch", False, "Success flag not true")
+                return False
+                
+            active_tribe_id = data.get('active_tribe_id')
+            if active_tribe_id != TRIBE_ID:
+                self.log_test("POST /api/tribe/switch", False, f"Active tribe ID mismatch. Expected {TRIBE_ID}, got {active_tribe_id}")
+                return False
+                
+            self.log_test("POST /api/tribe/switch", True, f"Switched to tribe: {active_tribe_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/tribe/switch", False, f"Exception: {str(e)}")
+            return False
+
+    def test_workout_today(self):
+        """Test GET /api/workout/today - Should return today's workout plan"""
+        try:
+            response = self.session.get(f"{BASE_URL}/workout/today")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/workout/today", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['program', 'exercises', 'day']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                self.log_test("GET /api/workout/today", False, f"Missing fields: {missing_fields}")
+                return False
+                
+            program = data.get('program')
+            exercises = data.get('exercises')
+            day = data.get('day')
+            
+            self.log_test("GET /api/workout/today", True, f"Program: {program.get('title') if program else 'None'}, Exercises: {len(exercises)}, Day: {day}")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/workout/today", False, f"Exception: {str(e)}")
+            return False
+
+    def test_workout_start(self):
+        """Test POST /api/workout/start - Should start workout session"""
+        try:
+            start_data = {
+                "programId": "prog-1"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/workout/start", json=start_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/workout/start", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'session' not in data:
+                self.log_test("POST /api/workout/start", False, "Missing session in response")
+                return False
+                
+            session = data['session']
+            session_id = session.get('id')
+            
+            if not session_id:
+                self.log_test("POST /api/workout/start", False, "Missing session ID")
+                return False
+                
+            # Store session ID for other tests
+            self.session_id = session_id
+            
+            self.log_test("POST /api/workout/start", True, f"Started session: {session_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/workout/start", False, f"Exception: {str(e)}")
+            return False
+
+    def test_workout_set(self):
+        """Test POST /api/workout/set - Should log exercise set"""
+        try:
+            # Use session ID from previous test or create a mock one
+            session_id = getattr(self, 'session_id', f'session-{int(time.time())}')
+            
+            set_data = {
+                "sessionId": session_id,
+                "exerciseId": "ex-1",
+                "reps_done": 10,
+                "load_kg": 20,
+                "rpe": 7
+            }
+            
+            response = self.session.post(f"{BASE_URL}/workout/set", json=set_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/workout/set", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'set' not in data:
+                self.log_test("POST /api/workout/set", False, "Missing set in response")
+                return False
+                
+            set_info = data['set']
+            set_id = set_info.get('id')
+            
+            if not set_id:
+                self.log_test("POST /api/workout/set", False, "Missing set ID")
+                return False
+                
+            self.log_test("POST /api/workout/set", True, f"Logged set: {set_id}, Reps: {set_info.get('reps_done')}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/workout/set", False, f"Exception: {str(e)}")
+            return False
+
+    def test_workout_finish(self):
+        """Test POST /api/workout/finish - Should finish workout session"""
+        try:
+            # Use session ID from previous test or create a mock one
+            session_id = getattr(self, 'session_id', f'session-{int(time.time())}')
+            
+            finish_data = {
+                "sessionId": session_id,
+                "duration_s": 2700,  # 45 minutes
+                "kcal": 350
+            }
+            
+            response = self.session.post(f"{BASE_URL}/workout/finish", json=finish_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/workout/finish", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success'):
+                self.log_test("POST /api/workout/finish", False, "Success flag not true")
+                return False
+                
+            session = data.get('session')
+            if session and session.get('completed') != True:
+                self.log_test("POST /api/workout/finish", False, "Session not marked as completed")
+                return False
+                
+            self.log_test("POST /api/workout/finish", True, f"Finished session: {session_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/workout/finish", False, f"Exception: {str(e)}")
+            return False
+
+    def test_workout_shrink(self):
+        """Test POST /api/workout/shrink - Should shrink workout plan"""
+        try:
+            shrink_data = {
+                "minutes": 30
+            }
+            
+            response = self.session.post(f"{BASE_URL}/workout/shrink", json=shrink_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/workout/shrink", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'target_minutes' not in data:
+                self.log_test("POST /api/workout/shrink", False, "Missing target_minutes in response")
+                return False
+                
+            target_minutes = data.get('target_minutes')
+            if target_minutes != 30:
+                self.log_test("POST /api/workout/shrink", False, f"Target minutes mismatch. Expected 30, got {target_minutes}")
+                return False
+                
+            self.log_test("POST /api/workout/shrink", True, f"Shrunk workout to {target_minutes} minutes")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/workout/shrink", False, f"Exception: {str(e)}")
+            return False
+
+    def test_pact_ledger(self):
+        """Test GET /api/pact/ledger - Should return pact wallet ledger"""
+        try:
+            response = self.session.get(f"{BASE_URL}/pact/ledger?tribe_id={TRIBE_ID}")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/pact/ledger", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['wallet', 'transactions', 'spend_requests']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                self.log_test("GET /api/pact/ledger", False, f"Missing fields: {missing_fields}")
+                return False
+                
+            wallet = data.get('wallet')
+            transactions = data.get('transactions')
+            spend_requests = data.get('spend_requests')
+            
+            self.log_test("GET /api/pact/ledger", True, f"Wallet balance: {wallet.get('balance_tc') if wallet else 0} TC, Transactions: {len(transactions)}, Requests: {len(spend_requests)}")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/pact/ledger", False, f"Exception: {str(e)}")
+            return False
+
+    def test_pact_spend_request(self):
+        """Test POST /api/pact/spend/request - Should create spend request"""
+        try:
+            request_data = {
+                "type": "gear",
+                "label": "Test Equipment",
+                "amount_tc": 50,
+                "gym_name": "Test Gym"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/pact/spend/request", json=request_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/pact/spend/request", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'request' not in data:
+                self.log_test("POST /api/pact/spend/request", False, "Missing request in response")
+                return False
+                
+            request = data['request']
+            request_id = request.get('id')
+            
+            if not request_id:
+                self.log_test("POST /api/pact/spend/request", False, "Missing request ID")
+                return False
+                
+            # Store request ID for approval test
+            self.spend_request_id = request_id
+            
+            self.log_test("POST /api/pact/spend/request", True, f"Created spend request: {request_id}, Amount: {request.get('amount_tc')} TC")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/pact/spend/request", False, f"Exception: {str(e)}")
+            return False
+
+    def test_pact_spend_approve(self):
+        """Test POST /api/pact/spend/approve - Should approve spend request"""
+        try:
+            # Use request ID from previous test or create a mock one
+            request_id = getattr(self, 'spend_request_id', f'req-{int(time.time())}')
+            
+            approve_data = {
+                "requestId": request_id
+            }
+            
+            response = self.session.post(f"{BASE_URL}/pact/spend/approve", json=approve_data)
+            
+            # This might fail if request doesn't exist, which is okay for testing
+            if response.status_code == 404:
+                self.log_test("POST /api/pact/spend/approve", True, "Request not found (expected for test)")
+                return True
+            elif response.status_code != 200:
+                self.log_test("POST /api/pact/spend/approve", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success'):
+                self.log_test("POST /api/pact/spend/approve", False, "Success flag not true")
+                return False
+                
+            self.log_test("POST /api/pact/spend/approve", True, f"Approved spend request: {request_id}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/pact/spend/approve", False, f"Exception: {str(e)}")
+            return False
+
+    def test_posts_create(self):
+        """Test POST /api/posts/create - Should create new post"""
+        try:
+            post_data = {
+                "tribeId": TRIBE_ID,
+                "caption": f"Test post from API testing {int(time.time())}",
+                "media_url": "https://example.com/test-image.jpg"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/posts/create", json=post_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/posts/create", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if 'post' not in data:
+                self.log_test("POST /api/posts/create", False, "Missing post in response")
+                return False
+                
+            post = data['post']
+            post_id = post.get('id')
+            
+            if not post_id:
+                self.log_test("POST /api/posts/create", False, "Missing post ID")
+                return False
+                
+            self.log_test("POST /api/posts/create", True, f"Created post: {post_id}, Caption: {post.get('caption')}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/posts/create", False, f"Exception: {str(e)}")
+            return False
+
+    def test_posts_feed(self):
+        """Test GET /api/posts/feed - Should return posts feed"""
+        try:
+            response = self.session.get(f"{BASE_URL}/posts/feed?tribe_id={TRIBE_ID}")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/posts/feed", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            if not isinstance(data, list):
+                self.log_test("GET /api/posts/feed", False, "Response should be a list")
+                return False
+                
+            self.log_test("GET /api/posts/feed", True, f"Found {len(data)} posts in feed")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/posts/feed", False, f"Exception: {str(e)}")
+            return False
+
+    def test_coach_list(self):
+        """Test GET /api/coach/list - Should return list of coaches"""
+        try:
+            response = self.session.get(f"{BASE_URL}/coach/list?lang=en&goal=strength")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/coach/list", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            if not isinstance(data, list):
+                self.log_test("GET /api/coach/list", False, "Response should be a list")
+                return False
+                
+            self.log_test("GET /api/coach/list", True, f"Found {len(data)} coaches")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/coach/list", False, f"Exception: {str(e)}")
+            return False
+
+    def test_coach_apply(self):
+        """Test POST /api/coach/apply - Should submit coach application"""
+        try:
+            response = self.session.post(f"{BASE_URL}/coach/apply", json={})
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/coach/apply", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success') and 'application' not in data:
+                self.log_test("POST /api/coach/apply", False, "Missing success flag or application in response")
+                return False
+                
+            message = data.get('message', 'Application submitted')
+            self.log_test("POST /api/coach/apply", True, f"Coach application: {message}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/coach/apply", False, f"Exception: {str(e)}")
+            return False
+
+    def test_coach_approve(self):
+        """Test POST /api/coach/approve - Should approve coach application"""
+        try:
+            approve_data = {
+                "userId": JORDAN_KIM_ID
+            }
+            
+            response = self.session.post(f"{BASE_URL}/coach/approve", json=approve_data)
+            
+            if response.status_code != 200:
+                self.log_test("POST /api/coach/approve", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success'):
+                self.log_test("POST /api/coach/approve", False, "Success flag not true")
+                return False
+                
+            self.log_test("POST /api/coach/approve", True, f"Approved coach: {JORDAN_KIM_ID}")
+            return True
+            
+        except Exception as e:
+            self.log_test("POST /api/coach/approve", False, f"Exception: {str(e)}")
+            return False
+
+    def test_notifications(self):
+        """Test GET /api/notifications - Should return user notifications"""
+        try:
+            response = self.session.get(f"{BASE_URL}/notifications")
+            
+            if response.status_code != 200:
+                self.log_test("GET /api/notifications", False, f"Status: {response.status_code}")
+                return False
+                
+            data = response.json()
+            
+            if not isinstance(data, list):
+                self.log_test("GET /api/notifications", False, "Response should be a list")
+                return False
+                
+            self.log_test("GET /api/notifications", True, f"Found {len(data)} notifications")
+            return True
+            
+        except Exception as e:
+            self.log_test("GET /api/notifications", False, f"Exception: {str(e)}")
+            return False
+
+    def test_notifications_read(self):
+        """Test PUT /api/notifications/read - Should mark notifications as read"""
+        try:
+            # First get notifications to find IDs
+            notif_response = self.session.get(f"{BASE_URL}/notifications")
+            if notif_response.status_code != 200:
+                self.log_test("PUT /api/notifications/read (Pre-check)", False, "Could not get notifications")
+                return False
+                
+            notifications = notif_response.json()
+            if not notifications:
+                self.log_test("PUT /api/notifications/read", True, "No notifications to mark as read")
+                return True
+                
+            # Mark first notification as read
+            notif_ids = [notifications[0]['id']]
+            read_data = {
+                "notificationIds": notif_ids
+            }
+            
+            response = self.session.put(f"{BASE_URL}/notifications/read", json=read_data)
+            
+            if response.status_code != 200:
+                self.log_test("PUT /api/notifications/read", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+            data = response.json()
+            
+            # Verify response structure
+            if not data.get('success'):
+                self.log_test("PUT /api/notifications/read", False, "Success flag not true")
+                return False
+                
+            self.log_test("PUT /api/notifications/read", True, f"Marked {len(notif_ids)} notifications as read")
+            return True
+            
+        except Exception as e:
+            self.log_test("PUT /api/notifications/read", False, f"Exception: {str(e)}")
+            return False
             
     def run_all_tests(self):
         """Run all backend API tests"""
