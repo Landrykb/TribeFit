@@ -309,6 +309,18 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Tip functionality working perfectly. POST /api/tip successfully transfers TribeCoins between users with proper balance validation. Tested tipping 50 TC from Alex Chen to Jordan Kim - sender balance correctly deducted (400 -> 350 TC), includes proper validation (rejects negative amounts), handles insufficient balance errors with 402 status code."
 
+  - task: "AI Workout Generation with Emergent LLM"
+    implemented: true
+    working: true
+    file: "/app/app/api/generate-workout/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: AI workout generation feature working correctly. POST /api/generate-workout successfully integrates with Emergent LLM (OpenAI GPT-4o-mini) to generate personalized workout plans based on fitness goals, available time, equipment, and experience level. API accepts required parameters (fitnessGoals, availableTime, equipment, experienceLevel, userId) and returns structured workout plans with planId. Tested with intermediate level muscle building goals - API responds successfully with detailed workout content."
+
 frontend:
   - task: "TribeFit Main UI"
     implemented: true
