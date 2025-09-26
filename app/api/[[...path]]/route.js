@@ -463,6 +463,19 @@ export async function GET(request, { params }) {
           .eq('active', true);
           
         return NextResponse.json(offerings || []);
+
+      case 'catalog/list':
+        if (isUsingMockData) {
+          return NextResponse.json({ items: mockData.catalog_items });
+        }
+        
+        const { data: catalogItems } = await supabase
+          .from('catalog_items')
+          .select('*')
+          .eq('active', true)
+          .order('category, title');
+          
+        return NextResponse.json({ items: catalogItems || [] });
         
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
