@@ -469,7 +469,7 @@ export default function TribeFitApp() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Tribe Feed</h2>
         <button
-          onClick={handleSharePost}
+          onClick={() => setShowPostModal(true)}
           className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg p-2 transition-all"
         >
           <Plus size={20} />
