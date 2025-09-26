@@ -134,6 +134,7 @@ export function ShrinkWorkoutModal({ isOpen, onClose, onShrink }) {
             Shrink & Start
           </Button>
         </div>
+        </div>
       </div>
     </Modal>
   );
