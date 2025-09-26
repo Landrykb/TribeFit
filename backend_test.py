@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
 TribeFit Backend API Testing Script
-Tests core social accountability system endpoints
+Tests all implemented social accountability system endpoints
 """
 
 import requests
 import json
 import sys
+import time
 from typing import Dict, Any
 
-# Base URL for local testing
-BASE_URL = "http://localhost:3000/api"
+# Base URL from environment
+BASE_URL = "https://pact-workout.preview.emergentagent.com/api"
 
 # Test user IDs from mock data
 ALEX_CHEN_ID = "00000000-0000-0000-0000-000000000001"
