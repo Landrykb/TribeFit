@@ -134,15 +134,18 @@ backend:
         
   - task: "Pact Wallet API"
     implemented: true
-    working: "needs_testing"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "needs_testing"
         agent: "main"
         comment: "Implemented /api/pact/wallet and /api/pact/transactions endpoints. Mock data shows 300 TC balance for Founders Tribe pact wallet."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Pact wallet API working correctly. GET /api/pact/wallet returns wallet balance and goal label. GET /api/pact/transactions returns transaction history with user names, amounts, and methods. Balance increases correctly when users skip with payment."
         
   - task: "Wallet Top-up API"
     implemented: true
