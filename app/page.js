@@ -203,6 +203,7 @@ export default function TribeFitApp() {
 
   // Handler for hiring a coach
   const handleHireCoach = async (coach) => {
+    console.log('Hiring coach:', coach);
     try {
       const response = await fetch('/api/coach/hire', {
         method: 'POST',
@@ -215,19 +216,20 @@ export default function TribeFitApp() {
         })
       });
 
+      const data = await response.json();
+      console.log('Coach hire response:', data);
+
       if (response.ok) {
-        const data = await response.json();
-        alert('Coach hired successfully!');
+        alert(`Coach ${coach.name || 'Coach'} hired successfully! 🎯`);
         // Update wallet balance
         setWalletBalance(prev => prev - (coach.pricing?.['1on1'] || 200));
         setSelectedHire(data.hire);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to hire coach');
+        alert(data.error || 'Failed to hire coach');
       }
     } catch (error) {
       console.error('Coach hire failed:', error);
-      alert('Failed to hire coach');
+      alert('Failed to hire coach: ' + error.message);
     }
   };
 
