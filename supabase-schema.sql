@@ -303,12 +303,50 @@ create table if not exists public.tribe_invite_codes (
   created_at timestamptz not null default now()
 );
 
--- Pact spend requests
+-- Coach ratings and hires
+create table if not exists public.coach_hires (
+  id uuid primary key default uuid_generate_v4(),
+  coach_id uuid references public.users(id) on delete cascade,
+  client_id uuid references public.users(id) on delete cascade,
+  offering_id uuid references public.coach_offerings(id) on delete set null,
+  price_tc numeric(12,2) not null,
+  status text not null default 'active' check (status in ('active', 'completed', 'refunded', 'cancelled')),
+  started_at timestamptz not null default now(),
+  ended_at timestamptz
+);
+
+create table if not exists public.coach_ratings (
+  id uuid primary key default uuid_generate_v4(),
+  hire_id uuid references public.coach_hires(id) on delete cascade,
+  coach_id uuid references public.users(id) on delete cascade,
+  client_id uuid references public.users(id) on delete cascade,
+  stars int check (stars between 1 and 5),
+  text text,
+  created_at timestamptz not null default now(),
+  unique (hire_id, client_id)
+);
+
+-- Equipment catalog
+create table if not exists public.catalog_items (
+  id uuid primary key default uuid_generate_v4(),
+  slug text unique not null,
+  title text not null,
+  category text not null check (category in ('strength', 'cardio', 'recovery', 'accessories', 'nutrition')),
+  icon text not null, -- lucide icon name
+  specs jsonb default '{}',
+  vendor_name text,
+  price_tc numeric(12,2),
+  active boolean default true,
+  created_at timestamptz not null default now()
+);
+
+-- Pact spend requests (updated)
 create table if not exists public.pact_spend_requests (
   id uuid primary key default uuid_generate_v4(),
   wallet_id uuid references public.pact_wallets(id) on delete cascade,
   type text not null check (type in ('gear', 'donation')),
   label text not null,
+  item_id uuid references public.catalog_items(id) on delete set null,
   amount_tc numeric(12,2) not null check (amount_tc > 0),
   status text not null default 'requested' check (status in ('requested', 'approved', 'rejected')),
   vendor_ref text,
@@ -319,7 +357,7 @@ create table if not exists public.pact_spend_requests (
   approved_at timestamptz
 );
 
--- Gyms directory (optional)
+-- Gyms directory
 create table if not exists public.gyms (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
