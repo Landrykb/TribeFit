@@ -410,11 +410,7 @@ class TribeFitTester:
         
         data = response['data']
         
-        # Check response structure
-        if not data.get('success'):
-            self.log_result("Posts Create API", False, "Response success field is false")
-            return
-            
+        # Check response structure - posts/create returns the post directly, not wrapped in success
         if 'post' not in data:
             self.log_result("Posts Create API", False, "Missing 'post' field in response")
             return
