@@ -1198,6 +1198,32 @@ function TribeFitApp() {
         plan={generatedPlan}
       />
 
+      {/* Workout Session Modal */}
+      <WorkoutSession
+        isOpen={showWorkoutSession}
+        onClose={() => setShowWorkoutSession(false)}
+        workoutData={generatedPlan}
+      />
+
+      {/* Shrink Workout Modal */}
+      <ShrinkWorkoutModal
+        isOpen={showShrinkModal}
+        onClose={() => setShowShrinkModal(false)}
+        onShrink={handleShrinkAndStart}
+      />
+
+      {/* Workout Calendar Modal */}
+      <WorkoutCalendar
+        isOpen={showWorkoutCalendar}
+        onClose={() => setShowWorkoutCalendar(false)}
+      />
+
+      {/* Profile Customization Modal */}
+      <ProfileCustomization
+        isOpen={showProfileCustomization}
+        onClose={() => setShowProfileCustomization(false)}
+      />
+
       {/* Equipment Catalog Modal */}
       <EquipmentCatalog
         isOpen={showEquipmentCatalog}
