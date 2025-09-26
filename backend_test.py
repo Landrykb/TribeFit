@@ -9,8 +9,8 @@ import json
 import sys
 from typing import Dict, Any
 
-# Base URL from environment
-BASE_URL = "https://pact-workout.preview.emergentagent.com/api"
+# Base URL for local testing
+BASE_URL = "http://localhost:3000/api"
 
 # Test user IDs from mock data
 ALEX_CHEN_ID = "00000000-0000-0000-0000-000000000001"
