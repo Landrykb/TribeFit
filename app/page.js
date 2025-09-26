@@ -45,8 +45,11 @@ function TribeFitApp() {
   
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showWorkoutSession, setShowWorkoutSession] = useState(false);
+  const [showShrinkModal, setShowShrinkModal] = useState(false);
   const [showWorkoutGenerator, setShowWorkoutGenerator] = useState(false);
   const [showWorkoutPlan, setShowWorkoutPlan] = useState(false);
+  const [showWorkoutCalendar, setShowWorkoutCalendar] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [showEquipmentCatalog, setShowEquipmentCatalog] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
