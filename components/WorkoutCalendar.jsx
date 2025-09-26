@@ -290,6 +290,16 @@ export function WorkoutCalendar({ isOpen, onClose }) {
           </Button>
         </div>
       </div>
+
+      {/* Workout Scheduler Modal */}
+      {showScheduler && (
+        <WorkoutScheduler
+          isOpen={showScheduler}
+          onClose={() => setShowScheduler(false)}
+          selectedDate={selectedDate}
+          onSchedule={handleScheduleWorkout}
+        />
+      )}
     </Modal>
   );
 }
