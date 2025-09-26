@@ -5,7 +5,7 @@ import {
   insertPactTx, getUserTribes, listTribeMembers, createTribe, joinByCode,
   getPactWallet, getPactTransactions
 } from '@/lib/supabase';
-import { t } from '@/lib/i18n';
+import { i18n } from '@/lib/i18n';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if keys are provided)
