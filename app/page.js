@@ -821,9 +821,19 @@ function TribeFitApp() {
       {/* Pending Votes */}
       {pendingRequests.length > 0 && (
         <div className="card">
-          <div className="flex items-center space-x-2 mb-4">
-            <Vote size={20} className="text-primary" />
-            <h3 className="text-lg font-bold text-surface-50">Pending Votes</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <Vote size={20} className="text-primary" />
+              <h3 className="text-lg font-bold text-surface-50">Pending Votes</h3>
+            </div>
+            <Button
+              onClick={() => setShowVotingModal(true)}
+              variant="primary"
+              size="sm"
+            >
+              <Vote size={16} />
+              Vote Now
+            </Button>
           </div>
           <div className="space-y-3">
             {pendingRequests.map((request) => (
