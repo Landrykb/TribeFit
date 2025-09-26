@@ -65,8 +65,9 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="AI Workout Generator" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Fitness Goals */}
+      <div className="max-h-96 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Fitness Goals */}
         <div>
           <label className="block text-sm font-medium text-surface-200 mb-3">
             <Target size={16} className="inline mr-2" />
