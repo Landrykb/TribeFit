@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, Coins } from 'lucide-react';
-import { Button } from './button';
 
 export function TipModal({ isOpen, onClose, recipient, onSubmitTip }) {
   const [amount, setAmount] = useState('');
