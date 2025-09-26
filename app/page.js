@@ -27,7 +27,9 @@ export default function TribeFitApp() {
   const [posts, setPosts] = useState([]);
   const [notifications, setNotifications] = useState([]);
   
-  // New modal states
+  // States for new post modal
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [postCaption, setPostCaption] = useState('');
   const [showEquipmentCatalog, setShowEquipmentCatalog] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [showCoachRating, setShowCoachRating] = useState(false);
