@@ -321,6 +321,30 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: AI workout generation feature working correctly. POST /api/generate-workout successfully integrates with Emergent LLM (OpenAI GPT-4o-mini) to generate personalized workout plans based on fitness goals, available time, equipment, and experience level. API accepts required parameters (fitnessGoals, availableTime, equipment, experienceLevel, userId) and returns structured workout plans with planId. Tested with intermediate level muscle building goals - API responds successfully with detailed workout content."
 
+  - task: "Calendar Integration APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/calendar/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Calendar Integration APIs working perfectly. GET /api/calendar fetches workout schedules with filtering by date, user_id, and tribe_id. POST /api/calendar schedules new workouts with comprehensive validation (date format YYYY-MM-DD, time format HH:MM, required fields, conflict detection for same user/time). All 9/9 tests passed including edge cases and error handling. Supports shared/private workouts and proper sorting by time."
+
+  - task: "Pact Voting System APIs"
+    implemented: true
+    working: true
+    file: "/app/app/api/pact/vote/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Pact Voting System APIs working perfectly. GET /api/pact/vote fetches voting data with filtering by request_id and tribe_id, includes vote counts and approval status. POST /api/pact/vote handles vote casting/updating with democratic approval process (majority of tribe members required). All 13/13 tests passed including vote validation, majority detection, status management (pending/approved/rejected), and proper error handling. Supports equipment/donation request approval workflow."
+
 frontend:
   - task: "TribeFit Main UI"
     implemented: true
