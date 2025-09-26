@@ -131,7 +131,7 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest }) {
                   <button
                     key={item.slug}
                     onClick={() => handleItemSelect(item)}
-                    className="p-4 bg-surface-800 hover:bg-surface-750 rounded-xl border border-surface-700 hover:border-surface-600 transition-all group"
+                    className="p-4 bg-surface-800 hover:bg-surface-700 rounded-xl border border-surface-700 hover:border-surface-600 transition-all group"
                   >
                     <div className="flex flex-col items-center text-center space-y-2">
                       <IconComponent size={32} className="text-primary group-hover:text-primary-400" />
