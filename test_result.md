@@ -119,15 +119,18 @@ backend:
         
   - task: "Skip Flow API"
     implemented: true
-    working: "needs_testing"
+    working: true
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "needs_testing"
         agent: "main"
         comment: "Implemented /api/skip endpoint with pay (deduct 100 TC) and ad (free) methods. Includes balance checking and transaction recording."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Skip flow working perfectly. Pay method deducts 100 TC from user and adds to pact wallet. Ad method skips without deducting TC. Both methods generate proper snitch notifications. Insufficient balance error handling works correctly (402 status with detailed error message)."
         
   - task: "Pact Wallet API"
     implemented: true
