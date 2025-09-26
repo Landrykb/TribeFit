@@ -101,3 +101,135 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Build TribeFit — Social Pact Fitness App (EN/FR/JP) with core social accountability system: tribes, skip flow (pay TribeCoins or watch ads), snitch notifications, pact wallets, and multilingual support"
+
+backend:
+  - task: "User Management & Mock Data"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented mock user data with Alex Chen (500 TC) and Jordan Kim (250 TC). API endpoint /api/user/current returns user data with wallet balance."
+        
+  - task: "Skip Flow API"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented /api/skip endpoint with pay (deduct 100 TC) and ad (free) methods. Includes balance checking and transaction recording."
+        
+  - task: "Pact Wallet API"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented /api/pact/wallet and /api/pact/transactions endpoints. Mock data shows 300 TC balance for Founders Tribe pact wallet."
+        
+  - task: "Wallet Top-up API"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented /api/wallet/topup endpoint with mock Stripe integration. Adds TribeCoins to user wallet balance."
+        
+  - task: "Snitch Notifications API"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented snitch notification system with localized messages. Sends notifications when users skip with snitch mode enabled."
+
+frontend:
+  - task: "TribeFit Main UI"
+    implemented: true
+    working: true
+    file: "/app/app/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented complete TribeFit UI with Home, Feed, Pact, Coach, Profile tabs. Shows wallet balance (500 TC), streak (7 days), tribe info."
+        
+  - task: "Skip Modal (Core Feature)"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented skip modal with 'Pay 100 TC' and 'Watch Ad' options. Includes simulated ad playback with progress bar."
+        
+  - task: "Multilingual Support (EN/FR/JP)"
+    implemented: true
+    working: true
+    file: "/app/lib/i18n.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented complete i18n system with translations for English, French, Japanese. Includes snitch messages, UI text, currency formatting."
+        
+  - task: "Pact Wallet UI"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/app/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+        agent: "main"
+        comment: "Implemented Pact wallet view showing tribe balance (300 TC), goal (Dumbbells 20kg Set), transaction history with skip payments."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Skip Flow API"
+    - "Pact Wallet API"
+    - "Skip Modal (Core Feature)"
+    - "Snitch Notifications API"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Successfully implemented TribeFit MVP with core social accountability features. Ready for backend API testing to verify skip flow, pact wallet, and snitch notifications work correctly. Frontend loads with mock data showing 500 TC balance, 7-day streak, and snitch notification from Jordan Kim."
