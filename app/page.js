@@ -453,17 +453,48 @@ function TribeFitApp() {
   };
 
   const handleVote = async (requestId, vote) => {
-    // Simulate voting
-    setPendingRequests(prev => prev.map(req => {
-      if (req.id === requestId) {
-        const newVotes = { ...req.votes };
-        newVotes[vote] = newVotes[vote] + 1;
-        return { ...req, votes: newVotes };
+    try {
+      const response = await fetch('/api/pact/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId,
+          vote,
+          userId: user?.id
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state
+        setPendingRequests(prev => prev.map(req => {
+          if (req.id === requestId) {
+            return {
+              ...req,
+              votes: data.votes,
+              status: data.status
+            };
+          }
+          return req;
+        }));
+        
+        toast.success(`Vote ${vote === 'approve' ? 'approved' : 'rejected'}! 🗳️`);
+        
+        // If request was approved or rejected, reload pending requests
+        if (data.status === 'approved' || data.status === 'rejected') {
+          setTimeout(() => {
+            loadPendingRequests();
+          }, 1000);
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to vote');
       }
-      return req;
-    }));
-    
-    toast.success(`Vote ${vote === 'approve' ? 'approved' : 'rejected'}! 🗳️`);
+    } catch (error) {
+      console.error('Vote failed:', error);
+      toast.error('Failed to vote: ' + error.message);
+    }
   };
 
   const handleWorkoutPlanGenerated = (plan) => {
