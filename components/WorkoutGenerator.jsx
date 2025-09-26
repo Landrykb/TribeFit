@@ -197,6 +197,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             {isGenerating ? 'Generating Plan...' : 'Generate AI Workout Plan'}
           </Button>
         </div>
+        </form>
       </div>
     </Modal>
   );
