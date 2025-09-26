@@ -6,7 +6,7 @@ Final comprehensive backend test with corrected parameters
 import requests
 import json
 
-BASE_URL = "https://workout-pact.preview.emergentagent.com/api"
+BASE_URL = "https://workout-pact-1.preview.emergentagent.com/api"
 TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
 TEST_USER_ID_2 = "00000000-0000-0000-0000-000000000002"
 
@@ -94,7 +94,7 @@ def run_comprehensive_test():
         'method': 'ad',
         'tribeId': '10000000-0000-0000-0000-000000000001'
     }))
-    results.append(test_endpoint("Pact Wallet", "GET", "pact/wallet?tribe_id=10000000-0000-0000-0000-000000000001"))
+    results.append(test_endpoint("Pact Wallet", "GET", "pact/wallet?tribe_id=workout-pact-1"))
     results.append(test_endpoint("Wallet Topup", "POST", "wallet/topup", {'amountTc': 100}))
     results.append(test_endpoint("Tip Functionality", "POST", "tip", {
         'fromUserId': TEST_USER_ID,

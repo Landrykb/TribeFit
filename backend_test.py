@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = "https://workout-pact.preview.emergentagent.com/api"
+BASE_URL = "https://workout-pact-1.preview.emergentagent.com/api"
 
 # Test user data
 TEST_USERS = {
@@ -324,7 +324,7 @@ def test_core_features_verification():
     
     # Pact wallet (with required parameters)
     results.append(test_api_endpoint('GET', f'/pact/wallet?tribe_id={TEST_TRIBE_ID}', description="Pact wallet balance"))
-    results.append(test_api_endpoint('GET', '/pact/transactions?wallet_id=20000000-0000-0000-0000-000000000001', description="Pact transactions"))
+    results.append(test_api_endpoint('GET', '/pact/transactions?wallet_id=workout-pact-1', description="Pact transactions"))
     
     # Workout system
     results.append(test_api_endpoint('GET', '/workout/today', description="Today's workout"))
