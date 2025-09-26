@@ -83,7 +83,7 @@
   }
   
   .card-interactive {
-    @apply card hover:bg-surface-750 hover:border-surface-600 transition-all duration-200 cursor-pointer;
+    @apply card hover:bg-surface-700 hover:border-surface-600 transition-all duration-200 cursor-pointer;
   }
   
   /* Input styles */
