@@ -26,10 +26,12 @@ import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
 import { TipModal } from '../components/ui/TipModal';
 import { VotingModal } from '../components/ui/VotingModal';
 import { ProfileCustomization } from '../components/ProfileCustomization';
+import { useTranslation } from '../lib/i18n-hooks';
 
 function TribeFitApp() {
   const { user, logout, isAuthenticated } = useAuth();
   const toast = useToast();
+  const { t, language, setLanguage, availableLanguages, getRandomSkipMessage } = useTranslation();
   
   const [activeTab, setActiveTab] = useState('home');
   const [loading, setLoading] = useState(!isAuthenticated);
@@ -65,6 +67,7 @@ function TribeFitApp() {
   const [showProfileCustomization, setShowProfileCustomization] = useState(false);
   const [showVotingModal, setShowVotingModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -177,13 +180,13 @@ function TribeFitApp() {
 
       if (response.ok) {
         setShowWorkoutSession(true);
-        toast.success('Opening workout session! 💪');
+        toast.success(t('workout_started'));
       } else {
-        toast.error(data.error || 'Failed to start workout');
+        toast.error(data.error || t('failed_start_workout'));
       }
     } catch (error) {
       console.error('Start workout failed:', error);
-      toast.error('Failed to start workout: ' + error.message);
+      toast.error(t('failed_start_workout') + ': ' + error.message);
     }
   };
 
@@ -203,14 +206,14 @@ function TribeFitApp() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(`Workout adjusted to ${minutes} minutes! Starting now...`);
+        toast.success(t('workout_shrunk', { minutes }));
         setShowWorkoutSession(true);
       } else {
-        toast.error(data.error || 'Failed to shrink workout');
+        toast.error(data.error || t('failed_shrink_workout'));
       }
     } catch (error) {
       console.error('Shrink workout failed:', error);
-      toast.error('Failed to shrink workout: ' + error.message);
+      toast.error(t('failed_shrink_workout') + ': ' + error.message);
     }
   };
 
@@ -236,17 +239,44 @@ function TribeFitApp() {
         if (method === 'ad') {
           setShowAdVideo(false);
           setAdProgress(0);
-          toast.success('Workout skipped! Ad watched successfully 📺');
+          toast.success(t('skip_ad_success'));
         } else {
-          toast.success('Workout skipped! 100 TC added to tribe pact 💰');
+          // Enhanced snitch notification for paying to skip
+          const snitchMessage = getRandomSkipMessage(user?.name || 'User');
+          toast.success(t('skip_pay_success'));
+          
+          // Send snitch notification to tribe members
+          sendSnitchNotification(user?.name || 'User', method);
         }
       } else {
         toast.error(data.error);
       }
     } catch (error) {
       console.error('Skip failed:', error);
-      toast.error('Skip failed: ' + error.message);
+      toast.error(t('skip_failed') + ': ' + error.message);
     }
+  };
+
+  // Enhanced snitch notification system
+  const sendSnitchNotification = async (userName, method) => {
+    const snitchMessage = method === 'pay' 
+      ? getRandomSkipMessage(userName) 
+      : t('skip_messages.watched_ad', { name: userName });
+    
+    // Add to local notifications
+    const newNotification = {
+      id: `snitch-${Date.now()}`,
+      title: t('snitch_alert'),
+      body: snitchMessage,
+      created_at: new Date().toISOString(),
+      read: false,
+      type: 'snitch'
+    };
+    
+    setNotifications(prev => [newNotification, ...prev]);
+    
+    // Show toast with snitch message
+    toast.warning(snitchMessage, { duration: 5000 });
   };
 
   const startAdWatch = () => {
@@ -281,17 +311,17 @@ function TribeFitApp() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Post shared to feed! 🎉');
+        toast.success(t('post_shared_success'));
         // Reload posts
         const postsResponse = await fetch('/api/posts/feed');
         const postsData = await postsResponse.json();
         setPosts(postsData);
       } else {
-        toast.error(data.error || 'Failed to share post');
+        toast.error(data.error || t('failed_share_post'));
       }
     } catch (error) {
       console.error('Post share failed:', error);
-      toast.error('Failed to share post: ' + error.message);
+      toast.error(t('failed_share_post') + ': ' + error.message);
     }
   };
 
@@ -301,7 +331,7 @@ function TribeFitApp() {
         ? { ...post, likes_count: (post.likes_count || 0) + 1, liked: true }
         : post
     ));
-    toast.success('Post liked! ❤️');
+    toast.success(t('post_liked'));
   };
 
   const handleBecomeCoach = async () => {
@@ -318,13 +348,13 @@ function TribeFitApp() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Coach application submitted! We\'ll review it soon. 🏆');
+        toast.success(t('coach_application'));
       } else {
-        toast.error(data.error || 'Failed to submit application');
+        toast.error(data.error || t('failed_coach_application'));
       }
     } catch (error) {
       console.error('Coach application failed:', error);
-      toast.error('Failed to submit application: ' + error.message);
+      toast.error(t('failed_coach_application') + ': ' + error.message);
     }
   };
 
@@ -345,15 +375,15 @@ function TribeFitApp() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(`Coach ${coach.name || 'Coach'} hired successfully! 🎯`);
+        toast.success(t('coach_hired'));
         setWalletBalance(prev => prev - (coach.pricing?.['1on1'] || 200));
         setSelectedHire(data.hire);
       } else {
-        toast.error(data.error || 'Failed to hire coach');
+        toast.error(data.error || t('failed_hire_coach'));
       }
     } catch (error) {
       console.error('Coach hire failed:', error);
-      toast.error('Failed to hire coach: ' + error.message);
+      toast.error(t('failed_hire_coach') + ': ' + error.message);
     }
   };
 
@@ -366,17 +396,17 @@ function TribeFitApp() {
       });
 
       if (response.ok) {
-        toast.success('Coach rating submitted! ⭐');
+        toast.success(t('coach_rating_success'));
         const coachResponse = await fetch('/api/coach/list');
         const coachData = await coachResponse.json();
         setCoaches(coachData);
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to submit rating');
+        toast.error(error.error || t('failed_rate_coach'));
       }
     } catch (error) {
       console.error('Coach rating failed:', error);
-      toast.error('Failed to submit rating: ' + error.message);
+      toast.error(t('failed_rate_coach') + ': ' + error.message);
     }
   };
 
@@ -392,15 +422,15 @@ function TribeFitApp() {
       });
 
       if (response.ok) {
-        toast.success('TribeCoins sent successfully! 🪙');
+        toast.success(t('tip_sent_success'));
         setWalletBalance(prev => prev - tipData.amountTc);
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to send tip');
+        toast.error(error.error || t('failed_send_tip'));
       }
     } catch (error) {
       console.error('Tip failed:', error);
-      toast.error('Failed to send tip: ' + error.message);
+      toast.error(t('failed_send_tip') + ': ' + error.message);
     }
   };
 
@@ -416,15 +446,15 @@ function TribeFitApp() {
       });
 
       if (response.ok) {
-        toast.success('Equipment request submitted for tribe voting! 🗳️');
+        toast.success(t('equipment_request'));
         loadPendingRequests(); // Refresh pending requests
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to submit request');
+        toast.error(error.error || t('failed_equipment_request'));
       }
     } catch (error) {
       console.error('Equipment request failed:', error);
-      toast.error('Failed to submit request: ' + error.message);
+      toast.error(t('failed_equipment_request') + ': ' + error.message);
     }
   };
 
@@ -440,15 +470,15 @@ function TribeFitApp() {
       });
 
       if (response.ok) {
-        toast.success('Donation request submitted for tribe voting! 🗳️');
+        toast.success(t('donation_request'));
         loadPendingRequests(); // Refresh pending requests
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to submit request');
+        toast.error(error.error || t('failed_donation_request'));
       }
     } catch (error) {
       console.error('Donation request failed:', error);
-      toast.error('Failed to submit request: ' + error.message);
+      toast.error(t('failed_donation_request') + ': ' + error.message);
     }
   };
 
@@ -479,7 +509,7 @@ function TribeFitApp() {
           return req;
         }));
         
-        toast.success(`Vote ${vote === 'approve' ? 'approved' : 'rejected'}! 🗳️`);
+        toast.success(t('vote_success', { vote: vote === 'approve' ? t('approve') : t('reject') }));
         
         // If request was approved or rejected, reload pending requests
         if (data.status === 'approved' || data.status === 'rejected') {
@@ -489,24 +519,24 @@ function TribeFitApp() {
         }
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Failed to vote');
+        toast.error(error.error || t('failed_vote'));
       }
     } catch (error) {
       console.error('Vote failed:', error);
-      toast.error('Failed to vote: ' + error.message);
+      toast.error(t('failed_vote') + ': ' + error.message);
     }
   };
 
   const handleWorkoutPlanGenerated = (plan) => {
     setGeneratedPlan(plan);
     setShowWorkoutPlan(true);
-    toast.success('AI workout plan generated! 🤖💪');
+    toast.success(t('workout_plan_generated'));
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-950 flex items-center justify-center">
-        <div className="text-surface-100 animate-pulse">Loading your profile...</div>
+        <div className="text-surface-100 animate-pulse">{t('loading')}</div>
       </div>
     );
   }
@@ -520,7 +550,22 @@ function TribeFitApp() {
               <Zap size={40} className="text-white" />
             </div>
             <h1 className="text-3xl font-bold text-surface-50 mb-2">TribeFit</h1>
-            <p className="text-surface-400">Stronger Together. One Tribe, One Pact.</p>
+            <p className="text-surface-400">{t('app_tagline')}</p>
+          </div>
+          
+          {/* Language Selector */}
+          <div className="mb-4">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="w-full p-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
+            >
+              {availableLanguages.map(lang => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </option>
+              ))}
+            </select>
           </div>
           
           <Button
@@ -528,12 +573,12 @@ function TribeFitApp() {
             variant="primary"
             className="w-full mb-4"
           >
-            Get Started
+            {t('get_started')}
           </Button>
           
           <div className="text-center">
             <p className="text-xs text-surface-500">
-              Join thousands building fitness habits together
+              {t('join_thousands')}
             </p>
           </div>
         </div>
@@ -553,35 +598,35 @@ function TribeFitApp() {
       <div className="bg-gradient-to-br from-surface-800 via-surface-700 to-surface-800 border border-surface-600 rounded-2xl p-6 text-surface-100">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold">Welcome back, {user?.name}!</h2>
-            <p className="text-surface-300">Ready to crush today's goals?</p>
+            <h2 className="text-xl font-bold">{t('welcome_back', { name: user?.name })}</h2>
+            <p className="text-surface-300">{t('ready_goals')}</p>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold number-display text-primary">{walletBalance}</div>
-            <div className="text-sm text-surface-400">TribeCoins</div>
+            <div className="text-sm text-surface-400">{t('tribecoins')}</div>
           </div>
         </div>
         
         <div className="mt-6 grid grid-cols-3 gap-3">
           <button 
-            onClick={() => toast.success(`🔥 ${user?.streak_days || 7} day streak! Keep it up!`)}
+            onClick={() => toast.success(`🔥 ${user?.streak_days || 7} ${t('day_streak')}! ${t('keep_it_up')}!`)}
             className="bg-surface-700/50 hover:bg-surface-700 rounded-xl p-3 transition-colors border border-surface-600 hover:border-primary/50"
           >
             <div className="flex items-center space-x-2">
               <Trophy size={16} className="text-accent" />
-              <span className="font-medium text-xs">{user?.streak_days || 7} Day Streak</span>
+              <span className="font-medium text-xs">{user?.streak_days || 7} {t('day_streak')}</span>
             </div>
           </button>
           <button 
             onClick={() => {
               setActiveTab('tribe');
-              toast.info('Viewing tribe details');
+              toast.info(t('viewing_tribe'));
             }}
             className="bg-surface-700/50 hover:bg-surface-700 rounded-xl p-3 transition-colors border border-surface-600 hover:border-primary/50"
           >
             <div className="flex items-center space-x-2">
               <Users size={16} className="text-primary" />
-              <span className="font-medium text-xs">Founders Tribe</span>
+              <span className="font-medium text-xs">{t('founders_tribe')}</span>
             </div>
           </button>
           <button 
@@ -590,7 +635,7 @@ function TribeFitApp() {
           >
             <div className="flex items-center space-x-2">
               <Calendar size={16} className="text-success" />
-              <span className="font-medium text-xs">Schedule</span>
+              <span className="font-medium text-xs">{t('schedule')}</span>
             </div>
           </button>
         </div>
@@ -599,14 +644,14 @@ function TribeFitApp() {
       {/* Workout Plan */}
       <div className="card animate-slide-up">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-surface-50">Today's Plan</h3>
+          <h3 className="text-xl font-bold text-surface-50">{t('todays_plan')}</h3>
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => setShowWorkoutGenerator(true)}
           >
             <Zap size={16} />
-            AI Generate
+            {t('ai_generate')}
           </Button>
         </div>
         
@@ -623,7 +668,7 @@ function TribeFitApp() {
                 className="flex-col h-16"
               >
                 <Play size={20} />
-                <span className="text-xs">Start</span>
+                <span className="text-xs">{t('start_workout')}</span>
               </Button>
               <Button 
                 onClick={handleShrinkWorkout}
@@ -631,7 +676,7 @@ function TribeFitApp() {
                 className="flex-col h-16"
               >
                 <Clock size={20} />
-                <span className="text-xs">Shrink</span>
+                <span className="text-xs">{t('shrink_workout')}</span>
               </Button>
               <Button 
                 onClick={() => setShowSkipModal(true)}
@@ -639,44 +684,44 @@ function TribeFitApp() {
                 className="flex-col h-16"
               >
                 <SkipForward size={20} />
-                <span className="text-xs">Skip</span>
+                <span className="text-xs">{t('skip_workout')}</span>
               </Button>
             </div>
           </div>
         ) : (
           <div className="text-center py-8">
             <Calendar size={48} className="text-surface-600 mx-auto mb-4" />
-            <p className="text-surface-400 mb-4">No workout planned for today</p>
+            <p className="text-surface-400 mb-4">{t('no_workout_planned')}</p>
             <Button 
               onClick={() => setShowWorkoutGenerator(true)}
               variant="primary"
             >
-              Generate AI Workout Plan
+              {t('generate_ai_workout')}
             </Button>
           </div>
         )}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - MADE BLUE */}
       <div className="grid grid-cols-2 gap-4">
         <Button 
-          onClick={() => handleSharePost('Share today\'s progress! 💪')}
-          variant="success"
+          onClick={() => handleSharePost(t('share_progress_caption'))}
+          variant="primary"
           className="h-14 flex-col"
         >
           <Share size={20} />
-          <span className="text-sm">Share Progress</span>
+          <span className="text-sm">{t('share_progress')}</span>
         </Button>
         <Button 
           onClick={() => {
             setSelectedPost(null);
             setShowTipModal(true);
           }}
-          variant="accent"
+          variant="primary"
           className="h-14 flex-col"
         >
           <Gift size={20} />
-          <span className="text-sm">Tip Friend</span>
+          <span className="text-sm">{t('tip_friend')}</span>
         </Button>
       </div>
     </div>
@@ -685,26 +730,26 @@ function TribeFitApp() {
   const renderFeed = () => (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-surface-50">Tribe Feed</h2>
+        <h2 className="text-2xl font-bold text-surface-50">{t('tribe_feed')}</h2>
         <Button
           onClick={() => setShowPostModal(true)}
           variant="primary"
           size="sm"
         >
           <Plus size={16} />
-          Post
+          {t('post')}
         </Button>
       </div>
       
       {posts.length === 0 ? (
         <div className="text-center py-12 card">
           <Camera size={48} className="text-surface-600 mx-auto mb-4" />
-          <div className="text-surface-400 mb-4">No posts yet</div>
+          <div className="text-surface-400 mb-4">{t('no_posts')}</div>
           <Button
             onClick={() => setShowPostModal(true)}
             variant="primary"
           >
-            Share your first workout! 💪
+            {t('share_first_workout')}
           </Button>
         </div>
       ) : (
@@ -716,17 +761,17 @@ function TribeFitApp() {
               </div>
               <div>
                 <div className="text-surface-100 font-medium">{post.user?.name || 'User'}</div>
-                <div className="text-surface-400 text-sm">2 hours ago</div>
+                <div className="text-surface-400 text-sm">{t('time_ago')}</div>
               </div>
             </div>
             
             {post.media_url && (
               <div className="bg-surface-800 rounded-xl h-48 mb-4 flex items-center justify-center">
-                <span className="text-surface-400">📷 Workout Photo</span>
+                <span className="text-surface-400">📷 {t('workout_photo')}</span>
               </div>
             )}
             
-            <p className="text-surface-300 mb-4">{post.caption || 'Just finished an awesome workout! 💪'}</p>
+            <p className="text-surface-300 mb-4">{post.caption || t('default_workout_caption')}</p>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -740,11 +785,11 @@ function TribeFitApp() {
                   <span>{post.likes_count || 0}</span>
                 </button>
                 <button 
-                  onClick={() => handleSharePost('Sharing this awesome workout!')}
+                  onClick={() => handleSharePost(t('sharing_awesome_workout'))}
                   className="flex items-center space-x-2 text-surface-400 hover:text-primary transition-colors"
                 >
                   <Share size={20} />
-                  <span>Share</span>
+                  <span>{t('share')}</span>
                 </button>
               </div>
               <Button
@@ -756,7 +801,7 @@ function TribeFitApp() {
                 size="sm"
               >
                 <Coins size={16} />
-                Tip TC
+                {t('tip_tc')}
               </Button>
             </div>
           </div>
@@ -774,30 +819,30 @@ function TribeFitApp() {
             <Trophy size={32} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-surface-50">Founders Tribe</h2>
-            <p className="text-surface-400">15 members • Rank #1</p>
+            <h2 className="text-xl font-bold text-surface-50">{t('founders_tribe')}</h2>
+            <p className="text-surface-400">{t('tribe_members_rank', { members: 15, rank: 1 })}</p>
           </div>
         </div>
         
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-primary number-display">{pactBalance}</div>
-            <div className="text-xs text-surface-400">Pact Balance</div>
+            <div className="text-xs text-surface-400">{t('pact_balance')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-accent number-display">28</div>
-            <div className="text-xs text-surface-400">Day Streak</div>
+            <div className="text-xs text-surface-400">{t('day_streak')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-success number-display">15</div>
-            <div className="text-xs text-surface-400">Members</div>
+            <div className="text-xs text-surface-400">{t('members')}</div>
           </div>
         </div>
       </div>
 
       {/* Pact Actions */}
       <div className="card">
-        <h3 className="text-lg font-bold text-surface-50 mb-4">Pact Wallet</h3>
+        <h3 className="text-lg font-bold text-surface-50 mb-4">{t('pact_wallet')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <Button
             onClick={() => setShowEquipmentCatalog(true)}
@@ -805,7 +850,7 @@ function TribeFitApp() {
             className="h-16 flex-col"
           >
             <ShoppingCart size={24} />
-            <span className="text-sm">Spend on Gear</span>
+            <span className="text-sm">{t('spend_on_gear')}</span>
           </Button>
           <Button
             onClick={() => setShowDonationModal(true)}
@@ -813,7 +858,7 @@ function TribeFitApp() {
             className="h-16 flex-col"
           >
             <Heart size={24} />
-            <span className="text-sm">Donate to Gym</span>
+            <span className="text-sm">{t('donate_to_gym')}</span>
           </Button>
         </div>
       </div>
@@ -824,7 +869,7 @@ function TribeFitApp() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Vote size={20} className="text-primary" />
-              <h3 className="text-lg font-bold text-surface-50">Pending Votes</h3>
+              <h3 className="text-lg font-bold text-surface-50">{t('pending_votes')}</h3>
             </div>
             <Button
               onClick={() => setShowVotingModal(true)}
@@ -832,17 +877,17 @@ function TribeFitApp() {
               size="sm"
             >
               <Vote size={16} />
-              Vote Now
+              {t('vote_now')}
             </Button>
           </div>
           <div className="space-y-3">
-            {pendingRequests.map((request) => (
+            {pendingRequests.slice(0, 2).map((request) => (
               <div key={request.id} className="bg-surface-800 rounded-lg p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-medium text-surface-100">{request.label}</h4>
                     <p className="text-sm text-surface-400">
-                      {request.amount} TC • Requested by {request.requestedBy}
+                      {request.amount} TC • {t('requested_by')} {request.requestedBy}
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs ${
@@ -854,7 +899,7 @@ function TribeFitApp() {
                 
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-surface-400">
-                    {request.votes.approve} / {Math.ceil(request.totalMembers / 2)} needed
+                    {request.votes.approve} / {Math.ceil(request.totalMembers / 2)} {t('needed_to_approve')}
                   </div>
                   <div className="flex space-x-2">
                     <Button
@@ -862,14 +907,14 @@ function TribeFitApp() {
                       variant="success"
                       size="sm"
                     >
-                      Approve
+                      {t('approve')}
                     </Button>
                     <Button
                       onClick={() => handleVote(request.id, 'reject')}
                       variant="danger"
                       size="sm"
                     >
-                      Reject
+                      {t('reject')}
                     </Button>
                   </div>
                 </div>
@@ -883,7 +928,7 @@ function TribeFitApp() {
       <div className="card">
         <div className="flex items-center space-x-2 mb-4">
           <TrendingUp size={20} className="text-accent" />
-          <h3 className="text-lg font-bold text-surface-50">Tribe Leaderboard</h3>
+          <h3 className="text-lg font-bold text-surface-50">{t('tribe_leaderboard')}</h3>
         </div>
         <div className="space-y-3">
           {leaderboard.map((tribe, index) => (
@@ -899,11 +944,11 @@ function TribeFitApp() {
                 </div>
                 <div>
                   <div className="font-medium text-surface-100">{tribe.name}</div>
-                  <div className="text-sm text-surface-400">{tribe.members} members</div>
+                  <div className="text-sm text-surface-400">{tribe.members} {t('members')}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-primary">{tribe.streak} days</div>
+                <div className="font-bold text-primary">{tribe.streak} {t('days')}</div>
                 <div className="text-xs text-surface-400">{tribe.balance} TC</div>
               </div>
             </div>
@@ -916,26 +961,26 @@ function TribeFitApp() {
   const renderCoach = () => (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-surface-50">Coaches</h2>
+        <h2 className="text-2xl font-bold text-surface-50">{t('coaches')}</h2>
         <Button
           onClick={handleBecomeCoach}
           variant="primary"
           size="sm"
         >
           <UserPlus size={16} />
-          Become Coach
+          {t('become_coach')}
         </Button>
       </div>
 
       {coaches.length === 0 ? (
         <div className="text-center py-12 card">
           <Award size={48} className="text-surface-600 mx-auto mb-4" />
-          <div className="text-surface-400 mb-4">No coaches available</div>
+          <div className="text-surface-400 mb-4">{t('no_coaches')}</div>
           <Button
             onClick={handleBecomeCoach}
             variant="primary"
           >
-            Be the first coach in your area! 🏆
+            {t('be_first_coach')}
           </Button>
         </div>
       ) : (
@@ -952,18 +997,18 @@ function TribeFitApp() {
                   <h3 className="text-surface-50 font-bold text-sm truncate">{coach.user?.name || coach.name || 'Coach'}</h3>
                   <div className="flex items-center space-x-2 mb-1">
                     <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs">
-                      {coach.tier || 'Certified'}
+                      {coach.tier || t('certified')}
                     </span>
                     <StarDisplay rating={coach.rating_avg || 0} size={12} />
                   </div>
                   <p className="text-surface-400 text-xs line-clamp-2 leading-tight">
-                    {coach.bio || 'Professional fitness coach specializing in strength training'}
+                    {coach.bio || t('professional_coach_bio')}
                   </p>
                 </div>
               </div>
               <div className="text-right flex-shrink-0 ml-3">
                 <div className="text-accent font-bold text-sm">{coach.pricing?.['1on1'] || 200} TC</div>
-                <div className="text-surface-400 text-xs">per session</div>
+                <div className="text-surface-400 text-xs">{t('per_session')}</div>
               </div>
             </div>
             
@@ -974,7 +1019,7 @@ function TribeFitApp() {
                 size="sm"
                 className="flex-1"
               >
-                Hire Coach
+                {t('hire_coach')}
               </Button>
               <Button
                 onClick={() => {
@@ -1011,7 +1056,7 @@ function TribeFitApp() {
               onClick={() => setShowProfileCustomization(true)}
             >
               <Settings size={16} />
-              Customize
+              {t('customize')}
             </Button>
           </div>
         </div>
@@ -1019,12 +1064,33 @@ function TribeFitApp() {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-surface-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-primary number-display">{walletBalance}</div>
-            <div className="text-surface-400 text-sm">TribeCoins</div>
+            <div className="text-surface-400 text-sm">{t('tribecoins')}</div>
           </div>
           <div className="bg-surface-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-accent number-display">{user?.streak_days || 7}</div>
-            <div className="text-surface-400 text-sm">Day Streak</div>
+            <div className="text-surface-400 text-sm">{t('day_streak')}</div>
           </div>
+        </div>
+      </div>
+
+      {/* Language Selector */}
+      <div className="card">
+        <h3 className="text-lg font-bold text-surface-50 mb-3">{t('language')}</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {availableLanguages.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => setLanguage(lang.code)}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                language === lang.code
+                  ? 'border-primary bg-primary/20 text-primary'
+                  : 'border-surface-700 bg-surface-800 text-surface-300 hover:border-surface-600'
+              }`}
+            >
+              <div className="text-2xl mb-1">{lang.flag}</div>
+              <div className="text-xs">{lang.name}</div>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -1034,25 +1100,25 @@ function TribeFitApp() {
         className="w-full"
       >
         <LogOut size={16} />
-        Sign Out
+        {t('sign_out')}
       </Button>
     </div>
   );
 
   const renderNotifications = () => (
     <div className="space-y-4 animate-fade-in">
-      <h2 className="text-2xl font-bold text-surface-50">Notifications</h2>
+      <h2 className="text-2xl font-bold text-surface-50">{t('notifications')}</h2>
       
       {notifications.length === 0 ? (
         <div className="text-center py-12 card">
           <Bell size={48} className="text-surface-600 mx-auto mb-4" />
-          <div className="text-surface-400 mb-4">No notifications yet</div>
-          <p className="text-sm text-surface-500">Stay active and you'll see updates here!</p>
+          <div className="text-surface-400 mb-4">{t('no_notifications')}</div>
+          <p className="text-sm text-surface-500">{t('stay_active_message')}</p>
         </div>
       ) : (
         <div className="space-y-3">
           {notifications.map((notification) => (
-            <div key={notification.id} className="card-interactive">
+            <div key={notification.id} className={`card-interactive ${notification.type === 'snitch' ? 'border-l-4 border-l-warning' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-medium text-surface-100">{notification.title}</h3>
@@ -1110,11 +1176,11 @@ function TribeFitApp() {
         <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm glass border-t border-surface-700">
           <div className="grid grid-cols-5 gap-1 p-2">
             {[
-              { id: 'home', icon: Home, label: 'Home' },
-              { id: 'feed', icon: Rss, label: 'Feed' },
-              { id: 'tribe', icon: Users, label: 'Tribe' },
-              { id: 'coach', icon: Dumbbell, label: 'Coach' },
-              { id: 'profile', icon: User, label: 'Profile' }
+              { id: 'home', icon: Home, label: t('home') },
+              { id: 'feed', icon: Rss, label: t('feed') },
+              { id: 'tribe', icon: Users, label: t('tribe') },
+              { id: 'coach', icon: Dumbbell, label: t('coach') },
+              { id: 'profile', icon: User, label: t('profile') }
             ].map(({ id, icon: Icon, label }) => (
               <button
                 key={id}
@@ -1136,8 +1202,8 @@ function TribeFitApp() {
       {/* Modals */}
       {/* Skip Modal */}
       {showSkipModal && (
-        <Modal isOpen={showSkipModal} onClose={() => setShowSkipModal(false)} title="Skip Today's Workout?">
-          <p className="text-surface-400 mb-6">Choose how to skip:</p>
+        <Modal isOpen={showSkipModal} onClose={() => setShowSkipModal(false)} title={t('skip_workout_question')}>
+          <p className="text-surface-400 mb-6">{t('choose_skip_method')}</p>
           
           <div className="space-y-3">
             <Button
@@ -1145,21 +1211,21 @@ function TribeFitApp() {
               variant="accent"
               className="w-full"
             >
-              Pay 100 TC to Skip
+              {t('pay_to_skip')}
             </Button>
             <Button
               onClick={startAdWatch}
               variant="primary"
               className="w-full"
             >
-              Watch Ad to Skip (Free)
+              {t('watch_ad_skip')}
             </Button>
             <Button
               onClick={() => setShowSkipModal(false)}
               variant="ghost"
               className="w-full"
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </div>
         </Modal>
@@ -1170,7 +1236,7 @@ function TribeFitApp() {
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
           <div className="text-center text-white">
             <div className="w-64 h-36 bg-surface-800 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-lg">📺 Ad Playing...</span>
+              <span className="text-lg">📺 {t('ad_playing')}</span>
             </div>
             <div className="w-64 bg-surface-700 rounded-full h-2 mb-4">
               <div 
@@ -1179,7 +1245,7 @@ function TribeFitApp() {
               ></div>
             </div>
             <p className="text-sm text-surface-400">
-              Ad will finish in {Math.ceil((100 - adProgress) / 5 * 0.15)} seconds
+              {t('ad_will_finish')} {Math.ceil((100 - adProgress) / 5 * 0.15)} {t('seconds')}
             </p>
           </div>
         </div>
@@ -1193,18 +1259,18 @@ function TribeFitApp() {
             setShowPostModal(false);
             setPostCaption('');
           }}
-          title="Create Post"
+          title={t('create_post')}
         >
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-surface-200 mb-2">
-                What's happening?
+                {t('whats_happening')}
               </label>
               <textarea
                 value={postCaption}
                 onChange={(e) => setPostCaption(e.target.value)}
                 className="w-full p-3 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                placeholder="Share your workout progress, achievements, or motivation..."
+                placeholder={t('share_workout_placeholder')}
                 rows={4}
               />
             </div>
@@ -1218,7 +1284,7 @@ function TribeFitApp() {
                 variant="ghost"
                 className="flex-1"
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button
                 onClick={() => {
@@ -1232,68 +1298,60 @@ function TribeFitApp() {
                 variant="primary"
                 className="flex-1"
               >
-                Share Post
+                {t('share_post')}
               </Button>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Workout Generator */}
+      {/* All other modals remain the same */}
       <WorkoutGenerator
         isOpen={showWorkoutGenerator}
         onClose={() => setShowWorkoutGenerator(false)}
         onPlanGenerated={handleWorkoutPlanGenerated}
       />
 
-      {/* Workout Plan Modal */}
       <WorkoutPlanModal
         isOpen={showWorkoutPlan}
         onClose={() => setShowWorkoutPlan(false)}
         plan={generatedPlan}
       />
 
-      {/* Workout Session Modal */}
       <WorkoutSession
         isOpen={showWorkoutSession}
         onClose={() => setShowWorkoutSession(false)}
         workoutData={generatedPlan}
       />
 
-      {/* Shrink Workout Modal */}
       <ShrinkWorkoutModal
         isOpen={showShrinkModal}
         onClose={() => setShowShrinkModal(false)}
         onShrink={handleShrinkAndStart}
       />
 
-      {/* Workout Calendar Modal */}
       <WorkoutCalendar
         isOpen={showWorkoutCalendar}
         onClose={() => setShowWorkoutCalendar(false)}
       />
 
-      {/* Profile Customization Modal */}
       <ProfileCustomization
         isOpen={showProfileCustomization}
         onClose={() => setShowProfileCustomization(false)}
       />
 
-      {/* Equipment Catalog Modal */}
       <EquipmentCatalog
         isOpen={showEquipmentCatalog}
         onClose={() => setShowEquipmentCatalog(false)}
         onSubmitRequest={handleEquipmentRequest}
       />
 
-      {/* Donation Modal */}
       <DonationModal
         isOpen={showDonationModal}
         onClose={() => setShowDonationModal(false)}
         onSubmitRequest={handleDonationRequest}
       />
 
-      {/* Coach Rating Modal */}
       <CoachRating
         isOpen={showCoachRating}
         onClose={() => setShowCoachRating(false)}
@@ -1302,7 +1360,6 @@ function TribeFitApp() {
         onSubmitRating={handleRateCoach}
       />
 
-      {/* Tip Modal */}
       <TipModal
         isOpen={showTipModal}
         onClose={() => setShowTipModal(false)}
@@ -1310,7 +1367,6 @@ function TribeFitApp() {
         onSubmitTip={handleTipUser}
       />
 
-      {/* Voting Modal */}
       <VotingModal
         isOpen={showVotingModal}
         onClose={() => setShowVotingModal(false)}
