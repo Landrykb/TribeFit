@@ -1309,6 +1309,14 @@ function TribeFitApp() {
         recipient={selectedPost}
         onSubmitTip={handleTipUser}
       />
+
+      {/* Voting Modal */}
+      <VotingModal
+        isOpen={showVotingModal}
+        onClose={() => setShowVotingModal(false)}
+        pendingRequests={pendingRequests}
+        onVote={handleVote}
+      />
     </div>
   );
 }
