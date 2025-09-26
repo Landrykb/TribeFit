@@ -24,6 +24,7 @@ import { EquipmentCatalog } from '../components/ui/EquipmentCatalog';
 import { DonationModal } from '../components/ui/DonationModal';
 import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
 import { TipModal } from '../components/ui/TipModal';
+import { VotingModal } from '../components/ui/VotingModal';
 import { ProfileCustomization } from '../components/ProfileCustomization';
 
 function TribeFitApp() {
