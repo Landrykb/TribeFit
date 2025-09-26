@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useToast } from './ui/Toast';
+import { WorkoutScheduler } from './WorkoutScheduler';
 import { 
   Calendar, ChevronLeft, ChevronRight, Plus, 
-  Users, Clock, Dumbbell, Eye, EyeOff 
+  Users, Clock, Eye, EyeOff, ArrowLeft, Save
 } from 'lucide-react';
 
 export function WorkoutCalendar({ isOpen, onClose }) {
@@ -12,13 +13,7 @@ export function WorkoutCalendar({ isOpen, onClose }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showTribeWorkouts, setShowTribeWorkouts] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState({
-    date: '',
-    time: '07:00',
-    workoutName: '',
-    shareWithTribe: true
-  });
+  const [showScheduler, setShowScheduler] = useState(false);
   
   // Mock workout data for tribe members
   const [workoutSchedule, setWorkoutSchedule] = useState({
