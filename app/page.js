@@ -507,11 +507,17 @@ export default function TribeFitApp() {
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <button className="flex items-center space-x-2 text-gray-400 hover:text-red-400 transition-colors">
+                <button 
+                  onClick={() => handleLikePost(post.id)}
+                  className="flex items-center space-x-2 text-gray-400 hover:text-red-400 transition-colors"
+                >
                   <Heart size={20} />
                   <span>{post.likes_count || 0}</span>
                 </button>
-                <button className="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors">
+                <button 
+                  onClick={() => handleSharePost('Sharing this awesome workout!')}
+                  className="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors"
+                >
                   <Share size={20} />
                   <span>Share</span>
                 </button>
