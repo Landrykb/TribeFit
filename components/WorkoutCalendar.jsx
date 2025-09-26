@@ -60,9 +60,39 @@ export function WorkoutCalendar({ isOpen, onClose }) {
     setCurrentDate(newDate);
   };
 
-  const getWorkoutsForDate = (date) => {
-    const dateStr = formatDate(date);
-    return workoutSchedule[dateStr] || [];
+  const handleScheduleWorkout = async (scheduleData) => {
+    try {
+      const response = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scheduleData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local schedule
+        const dateStr = scheduleData.date;
+        if (!workoutSchedule[dateStr]) {
+          workoutSchedule[dateStr] = [];
+        }
+        workoutSchedule[dateStr].push({
+          user: scheduleData.user_name,
+          time: scheduleData.time,
+          workout: scheduleData.workout_name,
+          shared: scheduleData.shared
+        });
+        
+        setWorkoutSchedule({...workoutSchedule});
+        toast.success(`Workout scheduled for ${scheduleData.date}! 📅`);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to schedule workout');
+      }
+    } catch (error) {
+      console.error('Schedule workout failed:', error);
+      toast.error('Failed to schedule workout');
+    }
   };
 
   const addWorkout = (date) => {
