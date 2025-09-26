@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { 
-  Home, Feed, Users, TrophyIcon, User, 
+  Home, Rss, Users, TrophyIcon, User, 
   Zap, Play, SkipForward, Coins, 
   Settings, Bell, ChevronRight,
   DollarSign, Clock, Target
