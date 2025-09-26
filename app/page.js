@@ -47,6 +47,16 @@ export default function TribeFitApp() {
       setWalletBalance(data.user.wallet_balance_tc);
     } catch (error) {
       console.error('Failed to load user data:', error);
+      // Fallback to mock data for demo
+      const mockUser = {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo1@tribefit.app',
+        name: 'Alex Chen',
+        wallet_balance_tc: 500,
+        settings: { snitch: true, privacy: 'friends' }
+      };
+      setUser(mockUser);
+      setWalletBalance(mockUser.wallet_balance_tc);
     }
   };
 
