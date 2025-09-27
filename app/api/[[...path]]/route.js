@@ -499,7 +499,9 @@ export async function POST(request, { params }) {
     switch (path) {
       case 'skip':
         const { userId, method, tribeId = '10000000-0000-0000-0000-000000000001' } = body;
-        const feeTc = parseInt(process.env.SKIP_FEE_TC || '100');
+        const feeTc = parseInt(process.env.DEAL_SKIP_FEE_TC || process.env.SKIP_FEE_TC || '100');
+        const donationPct = parseFloat(process.env.DEAL_DONATION_PCT || '0.10');
+        const dealSplitEnabled = process.env.FEATURE_DEAL_SPLIT === 'true';
         
         // Get user and validate
         const user = await getUserById(userId) || (isUsingMockData ? mockData.users[0] : null);
@@ -521,25 +523,90 @@ export async function POST(request, { params }) {
         if (!pactWallet) {
           return NextResponse.json({ error: 'Could not access pact wallet' }, { status: 500 });
         }
+
+        // Get tribe members for deal split
+        const tribeMembers = await listTribeMembers(tribeId);
+        const activeMembers = tribeMembers.filter(member => member.id !== user.id); // Exclude skipper
         
         // Process the skip
         let updatedUser = user;
+        let splitResults = [];
+        
         if (method === 'pay') {
           // Deduct from user wallet
           updatedUser = await adjustWalletTc(user.id, feeTc, 'subtract');
           
-          // Add to pact wallet
-          if (!isUsingMockData) {
-            const client = supabaseAdmin || supabase;
-            await client
-              .from('pact_wallets')
-              .update({ 
-                balance_tc: supabase.raw(`balance_tc + ${feeTc}`),
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', pactWallet.id);
+          if (dealSplitEnabled && activeMembers.length > 0) {
+            // NEW DEAL SPLIT LOGIC
+            // Calculate split amounts
+            const donationAmount = Math.round(feeTc * donationPct);
+            const splitTotal = feeTc - donationAmount;
+            const splitPerMember = Math.round(splitTotal / activeMembers.length);
+            
+            // Add donation amount to donation pool
+            if (!isUsingMockData) {
+              const client = supabaseAdmin || supabase;
+              await client
+                .from('pact_wallets')
+                .update({ 
+                  donation_pool_tc: supabase.raw(`COALESCE(donation_pool_tc, 0) + ${donationAmount}`),
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', pactWallet.id);
+            } else {
+              pactWallet.donation_pool_tc = (pactWallet.donation_pool_tc || 0) + donationAmount;
+            }
+            
+            // Split remainder among active members
+            for (const member of activeMembers) {
+              // Credit each member's private wallet
+              await adjustWalletTc(member.id, splitPerMember, 'add');
+              
+              // Record the split transaction
+              await insertPactTx(
+                pactWallet.id,
+                member.id,
+                'skip_split',
+                splitPerMember,
+                { 
+                  from_user: user.id,
+                  skipper_name: user.name,
+                  method: 'receive_split',
+                  tribe_id: tribeId 
+                }
+              );
+              
+              splitResults.push({
+                member_id: member.id,
+                member_name: member.name,
+                amount_received: splitPerMember
+              });
+            }
+            
+            // Record donation accrual
+            await insertPactTx(
+              pactWallet.id,
+              user.id,
+              'donation_accrual',
+              donationAmount,
+              { method: 'skip_fee_split', tribe_id: tribeId }
+            );
+            
           } else {
-            pactWallet.balance_tc += feeTc;
+            // LEGACY BEHAVIOR (when deal split disabled)
+            // Add to pact wallet (old way)
+            if (!isUsingMockData) {
+              const client = supabaseAdmin || supabase;
+              await client
+                .from('pact_wallets')
+                .update({ 
+                  balance_tc: supabase.raw(`balance_tc + ${feeTc}`),
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', pactWallet.id);
+            } else {
+              pactWallet.balance_tc += feeTc;
+            }
           }
           
           // Record payment
@@ -553,44 +620,80 @@ export async function POST(request, { params }) {
                 amount_tc: feeTc,
                 amount_cents: feeTc * 100,
                 status: 'succeeded',
-                metadata: { method: 'pay', tribe_id: tribeId }
+                metadata: { method: 'pay', tribe_id: tribeId, deal_split: dealSplitEnabled }
               });
           }
         }
         
-        // Record pact transaction
+        // Record main pact transaction
         const transaction = await insertPactTx(
           pactWallet.id,
           user.id,
           'skip',
           feeTc,
-          { method, tribe_id: tribeId }
+          { method, tribe_id: tribeId, split_enabled: dealSplitEnabled }
         );
         
-        // Send snitch notification if enabled
-        let notification = null;
+        // Enhanced notifications for deal split
+        let notifications = [];
         if (user.settings?.snitch) {
-          const tribeMembers = await listTribeMembers(tribeId);
-          const otherMembers = tribeMembers
-            .filter(member => member.id !== user.id)
-            .map(member => member.id);
+          if (dealSplitEnabled && method === 'pay' && splitResults.length > 0) {
+            // Send enhanced notifications for deal split
             
-          if (otherMembers.length > 0) {
-            notification = await sendSnitchNotification(
-              user.name,
-              otherMembers,
-              method,
-              user.locale || 'en'
-            );
+            // To skipper
+            const powerUpNames = splitResults.map(r => r.member_name).join(', ');
+            const skipperMsg = i18n.t('skip_deal_skipper', {
+              names: powerUpNames,
+              amount: splitResults[0]?.amount_received || 0
+            }, user.locale || 'en');
+            
+            notifications.push({
+              type: 'skip_split_skipper',
+              message: skipperMsg,
+              recipients: [user.id]
+            });
+            
+            // To each recipient
+            for (const result of splitResults) {
+              const recipientMsg = i18n.t('skip_deal_recipient', {
+                skipper: user.name,
+                amount: result.amount_received
+              }, user.locale || 'en');
+              
+              notifications.push({
+                type: 'skip_split_received',
+                message: recipientMsg,
+                recipients: [result.member_id]
+              });
+            }
+          } else {
+            // Legacy snitch notification
+            const otherMembers = activeMembers.map(member => member.id);
+            if (otherMembers.length > 0) {
+              const notification = await sendSnitchNotification(
+                user.name,
+                otherMembers,
+                method,
+                user.locale || 'en'
+              );
+              notifications.push({
+                type: 'legacy_snitch',
+                message: notification?.message || notification?.body,
+                recipients: otherMembers
+              });
+            }
           }
         }
         
         return NextResponse.json({
           success: true,
           transaction,
-          notification: notification?.message || notification?.body,
+          notifications,
+          split_results: splitResults,
+          deal_split_enabled: dealSplitEnabled,
           new_balance: updatedUser?.wallet_balance_tc || user.wallet_balance_tc,
-          pact_balance: pactWallet.balance_tc + (method === 'pay' ? feeTc : 0)
+          pact_balance: pactWallet.balance_tc + (method === 'pay' && !dealSplitEnabled ? feeTc : 0),
+          donation_pool: pactWallet.donation_pool_tc || 0
         });
         
       case 'wallet/topup':
