@@ -192,9 +192,9 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             type="submit"
             variant="primary"
             loading={isGenerating}
-            className="flex-1"
+            className="flex-1 text-sm"
           >
-            {isGenerating ? 'Generating Plan...' : 'Generate AI Workout Plan'}
+            {isGenerating ? 'Creating...' : 'Generate'}
           </Button>
         </div>
         </form>
