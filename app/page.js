@@ -1376,6 +1376,7 @@ function TribeFitApp() {
       <WorkoutCalendar
         isOpen={showWorkoutCalendar}
         onClose={() => setShowWorkoutCalendar(false)}
+        user={user}
       />
 
       <ProfileCustomization
