@@ -1093,14 +1093,24 @@ function TribeFitApp() {
               <span className="text-2xl">🔥</span>
               <span>Squads</span>
             </h3>
-            <Button
-              onClick={() => setShowSquadCreationModal(true)}
-              variant="primary"
-              size="sm"
-            >
-              <Plus size={16} />
-              Create Squad
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => setShowSquadCreationModal(true)}
+                variant="ghost"
+                size="sm"
+              >
+                <Plus size={16} />
+                Join Squad
+              </Button>
+              <Button
+                onClick={() => setShowSquadCreationModal(true)}
+                variant="primary"
+                size="sm"
+              >
+                <Plus size={16} />
+                Create Squad
+              </Button>
+            </div>
           </div>
           
           {squads.length === 0 ? (
