@@ -130,9 +130,9 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
                   {!group.is_member && (
                     <button
                       onClick={(e) => handleJoinClick(e, group)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary-600 text-white px-3 py-1 rounded-lg text-sm font-medium"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary-600 text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap"
                     >
-                      {type === 'squad' ? 'Join Squad' : 'Request Join'}
+                      {type === 'squad' ? 'Join' : 'Request'}
                     </button>
                   )}
 
