@@ -31,6 +31,17 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
     }
   }, [selectedDate]);
 
+  // Update user info when user prop changes
+  React.useEffect(() => {
+    if (user) {
+      setWorkoutData(prev => ({
+        ...prev,
+        user_id: user.id || '00000000-0000-0000-0000-000000000001',
+        user_name: user.name || 'You'
+      }));
+    }
+  }, [user]);
+
   const predefinedWorkouts = [
     { name: 'Push/Pull/Legs', duration: '45 min', type: 'strength' },
     { name: 'Full Body HIIT', duration: '30 min', type: 'cardio' },
