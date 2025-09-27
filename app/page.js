@@ -1048,17 +1048,19 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   <span>{t('share')}</span>
                 </button>
               </div>
-              <Button
-                onClick={() => {
-                  setSelectedPost({ ...post, post_id: post.id });
-                  setShowTipModal(true);
-                }}
-                variant="accent"
-                size="sm"
-              >
-                <Coins size={16} />
-                {t('tip_tc')}
-              </Button>
+              {Features.TIPS && (
+                <Button
+                  onClick={() => {
+                    setSelectedPost({ ...post, post_id: post.id });
+                    setShowTipModal(true);
+                  }}
+                  variant="accent"
+                  size="sm"
+                >
+                  <Coins size={16} />
+                  {t('tip_tc')}
+                </Button>
+              )}
             </div>
           </div>
         ))
