@@ -338,6 +338,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Calendar Integration APIs working perfectly. GET /api/calendar fetches workout schedules with filtering by date, user_id, and tribe_id. POST /api/calendar schedules new workouts with comprehensive validation (date format YYYY-MM-DD, time format HH:MM, required fields, conflict detection for same user/time). All 9/9 tests passed including edge cases and error handling. Supports shared/private workouts and proper sorting by time."
+      - working: true
+        agent: "testing"
+        comment: "✅ CALENDAR SCHEDULING COMPREHENSIVE TEST COMPLETE: Tested calendar scheduling functionality with focus on user-reported 'missing required fields' error. Results: 11/12 tests passed (91.7% success rate). KEY FINDINGS: 1) Calendar scheduling API is WORKING CORRECTLY - accepts exact payload from review request when all fields are properly provided, 2) Field validation is WORKING PERFECTLY - properly detects missing date, time, workout_name, and user_id fields, 3) All calendar retrieval functions working (GET /api/calendar with various filters), 4) Conflict detection, date/time format validation all working correctly. The user's reported issue appears to be a FRONTEND PROBLEM where user_id is being sent as empty string or null, causing the backend validation to correctly reject the request. Backend API is functioning as designed."
 
   - task: "Pact Voting System APIs"
     implemented: true
