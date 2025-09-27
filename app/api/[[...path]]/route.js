@@ -1092,6 +1092,14 @@ export async function POST(request, { params }) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
         
+        // Only allow donation requests when FEATURE_DEAL_SPLIT is enabled
+        if (process.env.FEATURE_DEAL_SPLIT === 'true' && type !== 'donation') {
+          return NextResponse.json({ 
+            error: 'Only donation requests are supported. Gear purchases are now direct buys.',
+            redirect: '/api/catalog/buy'
+          }, { status: 400 });
+        }
+        
         // Get user's active tribe wallet
         const activeTribeId = requester.settings?.active_tribe_id || '10000000-0000-0000-0000-000000000001'; // Default to mock tribe
         
