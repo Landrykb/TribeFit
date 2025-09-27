@@ -1272,6 +1272,17 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         )}
       </div>
 
+      {/* Wishlist & Shopping */}
+      {Features.WISHLIST && user && (
+        <WishlistManager 
+          tribeId={selectedTribe || '10000000-0000-0000-0000-000000000001'}
+          user={user}
+          onBuyWithBalance={(amount) => {
+            setWalletBalance(prev => prev + amount); // amount is negative for purchases
+          }}
+        />
+      )}
+
       {/* Pending Votes */}
       {pendingRequests.length > 0 && (
         <div className="card">
