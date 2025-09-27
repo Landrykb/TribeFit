@@ -947,8 +947,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <Button 
               onClick={() => setShowWorkoutGenerator(true)}
               variant="primary"
+              className="px-4 py-3 flex items-center gap-2"
             >
-              {t('generate_ai_workout')}
+              <Zap size={18} />
+              <span>{t('generate')}</span>
             </Button>
           </div>
         )}
