@@ -373,19 +373,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         setPactBalance(data.pact_balance);
         setShowSkipModal(false);
         
-        // Show deal split notifications if enabled
-        if (data.split_results && data.split_results.length > 0) {
-          const splitMsg = data.split_results
-            .map(r => `${r.member_name}: +${r.amount_received} TC`)
-            .join('\n');
-          toast.success(`Deal split complete!\n${splitMsg}`);
-          
-          // Auto-assign split TC to first wishlist item
-          const receivedAmount = data.split_results.find(r => r.member_id === user?.id)?.amount_received;
-          if (receivedAmount && Features.WISHLIST) {
-            updateWishlistProgress(receivedAmount);
-          }
-        }
         
         if (method === 'ad') {
           // Track ad skips and check for abuse
