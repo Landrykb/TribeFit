@@ -372,11 +372,33 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           setAdProgress(0);
           toast.success(t('skip_ad_success'));
           
+          // Deal Breaker Alert on 3rd ad skip - TRIGGER REACTIONS
+          if (newAdSkips >= 3 && Features.REACTIONS) {
+            toast.error(t('deal_breaker_alert', { count: newAdSkips }));
+            
+            // Auto-trigger reactions panel for tribe members to react
+            setReactionTarget(user);
+            setShowReactionsPanel(true);
+            
+            // Show celebration message encouraging reactions
+            setTimeout(() => {
+              toast.info('📺 Deal Breaker Alert! Tribe members can now send reactions 🔥💪😅');
+            }, 1000);
+          }
+          
           // Send snitch notification with ad count
           sendSnitchNotification(user?.name || 'User', method, newAdSkips);
         } else {
           // Enhanced snitch notification for paying to skip
           toast.success(t('skip_pay_success'));
+          
+          // Optional: Allow reactions for paid skips too
+          if (Features.REACTIONS && Math.random() > 0.7) { // 30% chance
+            setTimeout(() => {
+              setReactionTarget(user);
+              setShowReactionsPanel(true);
+            }, 2000);
+          }
           
           // Send snitch notification for payment
           sendSnitchNotification(user?.name || 'User', method);
