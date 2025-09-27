@@ -71,6 +71,10 @@ function TribeFitApp() {
   const [selectedHire, setSelectedHire] = useState(null);
   const [showProfileCustomization, setShowProfileCustomization] = useState(false);
   const [showVotingModal, setShowVotingModal] = useState(false);
+  const [showSquadUpgradeModal, setShowSquadUpgradeModal] = useState(false);
+  const [selectedSquadForUpgrade, setSelectedSquadForUpgrade] = useState(null);
+  const [squads, setSquads] = useState([]);
+  const [showSquadCreationModal, setShowSquadCreationModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [adSkipsThisWeek, setAdSkipsThisWeek] = useState(0); // Track weekly ad skips
