@@ -829,6 +829,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     toast.success(t('workout_plan_generated'));
   };
 
+  const updateWishlistProgress = (amount) => {
+    // Auto-assign TC to first wishlist item
+    // This is a placeholder function that would integrate with WishlistManager
+    toast.info(`+${amount} TC assigned to wishlist progress! 🎯`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-950 flex items-center justify-center">
