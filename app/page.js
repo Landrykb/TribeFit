@@ -30,6 +30,8 @@ import { SquadUpgradeModal } from '../components/ui/SquadUpgradeModal';
 import { SquadLeaderboards } from '../components/ui/SquadLeaderboards';
 import { SquadCreationModal } from '../components/ui/SquadCreationModal';
 import { SquadDetailsModal } from '../components/ui/SquadDetailsModal';
+import { WishlistManager } from '../components/ui/WishlistManager';
+import { ReactionsPanel } from '../components/ui/ReactionsPanel';
 import { ProfileCustomization } from '../components/ProfileCustomization';
 import { useTranslation } from '../lib/i18n-hooks';
 import { Features } from '../lib/feature-flags';
