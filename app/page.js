@@ -1787,12 +1787,14 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         onSubmitRating={handleRateCoach}
       />
 
-      <TipModal
-        isOpen={showTipModal}
-        onClose={() => setShowTipModal(false)}
-        recipient={selectedPost}
-        onSubmitTip={handleTipUser}
-      />
+      {Features.TIPS && (
+        <TipModal
+          isOpen={showTipModal}
+          onClose={() => setShowTipModal(false)}
+          recipient={selectedPost}
+          onSubmitTip={handleTipUser}
+        />
+      )}
 
       <VotingModal
         isOpen={showVotingModal}
