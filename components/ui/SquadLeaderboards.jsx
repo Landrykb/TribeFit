@@ -79,11 +79,12 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
               return (
                 <div
                   key={group.id}
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer group ${
                     isTop3 
-                      ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30' 
+                      ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30 hover:border-primary/50' 
                       : 'bg-surface-800 border-surface-700 hover:border-surface-600'
                   }`}
+                  onClick={() => handleGroupClick(group)}
                 >
                   {/* Rank */}
                   <div className="flex-shrink-0 w-8 flex justify-center">
@@ -120,10 +121,27 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
                   </div>
 
                   {/* Deal Vault */}
-                  <div className="text-right">
+                  <div className="text-right mr-3">
                     <div className="font-bold text-surface-50">{group.pact_balance || 0}</div>
                     <div className="text-surface-400 text-xs">TC</div>
                   </div>
+
+                  {/* Join Button - Only show if not a member */}
+                  {!group.is_member && (
+                    <button
+                      onClick={(e) => handleJoinClick(e, group)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary-600 text-white px-3 py-1 rounded-lg text-sm font-medium"
+                    >
+                      {type === 'squad' ? 'Join Squad' : 'Request Join'}
+                    </button>
+                  )}
+
+                  {/* Member indicator */}
+                  {group.is_member && (
+                    <div className="flex-shrink-0 bg-success/20 text-success px-2 py-1 rounded text-xs">
+                      Member
+                    </div>
+                  )}
 
                   {/* Special indicators */}
                   {isTop3 && (
