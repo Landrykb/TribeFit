@@ -1153,14 +1153,39 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <span>Deal Vault</span>
         </h3>
         <div className="grid grid-cols-2 gap-4">
-          <Button
-            onClick={() => setShowEquipmentCatalog(true)}
-            variant="primary"
-            className="h-16 flex-col"
-          >
-            <ShoppingCart size={24} />
-            <span className="text-sm">{t('spend_on_gear')}</span>
-          </Button>
+          {/* Priority Wishlist Item */}
+          <div className="bg-surface-800 rounded-lg p-4 flex-1">
+            <div className="flex items-center space-x-2 mb-3">
+              <Gift size={20} className="text-accent" />
+              <span className="text-surface-50 font-medium">Next Goal</span>
+            </div>
+            
+            {/* Mock priority wishlist item */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-surface-200 text-sm">Resistance Bands Set</span>
+                <span className="text-accent font-bold">150 TC</span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-surface-400">
+                  <span>Progress</span>
+                  <span>85/150 TC (57%)</span>
+                </div>
+                <div className="w-full bg-surface-700 rounded-full h-2">
+                  <div 
+                    className="bg-accent h-2 rounded-full transition-all"
+                    style={{ width: '57%' }}
+                  />
+                </div>
+              </div>
+              
+              <div className="text-xs text-surface-400">
+                Next skip split: +65 TC needed
+              </div>
+            </div>
+          </div>
           <Button
             onClick={() => setShowDonationModal(true)}
             variant="accent"
