@@ -8,11 +8,24 @@ import {
 } from 'lucide-react';
 import { Features } from '../../lib/feature-flags';
 
-export function SquadLeaderboards({ squads = [], tribes = [] }) {
+export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJoinSquad, user }) {
   const [activeTab, setActiveTab] = useState('squads');
   const [expanded, setExpanded] = useState(false);
   
   if (!Features.SQUAD_LEADERBOARDS) return null;
+
+  const handleGroupClick = (group) => {
+    if (onSquadClick) {
+      onSquadClick(group);
+    }
+  };
+
+  const handleJoinClick = (e, group) => {
+    e.stopPropagation(); // Prevent triggering the group click
+    if (onJoinSquad) {
+      onJoinSquad(group);
+    }
+  };
 
   const getRankIcon = (rank) => {
     switch (rank) {
