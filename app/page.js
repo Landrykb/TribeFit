@@ -28,6 +28,8 @@ import { VotingModal } from '../components/ui/VotingModal';
 import { SquadCard } from '../components/ui/SquadCard';
 import { SquadUpgradeModal } from '../components/ui/SquadUpgradeModal';
 import { SquadLeaderboards } from '../components/ui/SquadLeaderboards';
+import { SquadCreationModal } from '../components/ui/SquadCreationModal';
+import { SquadDetailsModal } from '../components/ui/SquadDetailsModal';
 import { ProfileCustomization } from '../components/ProfileCustomization';
 import { useTranslation } from '../lib/i18n-hooks';
 import { Features } from '../lib/feature-flags';
@@ -50,6 +52,7 @@ function TribeFitApp() {
   const [posts, setPosts] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [tribes, setTribes] = useState([]);
+  const [squads, setSquads] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   
   // Modal states
@@ -73,11 +76,12 @@ function TribeFitApp() {
   const [showVotingModal, setShowVotingModal] = useState(false);
   const [showSquadUpgradeModal, setShowSquadUpgradeModal] = useState(false);
   const [selectedSquadForUpgrade, setSelectedSquadForUpgrade] = useState(null);
-  const [squads, setSquads] = useState([]);
   const [showSquadCreationModal, setShowSquadCreationModal] = useState(false);
+  const [showSquadDetailsModal, setShowSquadDetailsModal] = useState(false);
+  const [selectedSquadForDetails, setSelectedSquadForDetails] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-  const [adSkipsThisWeek, setAdSkipsThisWeek] = useState(0); // Track weekly ad skips
+  const [adSkipsThisWeek, setAdSkipsThisWeek] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -153,6 +157,7 @@ function TribeFitApp() {
         pact_balance: 1250,
         rank: 1,
         is_member: true,
+        owner_id: user?.id,
         customization_data: { theme_color: 'indigo', logo_url: '/tribe-logos/founders.png' }
       },
       { 
@@ -167,7 +172,8 @@ function TribeFitApp() {
         balance: 450, 
         pact_balance: 450,
         rank: 2,
-        is_member: true
+        is_member: true,
+        owner_id: user?.id
       },
       { 
         id: '30000000-0000-0000-0000-000000000002', 
@@ -181,7 +187,8 @@ function TribeFitApp() {
         balance: 680, 
         pact_balance: 680,
         rank: 3,
-        is_member: false
+        is_member: false,
+        owner_id: 'other-user'
       },
       { 
         id: '30000000-0000-0000-0000-000000000003', 
@@ -195,7 +202,8 @@ function TribeFitApp() {
         balance: 230, 
         pact_balance: 230,
         rank: 4,
-        is_member: false
+        is_member: false,
+        owner_id: 'other-user'
       }
     ];
     
@@ -687,8 +695,38 @@ function TribeFitApp() {
   };
 
   const handleViewSquad = (squad) => {
-    toast.info(`Viewing ${squad.name} details...`);
-    // Here you could navigate to a detailed squad/tribe view
+    setSelectedSquadForDetails(squad);
+    setShowSquadDetailsModal(true);
+  };
+
+  const handleCreateSquad = async (formData) => {
+    try {
+      // Mock creation functionality
+      const newSquad = {
+        id: `squad-${Date.now()}`,
+        name: formData.name,
+        description: formData.description,
+        group_type: formData.type,
+        member_count: 1,
+        streak_days: 0,
+        participation_rate: 100,
+        pact_balance: 0,
+        is_member: true,
+        owner_id: user?.id,
+        isPrivate: formData.isPrivate
+      };
+
+      if (formData.type === 'squad') {
+        setSquads(prev => [newSquad, ...prev]);
+      } else {
+        setTribes(prev => [newSquad, ...prev]);
+      }
+
+      toast.success(`${formData.type === 'squad' ? 'Squad' : 'Tribe'} "${formData.name}" created successfully! 🎉`);
+    } catch (error) {
+      console.error('Creation failed:', error);
+      throw error;
+    }
   };
 
   const handleWorkoutPlanGenerated = (plan) => {
@@ -790,7 +828,7 @@ function TribeFitApp() {
           >
             <div className="flex items-center space-x-2">
               <Users size={16} className="text-primary" />
-              <span className="font-medium text-xs">{t('founders_tribe')}</span>
+              <span className="font-medium text-xs">{Features.SQUADS ? 'Squads & Tribes' : t('founders_tribe')}</span>
             </div>
           </button>
           <button 
@@ -866,7 +904,7 @@ function TribeFitApp() {
         )}
       </div>
 
-      {/* Quick Actions - MADE BLUE */}
+      {/* Quick Actions - BLUE BUTTONS */}
       <div className="grid grid-cols-2 gap-4">
         <Button 
           onClick={() => handleSharePost(t('share_progress_caption'))}
@@ -980,7 +1018,7 @@ function TribeFitApp() {
       <div className="card">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center">
-            {Features.SQUADS && squads.length > 0 ? (
+            {Features.SQUADS && (squads.length > 0 || tribes.length > 0) ? (
               <div className="flex">
                 <span className="text-2xl">🔥</span>
                 <span className="text-2xl">🪶</span>
@@ -991,7 +1029,7 @@ function TribeFitApp() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-surface-50">
-              {Features.SQUADS ? t('squads_and_tribes') || 'Squads & Tribes' : t('founders_tribe')}
+              {Features.SQUADS ? 'Squads & Tribes' : t('founders_tribe')}
             </h2>
             <p className="text-surface-400">
               {Features.SQUADS 
@@ -1007,7 +1045,7 @@ function TribeFitApp() {
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary number-display">{pactBalance}</div>
-              <div className="text-xs text-surface-400">{t('deal_vault') || 'Deal Vault'}</div>
+              <div className="text-xs text-surface-400">Deal Vault</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-accent number-display">28</div>
@@ -1025,7 +1063,7 @@ function TribeFitApp() {
       <div className="card">
         <h3 className="text-lg font-bold text-surface-50 mb-4 flex items-center space-x-2">
           <TrendingUp size={20} className="text-accent" />
-          <span>{t('deal_vault') || 'Deal Vault'}</span>
+          <span>Deal Vault</span>
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <Button
@@ -1105,6 +1143,7 @@ function TribeFitApp() {
           </h3>
           {!Features.SQUADS && (
             <Button
+              onClick={() => setShowSquadCreationModal(true)}
               variant="primary"
               size="sm"
             >
@@ -1125,7 +1164,10 @@ function TribeFitApp() {
                 </p>
               </div>
             ) : (
-              <Button variant="primary">
+              <Button 
+                onClick={() => setShowSquadCreationModal(true)}
+                variant="primary"
+              >
                 Create Your First Tribe
               </Button>
             )}
@@ -1159,7 +1201,7 @@ function TribeFitApp() {
               size="sm"
             >
               <Vote size={16} />
-              {t('vote_now')}
+              Vote Now
             </Button>
           </div>
           <div className="space-y-3">
@@ -1169,7 +1211,7 @@ function TribeFitApp() {
                   <div>
                     <h4 className="font-medium text-surface-100">{request.label}</h4>
                     <p className="text-sm text-surface-400">
-                      {request.amount} TC • {t('requested_by')} {request.requestedBy}
+                      {request.amount} TC • Requested by {request.requestedBy}
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs ${
@@ -1181,7 +1223,7 @@ function TribeFitApp() {
                 
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-surface-400">
-                    {request.votes.approve} / {Math.ceil(request.totalMembers / 2)} {t('needed_to_approve')}
+                    {request.votes.approve} / {Math.ceil(request.totalMembers / 2)} needed to approve
                   </div>
                   <div className="flex space-x-2">
                     <Button
@@ -1189,14 +1231,14 @@ function TribeFitApp() {
                       variant="success"
                       size="sm"
                     >
-                      {t('approve')}
+                      Approve
                     </Button>
                     <Button
                       onClick={() => handleVote(request.id, 'reject')}
                       variant="danger"
                       size="sm"
                     >
-                      {t('reject')}
+                      Reject
                     </Button>
                   </div>
                 </div>
@@ -1207,42 +1249,11 @@ function TribeFitApp() {
       )}
 
       {/* Enhanced Leaderboard with Squad/Tribe separation */}
-      {Features.SQUAD_LEADERBOARDS ? (
+      {Features.SQUAD_LEADERBOARDS && (squads.length > 0 || tribes.length > 0) && (
         <SquadLeaderboards
           squads={squads}
           tribes={tribes}
         />
-      ) : (
-        <div className="card">
-          <div className="flex items-center space-x-2 mb-4">
-            <TrendingUp size={20} className="text-accent" />
-            <h3 className="text-lg font-bold text-surface-50">{t('tribe_leaderboard')}</h3>
-          </div>
-          <div className="space-y-3">
-            {leaderboard.map((tribe, index) => (
-              <div key={tribe.id} className="flex items-center justify-between p-3 bg-surface-800 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    index === 0 ? 'bg-yellow-500 text-black' :
-                    index === 1 ? 'bg-gray-400 text-black' :
-                    index === 2 ? 'bg-amber-600 text-white' :
-                    'bg-surface-700 text-surface-300'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <div className="font-medium text-surface-100">{tribe.name}</div>
-                    <div className="text-sm text-surface-400">{tribe.members} {t('members')}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-primary">{tribe.streak_days || tribe.streak} {t('days')}</div>
-                  <div className="text-xs text-surface-400">{tribe.balance} TC</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       )}
     </div>
   );
@@ -1467,7 +1478,7 @@ function TribeFitApp() {
             {[
               { id: 'home', icon: Home, label: t('home') },
               { id: 'feed', icon: Rss, label: t('feed') },
-              { id: 'tribe', icon: Users, label: t('tribe') },
+              { id: 'tribe', icon: Users, label: Features.SQUADS ? 'Groups' : t('tribe') },
               { id: 'coach', icon: Dumbbell, label: t('coach') },
               { id: 'profile', icon: User, label: t('profile') }
             ].map(({ id, icon: Icon, label }) => (
@@ -1501,8 +1512,8 @@ function TribeFitApp() {
                 <span className="text-warning">⚠️</span>
                 <p className="text-warning text-sm">
                   {adSkipsThisWeek === 2 ? 
-                    t('ad_warning_approaching') || "You've watched 2 ads this week. One more and your tribe gets notified!" :
-                    t('ad_warning_exceeded') || `You've watched ${adSkipsThisWeek} ads this week! Your tribe will be notified of excessive ad watching.`
+                    "You've watched 2 ads this week. One more and your tribe gets notified!" :
+                    `You've watched ${adSkipsThisWeek} ads this week! Your tribe will be notified of excessive ad watching.`
                   }
                 </p>
               </div>
@@ -1609,7 +1620,7 @@ function TribeFitApp() {
         </Modal>
       )}
 
-      {/* All other modals remain the same */}
+      {/* All other modals */}
       <WorkoutGenerator
         isOpen={showWorkoutGenerator}
         onClose={() => setShowWorkoutGenerator(false)}
@@ -1685,6 +1696,26 @@ function TribeFitApp() {
         onClose={() => setShowSquadUpgradeModal(false)}
         squad={selectedSquadForUpgrade}
         onConfirmUpgrade={handleSquadUpgrade}
+      />
+
+      {/* Squad Creation Modal */}
+      <SquadCreationModal
+        isOpen={showSquadCreationModal}
+        onClose={() => setShowSquadCreationModal(false)}
+        onCreateSquad={handleCreateSquad}
+      />
+
+      {/* Squad Details Modal */}
+      <SquadDetailsModal
+        isOpen={showSquadDetailsModal}
+        onClose={() => setShowSquadDetailsModal(false)}
+        squad={selectedSquadForDetails}
+        user={user}
+        onJoin={handleJoinSquad}
+        onUpgrade={(squad) => {
+          setSelectedSquadForUpgrade(squad);
+          setShowSquadUpgradeModal(true);
+        }}
       />
     </div>
   );
