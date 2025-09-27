@@ -23,7 +23,7 @@ import { WorkoutScheduler } from '../components/WorkoutScheduler';
 import { EquipmentCatalog } from '../components/ui/EquipmentCatalog';
 import { DonationModal } from '../components/ui/DonationModal';
 import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
-// import { TipModal } from '../components/ui/TipModal'; // Removed: FEATURE_TIPS=false
+import { TipModal } from '../components/ui/TipModal';
 import { VotingModal } from '../components/ui/VotingModal';
 import { SquadCard } from '../components/ui/SquadCard';
 import { SquadUpgradeModal } from '../components/ui/SquadUpgradeModal';
