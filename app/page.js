@@ -257,11 +257,31 @@ function TribeFitApp() {
     }
   };
 
-  // Enhanced snitch notification system
-  const sendSnitchNotification = async (userName, method) => {
-    const snitchMessage = method === 'pay' 
-      ? getRandomSkipMessage(userName) 
-      : t('skip_messages.watched_ad', { name: userName });
+  // Enhanced snitch notification system with ad tracking
+  const sendSnitchNotification = async (userName, method, adSkipsThisWeek = 0) => {
+    let snitchMessage;
+    
+    if (method === 'pay') {
+      snitchMessage = getRandomSkipMessage(userName);
+    } else if (method === 'ad') {
+      // Check if user is watching too many ads this week
+      const AD_THRESHOLD = 3; // Alert after 3 ads in a week
+      
+      if (adSkipsThisWeek >= AD_THRESHOLD) {
+        // Send special ad abuse notification
+        const adAbuseMessages = [
+          'ad_addict', 'binge_watcher', 'commercial_break', 
+          'ad_marathon', 'screen_time'
+        ];
+        const randomAdMessage = adAbuseMessages[Math.floor(Math.random() * adAbuseMessages.length)];
+        snitchMessage = t(`skip_messages.${randomAdMessage}`, { 
+          name: userName, 
+          count: adSkipsThisWeek 
+        });
+      } else {
+        snitchMessage = t('skip_messages.watched_ad', { name: userName });
+      }
+    }
     
     // Add to local notifications
     const newNotification = {
@@ -276,7 +296,8 @@ function TribeFitApp() {
     setNotifications(prev => [newNotification, ...prev]);
     
     // Show toast with snitch message
-    toast.warning(snitchMessage, { duration: 5000 });
+    const toastDuration = adSkipsThisWeek >= 3 ? 7000 : 5000; // Longer for ad abuse
+    toast.warning(snitchMessage, { duration: toastDuration });
   };
 
   const startAdWatch = () => {
