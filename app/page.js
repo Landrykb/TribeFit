@@ -57,6 +57,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [squads, setSquads] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [selectedTribe, setSelectedTribe] = useState('10000000-0000-0000-0000-000000000001'); // Default tribe ID
+  const [wishlistProgress, setWishlistProgress] = useState({
+    currentItem: 'Resistance Bands Set',
+    targetAmount: 150,
+    currentAmount: 85,
+    nextNeeded: 65
+  });
   
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
