@@ -1202,26 +1202,26 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <span className="text-2xl">🪶</span>
             <span>Tribes</span>
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             {Features.SQUADS && (
               <Button
                 onClick={() => toast.info('Browse tribes in leaderboard below to request membership')}
                 variant="ghost"
                 size="sm"
-                className="text-xs px-3 py-2"
+                className="px-3 py-2 flex items-center gap-1"
               >
-                <Users size={14} />
-                <span className="ml-1">Request Join</span>
+                <Users size={16} />
+                <span className="text-xs">Request</span>
               </Button>
             )}
             <Button
               onClick={() => setShowSquadCreationModal(true)}
               variant="primary"
               size="sm"
-              className="text-xs px-3 py-2"
+              className="px-3 py-2 flex items-center gap-1"
             >
-              <Plus size={14} />
-              <span className="ml-1">Create Tribe</span>
+              <Crown size={16} />
+              <span className="text-xs">Create</span>
             </Button>
           </div>
         </div>
