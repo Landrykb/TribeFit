@@ -76,6 +76,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [selectedHire, setSelectedHire] = useState(null);
   const [showProfileCustomization, setShowProfileCustomization] = useState(false);
   const [showVotingModal, setShowVotingModal] = useState(false);
+  const [selectedVote, setSelectedVote] = useState(null);
+  const [showReactionsPanel, setShowReactionsPanel] = useState(false);
+  const [reactionTarget, setReactionTarget] = useState(null);
   const [showSquadUpgradeModal, setShowSquadUpgradeModal] = useState(false);
   const [selectedSquadForUpgrade, setSelectedSquadForUpgrade] = useState(null);
   const [showSquadCreationModal, setShowSquadCreationModal] = useState(false);
