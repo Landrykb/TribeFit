@@ -227,7 +227,14 @@ export function WorkoutPlanModal({ isOpen, onClose, plan }) {
       <div className="max-h-96 overflow-y-auto">
         <div 
           className="prose prose-sm max-w-none text-surface-200"
-          dangerouslySetInnerHTML={{ __html: formatPlanContent(plan.workoutPlan) }}
+          dangerouslySetInnerHTML={{ 
+            __html: formatPlanContent(
+              plan.workoutPlan?.aiContent || 
+              plan.workoutPlan?.content || 
+              JSON.stringify(plan.workoutPlan, null, 2) || 
+              'No workout content available'
+            ) 
+          }}
         />
       </div>
       
