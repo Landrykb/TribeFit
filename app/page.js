@@ -1248,13 +1248,14 @@ function TribeFitApp() {
         </div>
       )}
 
-      {/* Enhanced Leaderboard with Squad/Tribe separation */}
-      {Features.SQUAD_LEADERBOARDS && (squads.length > 0 || tribes.length > 0) && (
-        <SquadLeaderboards
-          squads={squads}
-          tribes={tribes}
-        />
-      )}
+      {/* Enhanced Leaderboard with Squad/Tribe separation - ALWAYS SHOW */}
+      <SquadLeaderboards
+        squads={squads}
+        tribes={tribes}
+        onSquadClick={handleViewSquad}
+        onJoinSquad={handleJoinSquad}
+        user={user}
+      />
     </div>
   );
 
