@@ -27,6 +27,8 @@ import { TipModal } from '../components/ui/TipModal';
 import { VotingModal } from '../components/ui/VotingModal';
 import { ProfileCustomization } from '../components/ProfileCustomization';
 import { useTranslation } from '../lib/i18n-hooks';
+import { Features } from '../lib/feature-flags';
+import { SquadProgression } from '../lib/squad-progression';
 
 function TribeFitApp() {
   const { user, logout, isAuthenticated } = useAuth();
