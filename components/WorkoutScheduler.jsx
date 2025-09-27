@@ -8,7 +8,7 @@ import {
   Save, Zap, Dumbbell, Plus, X
 } from 'lucide-react';
 
-export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule }) {
+export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, user }) {
   const [showWorkoutGenerator, setShowWorkoutGenerator] = useState(false);
   const [workoutData, setWorkoutData] = useState({
     date: selectedDate || '',
@@ -17,8 +17,19 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule }) 
     workout_type: 'custom',
     duration: '45 min',
     shared: true,
-    user_name: 'You'
+    user_name: user?.name || 'You',
+    user_id: user?.id || '00000000-0000-0000-0000-000000000001'
   });
+
+  // Update date when selectedDate prop changes
+  React.useEffect(() => {
+    if (selectedDate && selectedDate !== workoutData.date) {
+      setWorkoutData(prev => ({
+        ...prev,
+        date: selectedDate
+      }));
+    }
+  }, [selectedDate]);
 
   const predefinedWorkouts = [
     { name: 'Push/Pull/Legs', duration: '45 min', type: 'strength' },
@@ -30,10 +41,27 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule }) 
   ];
 
   const handleSchedule = async () => {
-    if (!workoutData.workout_name || !workoutData.time) return;
+    // Validate all required fields
+    if (!workoutData.workout_name || !workoutData.time || !workoutData.date || !workoutData.user_id) {
+      console.error('Missing required fields:', workoutData);
+      return;
+    }
     
     try {
-      await onSchedule(workoutData);
+      // Ensure all required fields are included
+      const schedulePayload = {
+        date: workoutData.date,
+        time: workoutData.time,
+        workout_name: workoutData.workout_name,
+        workout_type: workoutData.workout_type,
+        user_id: workoutData.user_id,
+        user_name: workoutData.user_name,
+        shared: workoutData.shared,
+        duration: workoutData.duration
+      };
+      
+      console.log('Scheduling workout with payload:', schedulePayload);
+      await onSchedule(schedulePayload);
       onClose();
     } catch (error) {
       console.error('Failed to schedule workout:', error);
