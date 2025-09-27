@@ -128,8 +128,10 @@ function TribeFitApp() {
         setNotifications(notifData);
       }
 
-      // Load tribes and leaderboard
-      loadTribesAndLeaderboard();
+      // Load tribes and leaderboard (wait for user data first)
+      setTimeout(() => {
+        loadTribesAndLeaderboard();
+      }, 500);
 
       // Load pending requests for voting
       loadPendingRequests();
