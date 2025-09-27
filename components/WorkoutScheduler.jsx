@@ -54,7 +54,15 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
   const handleSchedule = async () => {
     // Validate all required fields
     if (!workoutData.workout_name || !workoutData.time || !workoutData.date || !workoutData.user_id) {
-      console.error('Missing required fields:', workoutData);
+      console.error('Missing required fields:', {
+        workout_name: workoutData.workout_name,
+        time: workoutData.time,
+        date: workoutData.date,
+        user_id: workoutData.user_id
+      });
+      
+      // Show user-friendly error
+      alert('Please fill in all required fields: workout name, date, time, and ensure you are logged in.');
       return;
     }
     
@@ -72,10 +80,14 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
       };
       
       console.log('Scheduling workout with payload:', schedulePayload);
-      await onSchedule(schedulePayload);
-      onClose();
+      const result = await onSchedule(schedulePayload);
+      
+      if (result !== false) { // onSchedule returns false on error
+        onClose();
+      }
     } catch (error) {
       console.error('Failed to schedule workout:', error);
+      alert('Failed to schedule workout: ' + error.message);
     }
   };
 
