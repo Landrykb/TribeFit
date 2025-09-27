@@ -241,21 +241,21 @@ export function WorkoutPlanModal({ isOpen, onClose, plan }) {
       <div className="flex space-x-3 pt-6 border-t border-surface-700">
         <Button
           variant="accent"
-          className="flex-1"
+          className="flex-1 text-sm"
           onClick={() => {
             // Save plan functionality
             localStorage.setItem('currentWorkoutPlan', JSON.stringify(plan));
             alert('Workout plan saved! 💾');
           }}
         >
-          Save Plan
+          Save
         </Button>
         <Button
-          variant="primary"
-          className="flex-1"
+          variant="primary"  
+          className="flex-1 text-sm"
           onClick={onClose}
         >
-          Start Training
+          Start
         </Button>
       </div>
     </Modal>
