@@ -66,7 +66,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [showEquipmentCatalog, setShowEquipmentCatalog] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [showCoachRating, setShowCoachRating] = useState(false);
-  const [showTipModal, setShowTipModal] = useState(false);
+  // const [showTipModal, setShowTipModal] = useState(false); // Removed: FEATURE_TIPS=false
   const [showPostModal, setShowPostModal] = useState(false);
   const [postCaption, setPostCaption] = useState('');
   const [selectedCoach, setSelectedCoach] = useState(null);
