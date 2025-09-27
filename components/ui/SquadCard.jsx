@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { Button } from './Button';
-import { Card } from './Card';
+import { Card } from './card';
 import { 
   Users, Trophy, TrendingUp, Zap, Crown, 
   Star, ChevronRight, Flame, ArrowUp
