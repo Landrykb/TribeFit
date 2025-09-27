@@ -208,6 +208,11 @@ export function WorkoutPlanModal({ isOpen, onClose, plan }) {
 
   // Convert the plan content to HTML-friendly format
   const formatPlanContent = (content) => {
+    // Check if content exists and is a string
+    if (!content || typeof content !== 'string') {
+      return '<p>Workout plan content not available. Please try generating again.</p>';
+    }
+    
     return content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
