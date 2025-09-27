@@ -8,7 +8,7 @@ import {
   Users, Clock, Eye, EyeOff, ArrowLeft, Save
 } from 'lucide-react';
 
-export function WorkoutCalendar({ isOpen, onClose }) {
+export function WorkoutCalendar({ isOpen, onClose, user }) {
   const toast = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showTribeWorkouts, setShowTribeWorkouts] = useState(true);
