@@ -1,210 +1,208 @@
-# TribeFit Setup Guide 🏋️‍♂️
+# 🚀 TribeFit Quick Setup Guide
 
-**Complete Production-Ready Social Fitness App**
+## 📋 Prerequisites
 
-TribeFit is ready to deploy! Just replace placeholder credentials with your actual API keys.
+- Node.js 18+ installed
+- Yarn package manager
+- Git for version control
 
-## 🚀 Quick Start
+## ⚡ Quick Start (5 minutes)
 
 ### 1. Clone and Install
 ```bash
-git clone <your-repo>
+git clone https://github.com/your-username/tribefit.git
 cd tribefit
 yarn install
 ```
 
-### 2. Set Up Environment Variables
-
-Copy the example environment file:
+### 2. Environment Setup
 ```bash
+# Copy the environment template
 cp .env.example .env
+
+# Edit .env with your credentials (see below)
+nano .env  # or use your preferred editor
 ```
 
-Replace the placeholder values in `.env` with your actual credentials:
-
-#### **Required: Supabase Database**
-1. Go to [supabase.com](https://supabase.com)
-2. Create a new project
-3. Go to Settings → API
-4. Replace in `.env`:
-   ```bash
-   SUPABASE_URL=https://your-project-id.supabase.co
-   SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   ```
-
-#### **Required: Stripe Payments**
-1. Go to [dashboard.stripe.com](https://dashboard.stripe.com)
-2. Get your test API keys
-3. Replace in `.env`:
-   ```bash
-   STRIPE_PUBLISHABLE_KEY=pk_test_...
-   STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_WEBHOOK_SECRET=whsec_...
-   ```
-
-### 3. Set Up Database
-
-Run the complete database schema in your Supabase SQL Editor:
+### 3. Run Development Server
 ```bash
-# Copy the contents of supabase-schema.sql
-# Paste and run in Supabase Dashboard → SQL Editor
-```
-
-This creates:
-- ✅ All tables with proper relationships
-- ✅ Row Level Security policies
-- ✅ Storage buckets for media uploads
-- ✅ Triggers and functions
-- ✅ Sample exercise data
-
-### 4. Run Development Server
-```bash
+# Start the development server
 yarn dev
+
+# Open http://localhost:3000 in your browser
 ```
 
-Visit `http://localhost:3000` - you should see the TribeFit app!
+## 🔧 Environment Variables Explained
 
----
-
-## 🔧 Features Status
-
-### ✅ **Ready to Use (M0 - Production Hardening)**
-- **Social Accountability System**: Skip workouts → Pay TribeCoins or watch ads → Snitch notifications
-- **TribeCoins Virtual Currency**: Full wallet system with real Stripe integration
-- **Pact Wallets**: Shared tribe funds from skip penalties
-- **Multilingual Support**: English, French, Japanese
-- **Database Integration**: Complete Supabase schema with RLS security
-- **Media Uploads**: Photos/videos to Supabase Storage
-- **Notifications**: Database-stored with push notification ready
-
-### 🚧 **Coming Next (M1-M5)**
-- **Workout Tracking**: Rep counting, session logging
-- **Watch Companion**: Apple Watch / WearOS integration
-- **Coach Marketplace**: Certification system and payments
-- **Advanced Features**: Gamification, analytics
-
----
-
-## 🗂️ Project Structure
-
-```
-tribefit/
-├── app/
-│   ├── api/[[...path]]/route.js    # All API endpoints
-│   ├── page.js                     # Main TribeFit UI
-│   └── layout.js                   # App layout
-├── lib/
-│   ├── supabase.js                 # Database client & helpers
-│   └── i18n.js                     # Multilingual translations
-├── components/ui/                  # Shadcn UI components
-├── supabase-schema.sql             # Complete database schema
-├── .env.example                    # Environment template
-└── SETUP.md                        # This file
-```
-
----
-
-## 🔐 Security Features
-
-### Row Level Security (RLS)
-- ✅ Users can only see their own data and tribe data
-- ✅ Anon key is safe for client-side use
-- ✅ Service role key used only in API routes
-- ✅ Storage policies protect user uploads
-
-### Payment Security
-- ✅ No card details stored in app
-- ✅ Stripe webhooks with signature validation
-- ✅ Idempotent payment processing
-- ✅ Test mode by default
-
----
-
-## 🌐 API Endpoints
-
-### Core Features
-- `GET /api/user/current` - Get current user profile
-- `POST /api/skip` - Skip workout (pay or watch ad)
-- `GET /api/pact/wallet` - Get tribe pact wallet
-- `GET /api/pact/transactions` - Get transaction history
-- `POST /api/wallet/topup` - Create Stripe payment
-- `POST /api/stripe/webhook` - Process payments
-
-### Social Features  
-- `POST /api/tribe/create` - Create new tribe
-- `POST /api/tribe/join` - Join tribe by invite code
-- `GET /api/notifications` - Get user notifications
-- `POST /api/tip` - Send TribeCoins to other users
-
-### Settings
-- `PUT /api/user/settings` - Update user preferences
-
----
-
-## 🧪 Testing
-
-### Manual Testing
-1. **Skip Flow**: Click Skip → Pay 100 TC or Watch Ad → Check wallet balance
-2. **Pact Wallet**: View transaction history in Pact tab
-3. **Notifications**: Skip should create snitch notification
-4. **Payments**: Use Stripe test cards (4242 4242 4242 4242)
-
-### Automated Testing
-Run the included test suite:
-```bash
-yarn test
-```
-
----
-
-## 🚀 Deployment
-
-### Environment Variables for Production
-Set these in your hosting platform (Vercel, Netlify, etc.):
+### Quick Setup (Uses Mock Data)
+For immediate testing, you can use the default values. The app will run in mock mode:
 
 ```bash
-# Database
-SUPABASE_URL=your_production_url
-SUPABASE_ANON_KEY=your_production_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_production_service_key
-
-# Payments
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_live_...
-
-# App Config
-NEXT_PUBLIC_BASE_URL=https://your-domain.com
+# Minimal .env for testing (mock mode)
+APP_NAME=TribeFit
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
 ```
 
-### Stripe Webhook Setup
-1. In Stripe Dashboard → Webhooks
-2. Add endpoint: `https://your-domain.com/api/stripe/webhook`
-3. Select events: `payment_intent.succeeded`
-4. Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
+### Production Setup (Real Database)
+For production deployment, you need real services:
+
+#### 1. Supabase Setup
+```bash
+# 1. Go to https://supabase.com
+# 2. Create new project
+# 3. Go to Settings → API
+# 4. Copy these values to your .env:
+
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-actual-key
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-service-key
+```
+
+#### 2. Database Schema
+```bash
+# 1. Go to Supabase Dashboard → SQL Editor
+# 2. Copy all contents from supabase-schema.sql
+# 3. Paste and execute the SQL
+```
+
+#### 3. Stripe Setup (For Payments)
+```bash
+# 1. Go to https://stripe.com
+# 2. Create account and verify
+# 3. Go to Developers → API Keys
+# 4. Copy to your .env:
+
+STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+```
+
+#### 4. Emergent LLM (For AI Features)
+```bash
+# Add your Emergent LLM key to .env:
+EMERGENT_LLM_KEY=sk-emergent-your-key-here
+```
+
+## 🎯 Feature Testing
+
+### Mock Mode Features (No Setup Required)
+- ✅ User interface and navigation
+- ✅ Language switching (EN/FR/JP)
+- ✅ Mock workout data
+- ✅ UI components and modals
+- ✅ Calendar and scheduling UI
+
+### Full Features (Requires Setup)
+- 🔐 User registration and authentication
+- 💰 Real TribeCoin wallet and payments
+- 👥 Tribe creation and joining
+- 🗳️ Pact voting with real persistence
+- 🤖 AI workout generation
+- 📊 Progress tracking and analytics
+
+## 🛠️ Development Commands
+
+```bash
+# Development server with hot reload
+yarn dev
+
+# Build for production
+yarn build
+
+# Run production build locally
+yarn start
+
+# Run with no memory limit restrictions
+yarn dev:no-reload
+
+# Build and analyze bundle
+yarn build && yarn analyze
+```
+
+## 📱 Testing the App
+
+### 1. Mock Mode Testing (Default)
+```bash
+# Features available without setup:
+# - UI navigation and language switching
+# - Mock data for workouts and users
+# - All component interactions
+# - Calendar scheduling (UI only)
+```
+
+### 2. Database Mode Testing
+```bash
+# After Supabase setup:
+# - Create user account
+# - Join/create tribes
+# - Real workout tracking
+# - Persistent data storage
+```
+
+### 3. Payment Testing
+```bash
+# After Stripe setup, use test cards:
+# Success: 4242 4242 4242 4242
+# Decline: 4000 0000 0000 0002
+# Test TC purchases and wallet top-ups
+```
+
+## 🐛 Troubleshooting
+
+### Issue: "Supabase connection failed"
+```bash
+# Check your .env file:
+# - SUPABASE_URL format: https://xxx.supabase.co
+# - No trailing slashes
+# - Keys are complete (very long strings)
+```
+
+### Issue: "Build errors"
+```bash
+# Clear cache and reinstall:
+rm -rf .next node_modules
+yarn install
+yarn build
+```
+
+### Issue: "Payments not working"
+```bash
+# Verify Stripe keys:
+# - Test keys start with pk_test_ and sk_test_
+# - Live keys start with pk_live_ and sk_live_
+# - Match the account (same Stripe account)
+```
+
+### Issue: "AI features not working"
+```bash
+# Check Emergent LLM key:
+# - Key format: sk-emergent-xxxxx
+# - Key is active and has credits
+# - Network connectivity for API calls
+```
+
+## 📚 Next Steps
+
+### For Development
+1. Customize the UI components in `/components`
+2. Modify API routes in `/app/api`
+3. Add new features following existing patterns
+4. Test with both mock and real data
+
+### For Deployment
+1. Follow `/DEPLOYMENT.md` for production setup
+2. Configure domain and SSL certificates
+3. Set up monitoring and analytics
+4. Test all features end-to-end
+
+## 🆘 Getting Help
+
+- 📖 Check `/DEPLOYMENT.md` for deployment issues
+- 🐛 Check GitHub Issues for known problems
+- 📧 Create new issue with error details and steps to reproduce
 
 ---
 
-## 🎯 Core Value Delivered
+**🎉 You're ready to build the future of social fitness!**
 
-**TribeFit's "Aha" Moment**: Social workout accountability through financial and social pressure
-
-1. **User skips workout** → Must pay 100 TribeCoins OR watch ad
-2. **Tribe gets notified** → "Alex Chen PAID to skip 💸. Your tribe is stronger than excuses."
-3. **Money pools in Pact Wallet** → Tribe can spend on equipment together
-4. **Social pressure works** → Members are accountable even when apart
-
-This core loop is **fully functional** with real payments, database persistence, and multilingual support.
-
----
-
-## 💬 Support
-
-For questions about setup or development:
-1. Check the console logs for detailed error messages
-2. Verify all environment variables are set correctly
-3. Ensure Supabase schema was run successfully
-4. Test with Stripe test cards first
-
-**Happy building! 🏋️‍♂️✨**
+*Remember: TribeFit works in mock mode by default, so you can start development immediately even without external services.*
