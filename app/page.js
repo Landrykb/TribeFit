@@ -6,7 +6,7 @@ import {
   ShoppingCart, Heart, Clock, Target, Trophy, Zap,
   Play, SkipForward, Share, Gift, Star, UserPlus, X,
   Settings, LogOut, Camera, Vote, TrendingUp, Award,
-  Dumbbell, Calendar
+  Dumbbell, Calendar, Moon, Sun
 } from 'lucide-react';
 
 // Import new components
