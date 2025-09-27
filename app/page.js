@@ -353,7 +353,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         body: JSON.stringify({
           userId: user?.id || '00000000-0000-0000-0000-000000000001',
           method,
-          tribeId: '10000000-0000-0000-0000-000000000001'
+          tribeId: selectedTribe
         })
       });
 
