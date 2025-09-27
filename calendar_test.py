@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://workout-pact-1.preview.emergentagent.com"
+BASE_URL = "https://social-fitness-6.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 def test_calendar_scheduling():
@@ -222,7 +222,7 @@ def test_calendar_scheduling():
     print("\n5. Testing Calendar Retrieval by User")
     
     try:
-        response = requests.get(f"{API_BASE}/calendar?date=2024-01-15&user_id=00000000-0000-0000-0000-000000000001", timeout=10)
+        response = requests.get(f"{API_BASE}/calendar?date=2024-01-15&user_id=social-fitness-6", timeout=10)
         print(f"   Status: {response.status_code}")
         
         if response.status_code == 200:

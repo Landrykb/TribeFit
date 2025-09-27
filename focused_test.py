@@ -6,7 +6,7 @@ Focused test for failing endpoints with correct parameters
 import requests
 import json
 
-BASE_URL = "https://workout-pact-1.preview.emergentagent.com/api"
+BASE_URL = "https://social-fitness-6.preview.emergentagent.com/api"
 TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
 TEST_USER_ID_2 = "00000000-0000-0000-0000-000000000002"
 

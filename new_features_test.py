@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Base URL from environment
-BASE_URL = "https://workout-pact-1.preview.emergentagent.com/api"
+BASE_URL = "https://social-fitness-6.preview.emergentagent.com/api"
 
 def test_api_endpoint(method, endpoint, data=None, expected_status=200, description=""):
     """Helper function to test API endpoints"""

@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = "https://workout-pact-1.preview.emergentagent.com/api"
+BASE_URL = "https://social-fitness-6.preview.emergentagent.com/api"
 
 # Test user data
 TEST_USERS = {

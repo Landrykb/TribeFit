@@ -95,7 +95,7 @@ yarn dev
 
 ## 🎮 Demo
 
-Try the live demo: [TribeFit Demo](https://workout-pact-1.preview.emergentagent.com)
+Try the live demo: [TribeFit Demo](https://social-fitness-6.preview.emergentagent.com)
 
 **Demo Features:**
 - Mock user "Alex Chen" with 500 TC balance
