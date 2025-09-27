@@ -20,8 +20,24 @@
   body {
     font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Dark mode (default) */
+  .dark body,
+  body {
     background-color: #0D1117;
     color: #F8FAFC;
+  }
+
+  /* Light mode */
+  .light body {
+    background-color: #FFFFFF;
+    color: #1F2937;
+  }
+
+  .light :root {
+    color-scheme: light;
   }
   
   img {
