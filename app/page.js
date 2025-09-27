@@ -1208,29 +1208,37 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               <span className="text-surface-50 font-medium">Next Goal</span>
             </div>
             
-            {/* Mock priority wishlist item */}
+            {/* Dynamic priority wishlist item */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-surface-200 text-sm">Resistance Bands Set</span>
-                <span className="text-accent font-bold">150 TC</span>
+                <span className="text-surface-200 text-sm">{wishlistProgress.currentItem}</span>
+                <span className="text-accent font-bold">{wishlistProgress.targetAmount} TC</span>
               </div>
               
               {/* Progress Bar */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-surface-400">
                   <span>Progress</span>
-                  <span>85/150 TC (57%)</span>
+                  <span>
+                    {wishlistProgress.currentAmount}/{wishlistProgress.targetAmount} TC 
+                    ({Math.round((wishlistProgress.currentAmount / wishlistProgress.targetAmount) * 100)}%)
+                  </span>
                 </div>
                 <div className="w-full bg-surface-700 rounded-full h-2">
                   <div 
                     className="bg-accent h-2 rounded-full transition-all"
-                    style={{ width: '57%' }}
+                    style={{ 
+                      width: `${Math.min((wishlistProgress.currentAmount / wishlistProgress.targetAmount) * 100, 100)}%` 
+                    }}
                   />
                 </div>
               </div>
               
               <div className="text-xs text-surface-400">
-                Next skip split: +65 TC needed
+                {wishlistProgress.nextNeeded > 0 
+                  ? `Next skip split: +${wishlistProgress.nextNeeded} TC needed`
+                  : '🎉 Ready to purchase!'
+                }
               </div>
             </div>
           </div>
