@@ -379,6 +379,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           const newAdSkips = adSkipsThisWeek + 1;
           setAdSkipsThisWeek(newAdSkips);
           
+          setShowAdVideo(false);
+          setAdProgress(0);
+          toast.success(t('skip_ad_success'));
+          
           // Deal Breaker Alert on 3rd ad skip - TRIGGER REACTIONS
           if (newAdSkips >= 3 && Features.REACTIONS) {
             toast.error(t('deal_breaker_alert', { count: newAdSkips }));
