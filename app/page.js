@@ -1819,6 +1819,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         onVote={handleVote}
       />
 
+      <ReactionsPanel
+        isOpen={showReactionsPanel}
+        onClose={() => setShowReactionsPanel(false)}
+        targetUser={reactionTarget}
+        tribeId={selectedTribe || '10000000-0000-0000-0000-000000000001'}
+        currentUser={user}
+        onReactionSent={(reaction) => {
+          console.log('Reaction sent:', reaction);
+          // Optionally update UI or show notification
+        }}
+      />
+
       {/* Squad Upgrade Modal */}
       <SquadUpgradeModal
         isOpen={showSquadUpgradeModal}
