@@ -1448,6 +1448,35 @@ function TribeFitApp() {
         </div>
       </div>
 
+      {/* Theme & Language Settings */}
+      <div className="card">
+        <h3 className="font-bold text-surface-50 mb-4">Settings</h3>
+        
+        {/* Dark/Light Mode Toggle */}
+        <div className="flex items-center justify-between mb-4 p-3 bg-surface-800 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+              {isDarkMode ? <Moon size={16} className="text-primary" /> : <Sun size={16} className="text-accent" />}
+            </div>
+            <div>
+              <div className="text-surface-50 text-sm font-medium">Theme</div>
+              <div className="text-surface-400 text-xs">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isDarkMode ? 'bg-primary' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isDarkMode ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
       {/* Language Selector */}
       <div className="card">
         <h3 className="text-lg font-bold text-surface-50 mb-3">{t('language')}</h3>
