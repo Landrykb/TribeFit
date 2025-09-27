@@ -238,15 +238,21 @@ function TribeFitApp() {
         setShowSkipModal(false);
         
         if (method === 'ad') {
+          // Track ad skips and check for abuse
+          const newAdSkips = adSkipsThisWeek + 1;
+          setAdSkipsThisWeek(newAdSkips);
+          
           setShowAdVideo(false);
           setAdProgress(0);
           toast.success(t('skip_ad_success'));
+          
+          // Send snitch notification with ad count
+          sendSnitchNotification(user?.name || 'User', method, newAdSkips);
         } else {
           // Enhanced snitch notification for paying to skip
-          const snitchMessage = getRandomSkipMessage(user?.name || 'User');
           toast.success(t('skip_pay_success'));
           
-          // Send snitch notification to tribe members
+          // Send snitch notification for payment
           sendSnitchNotification(user?.name || 'User', method);
         }
       } else {
