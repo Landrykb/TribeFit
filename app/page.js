@@ -1142,22 +1142,24 @@ function TribeFitApp() {
               <span className="text-2xl">🔥</span>
               <span>Squads</span>
             </h3>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button
-                onClick={() => setShowSquadCreationModal(true)}
+                onClick={() => toast.info('Browse squads in leaderboard below to join')}
                 variant="ghost"
                 size="sm"
+                className="text-xs px-3 py-2"
               >
-                <Plus size={16} />
-                Join Squad
+                <Users size={14} />
+                <span className="ml-1">Join Squad</span>
               </Button>
               <Button
                 onClick={() => setShowSquadCreationModal(true)}
                 variant="primary"
                 size="sm"
+                className="text-xs px-3 py-2"
               >
-                <Plus size={16} />
-                Create Squad
+                <Plus size={14} />
+                <span className="ml-1">Create Squad</span>
               </Button>
             </div>
           </div>
