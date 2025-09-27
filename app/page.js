@@ -203,8 +203,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       { 
         id: '30000000-0000-0000-0000-000000000002', 
         name: 'Iron Hearts', 
-        description: 'Strength training focused squad',
-        group_type: 'squad',
+        description: 'Strength training tribe (auto-upgraded)',
+        group_type: 'tribe',
         members: 8, 
         member_count: 8,
         streak_days: 28, 
@@ -213,22 +213,24 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         pact_balance: 680,
         rank: 4,
         is_member: false,
-        owner_id: 'other-user'
+        owner_id: 'other-user',
+        upgraded_from_squad: true
       },
       { 
         id: '30000000-0000-0000-0000-000000000003', 
         name: 'Cardio Crushers', 
-        description: 'High-energy cardio squad',
+        description: 'High-energy cardio squad (ready to upgrade)',
         group_type: 'squad',
-        members: 5, 
-        member_count: 5,
+        members: 4, 
+        member_count: 4,
         streak_days: 25, 
         participation_rate: 88.0,
         balance: 320, 
         pact_balance: 320,
         rank: 5,
         is_member: false,
-        owner_id: 'other-user'
+        owner_id: 'other-user',
+        ready_for_upgrade: true
       },
       { 
         id: '30000000-0000-0000-0000-000000000004', 
