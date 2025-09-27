@@ -56,6 +56,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [tribes, setTribes] = useState([]);
   const [squads, setSquads] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [selectedTribe, setSelectedTribe] = useState('10000000-0000-0000-0000-000000000001'); // Default tribe ID
   
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
