@@ -1496,7 +1496,6 @@ function TribeFitApp() {
             </button>
           ))}
         </div>
-      </div>
 
       <Button 
         onClick={logout}
