@@ -35,7 +35,7 @@ import { useTranslation } from '../lib/i18n-hooks';
 import { Features } from '../lib/feature-flags';
 import { SquadProgression } from '../lib/squad-progression';
 
-function TribeFitApp() {
+function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const { user, logout, isAuthenticated } = useAuth();
   const toast = useToast();
   const { t, language, setLanguage, availableLanguages, getRandomSkipMessage } = useTranslation();
