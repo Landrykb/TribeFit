@@ -392,10 +392,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           const newAdSkips = adSkipsThisWeek + 1;
           setAdSkipsThisWeek(newAdSkips);
           
-          setShowAdVideo(false);
-          setAdProgress(0);
-          toast.success(t('skip_ad_success'));
-          
           // Deal Breaker Alert on 3rd ad skip - TRIGGER REACTIONS
           if (newAdSkips >= 3 && Features.REACTIONS) {
             toast.error(t('deal_breaker_alert', { count: newAdSkips }));
@@ -412,9 +408,27 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           
           // Send snitch notification with ad count
           sendSnitchNotification(user?.name || 'User', method, newAdSkips);
-        } else {
-          // Enhanced snitch notification for paying to skip
-          toast.success(t('skip_pay_success'));
+        } else if (method === 'pay') {
+          // Enhanced notifications for paid skips
+          if (data.deal_split_enabled && data.split_results && data.split_results.length > 0) {
+            const memberNames = data.split_results.map(r => r.member_name).join(', ');
+            const amountEach = data.split_results[0]?.amount_received || 0;
+            
+            toast.success(
+              t('skip_deal_skipper', { 
+                names: memberNames, 
+                amount: amountEach 
+              })
+            );
+            
+            // Show additional info about donation pool
+            if (data.donation_pool > 0) {
+              toast.info(`${Math.round(data.donation_pool - (data.donation_pool - 10))} TC added to donation pool`);
+            }
+          } else {
+            // Legacy payment skip without deal split
+            toast.success(getRandomSkipMessage(user?.name || 'Warrior'));
+          }
           
           // Optional: Allow reactions for paid skips too
           if (Features.REACTIONS && Math.random() > 0.7) { // 30% chance
@@ -426,6 +440,19 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           
           // Send snitch notification for payment
           sendSnitchNotification(user?.name || 'User', method);
+        }
+        
+        // Handle split results for both ad and pay methods (for the receiving users)
+        if (data.split_results && data.split_results.length > 0) {
+          // Find if current user received split TC (they are not the skipper)
+          const receivedAmount = data.split_results.find(r => r.member_id === user?.id)?.amount_received;
+          if (receivedAmount && Features.WISHLIST) {
+            updateWishlistProgress(receivedAmount);
+            
+            // Show split notification
+            const skipperName = data.split_results[0]?.from_user_name || 'Someone';
+            toast.success(`${skipperName} skipped! You received +${receivedAmount} TC 💰`);
+          }
         }
       } else {
         toast.error(data.error);
