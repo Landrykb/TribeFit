@@ -619,6 +619,78 @@ function TribeFitApp() {
     }
   };
 
+  // Squad → Tribe progression handlers
+  const handleSquadUpgrade = async (squadId) => {
+    try {
+      const response = await fetch('/api/squad/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          squadId,
+          upgradedBy: user?.id
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Show upgrade celebration
+        const upgradedSquad = squads.find(s => s.id === squadId);
+        const celebrationMessage = SquadProgression.getUpgradeCelebrationMessage(
+          upgradedSquad.name, 
+          language
+        );
+        
+        toast.success(celebrationMessage, { duration: 8000 });
+        
+        // Update local state - move squad to tribes
+        setSquads(prev => prev.filter(s => s.id !== squadId));
+        setTribes(prev => [...prev, { ...upgradedSquad, group_type: 'tribe' }]);
+        
+        // Award bonus TribeCoins
+        setWalletBalance(prev => prev + SquadProgression.getUpgradeRewards().bonusTC);
+        
+        setShowSquadUpgradeModal(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to upgrade squad');
+      }
+    } catch (error) {
+      console.error('Squad upgrade failed:', error);
+      toast.error('Failed to upgrade squad: ' + error.message);
+    }
+  };
+
+  const handleJoinSquad = async (squad) => {
+    try {
+      // Mock join functionality for now
+      toast.success(`Joined ${squad.name}! Welcome to the ${squad.group_type}! 🎉`);
+      
+      // Update local state
+      if (squad.group_type === 'squad') {
+        setSquads(prev => prev.map(s => 
+          s.id === squad.id 
+            ? { ...s, is_member: true, member_count: s.member_count + 1 }
+            : s
+        ));
+      } else {
+        setTribes(prev => prev.map(t => 
+          t.id === squad.id 
+            ? { ...t, is_member: true, member_count: t.member_count + 1 }
+            : t
+        ));
+      }
+    } catch (error) {
+      console.error('Join failed:', error);
+      toast.error('Failed to join: ' + error.message);
+    }
+  };
+
+  const handleViewSquad = (squad) => {
+    toast.info(`Viewing ${squad.name} details...`);
+    // Here you could navigate to a detailed squad/tribe view
+  };
+
   const handleWorkoutPlanGenerated = (plan) => {
     setGeneratedPlan(plan);
     setShowWorkoutPlan(true);
