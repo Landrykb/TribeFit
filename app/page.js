@@ -68,6 +68,7 @@ function TribeFitApp() {
   const [showVotingModal, setShowVotingModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [adSkipsThisWeek, setAdSkipsThisWeek] = useState(0); // Track weekly ad skips
 
   useEffect(() => {
     if (isAuthenticated) {
