@@ -138,8 +138,8 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
 
                   {/* Member indicator */}
                   {group.is_member && (
-                    <div className="flex-shrink-0 bg-success/20 text-success px-2 py-1 rounded text-xs">
-                      Member
+                    <div className="flex-shrink-0 bg-success/20 text-success px-2 py-1 rounded-lg text-xs font-medium">
+                      ✓ Member
                     </div>
                   )}
 
