@@ -1678,6 +1678,14 @@ function TribeFitApp() {
         pendingRequests={pendingRequests}
         onVote={handleVote}
       />
+
+      {/* Squad Upgrade Modal */}
+      <SquadUpgradeModal
+        isOpen={showSquadUpgradeModal}
+        onClose={() => setShowSquadUpgradeModal(false)}
+        squad={selectedSquadForUpgrade}
+        onConfirmUpgrade={handleSquadUpgrade}
+      />
     </div>
   );
 }
