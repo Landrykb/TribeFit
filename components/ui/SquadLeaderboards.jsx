@@ -79,7 +79,7 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
               return (
                 <div
                   key={group.id}
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer group ${
+                  className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer group ${
                     isTop3 
                       ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30 hover:border-primary/50' 
                       : 'bg-surface-800 border-surface-700 hover:border-surface-600'
