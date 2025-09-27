@@ -966,17 +966,19 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <Share size={20} />
           <span className="text-sm">{t('share_progress')}</span>
         </Button>
-        <Button 
-          onClick={() => {
-            setSelectedPost(null);
-            setShowTipModal(true);
-          }}
-          variant="primary"
-          className="h-14 flex-col"
-        >
-          <Gift size={20} />
-          <span className="text-sm">{t('tip_friend')}</span>
-        </Button>
+        {Features.TIPS && (
+          <Button 
+            onClick={() => {
+              setSelectedPost(null);
+              setShowTipModal(true);
+            }}
+            variant="primary"
+            className="h-14 flex-col"
+          >
+            <Gift size={20} />
+            <span className="text-sm">{t('tip_friend')}</span>
+          </Button>
+        )}
       </div>
     </div>
   );
