@@ -187,8 +187,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       { 
         id: '30000000-0000-0000-0000-000000000001', 
         name: 'Morning Legends', 
-        description: 'Early bird workout squad ready for upgrade!',
-        group_type: 'squad',
+        description: 'Early bird workout tribe (auto-upgraded from squad)',
+        group_type: 'tribe',
         members: 6, 
         member_count: 6,
         streak_days: 32, 
@@ -197,7 +197,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         pact_balance: 450,
         rank: 3,
         is_member: true,
-        owner_id: user?.id
+        owner_id: user?.id,
+        upgraded_from_squad: true
       },
       { 
         id: '30000000-0000-0000-0000-000000000002', 
