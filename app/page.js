@@ -1477,8 +1477,8 @@ function TribeFitApp() {
           </button>
         </div>
 
-      {/* Language Selector */}
-      <div className="card">
+        {/* Language Selector */}
+        <div>
         <h3 className="text-lg font-bold text-surface-50 mb-3">{t('language')}</h3>
         <div className="grid grid-cols-3 gap-2">
           {availableLanguages.map(lang => (
