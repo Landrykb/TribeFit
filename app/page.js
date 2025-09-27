@@ -836,9 +836,31 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   const updateWishlistProgress = (amount) => {
-    // Auto-assign TC to first wishlist item
-    // This is a placeholder function that would integrate with WishlistManager
-    toast.info(`+${amount} TC assigned to wishlist progress! 🎯`);
+    setWishlistProgress(prev => {
+      const newAmount = prev.currentAmount + amount;
+      const isComplete = newAmount >= prev.targetAmount;
+      
+      if (isComplete) {
+        toast.success(`🎉 ${prev.currentItem} fully funded! Ready to purchase!`);
+        
+        // Move to next item or clear progress
+        return {
+          currentItem: 'Yoga Mat Premium',
+          targetAmount: 120,
+          currentAmount: 0,
+          nextNeeded: 120
+        };
+      } else {
+        const remaining = prev.targetAmount - newAmount;
+        toast.info(`+${amount} TC → ${prev.currentItem} progress! ${remaining} TC remaining 🎯`);
+        
+        return {
+          ...prev,
+          currentAmount: newAmount,
+          nextNeeded: remaining
+        };
+      }
+    });
   };
 
   if (loading) {
