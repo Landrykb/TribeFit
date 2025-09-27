@@ -1151,7 +1151,17 @@ function TribeFitApp() {
             <span className="text-2xl">🪶</span>
             <span>Tribes</span>
           </h3>
-          {!Features.SQUADS && (
+          <div className="flex space-x-2">
+            {Features.SQUADS && (
+              <Button
+                onClick={() => toast.info('Browse tribes in leaderboard below to request membership')}
+                variant="ghost"
+                size="sm"
+              >
+                <Users size={16} />
+                Request to Join
+              </Button>
+            )}
             <Button
               onClick={() => setShowSquadCreationModal(true)}
               variant="primary"
@@ -1160,7 +1170,7 @@ function TribeFitApp() {
               <Plus size={16} />
               Create Tribe
             </Button>
-          )}
+          </div>
         </div>
         
         {tribes.length === 0 ? (
