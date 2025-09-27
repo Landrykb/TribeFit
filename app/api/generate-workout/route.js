@@ -1,112 +1,176 @@
 import { NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
+import { generateAIWorkout } from '../../../lib/ai-service.js';
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { fitnessGoals, availableTime, equipment, experienceLevel, userId } = body;
+    const { fitnessGoals, availableTime, equipment, experienceLevel, userId } = await request.json();
+
+    console.log('GPT-4o-mini workout generation request:', { fitnessGoals, availableTime, equipment, experienceLevel, userId });
 
     // Validate required fields
     if (!fitnessGoals || !availableTime || !equipment || !experienceLevel) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: fitnessGoals, availableTime, equipment, experienceLevel' },
         { status: 400 }
       );
     }
 
-    // Use Emergent LLM key for AI generation
-    const apiKey = process.env.EMERGENT_LLM_KEY;
-    
-    if (!apiKey) {
-      console.error('EMERGENT_LLM_KEY not found in environment variables');
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 500 }
-      );
-    }
-    
-    // Construct prompt for AI
-    const prompt = `
-Create a personalized workout plan with the following requirements:
-
-FITNESS GOALS: ${fitnessGoals}
-AVAILABLE TIME: ${availableTime} minutes per session
-EQUIPMENT ACCESS: ${equipment}
-EXPERIENCE LEVEL: ${experienceLevel}
-
-Please provide a detailed weekly workout plan that includes:
-1. A brief introduction explaining the benefits for these specific goals
-2. A 7-day structured schedule with specific workout days and rest days
-3. Detailed exercises for each day including:
-   - Exercise names
-   - Sets and reps (or time for cardio)
-   - Rest periods between sets
-   - Proper form cues
-4. Warm-up routine (5-10 minutes)
-5. Cool-down/stretching routine (5-10 minutes)
-6. Weekly progression recommendations
-7. Tips for nutrition and recovery
-
-Format the response in a clear, organized way using markdown-style headers and bullet points.
-Keep it practical and achievable for someone with ${experienceLevel} experience level.
-    `;
-
-    // Call OpenAI API through Emergent integration
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a certified personal trainer and fitness expert with 10+ years of experience. Create detailed, safe, and effective workout plans tailored to individual needs and goals.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API Error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const workoutPlan = data.choices[0].message.content;
-
-    // Store the generated plan (in a real app, save to database)
-    const planData = {
-      id: `plan-${Date.now()}`,
-      userId: userId || 'demo-user',
-      goals: fitnessGoals,
-      duration: availableTime,
+    // Use GPT-4o-mini AI service to generate personalized workout
+    const userProfile = {
+      userId: userId || 'default-user',
+      fitnessGoals,
+      availableTime,
       equipment,
-      level: experienceLevel,
-      content: workoutPlan,
-      createdAt: new Date().toISOString()
+      experienceLevel,
+      limitations: 'None' // Can be extended based on user input
     };
 
-    return NextResponse.json({ 
-      success: true, 
-      workoutPlan,
-      planId: planData.id
-    });
-    
+    try {
+      const aiWorkoutPlan = await generateAIWorkout(userProfile);
+      
+      // Ensure we have the required structure for the frontend
+      const workoutPlan = {
+        planId: `ai-plan-${Date.now()}`,
+        title: aiWorkoutPlan.title || `${experienceLevel} ${fitnessGoals} Workout`,
+        goal: fitnessGoals,
+        duration: availableTime,
+        level: experienceLevel,
+        equipment: equipment,
+        exercises: aiWorkoutPlan.exercises || [],
+        warmup: aiWorkoutPlan.warmup || [
+          'Light stretching - 2 minutes',
+          'Arm circles and leg swings - 2 minutes', 
+          'Light cardio movement - 1 minute'
+        ],
+        cooldown: aiWorkoutPlan.cooldown || [
+          'Deep breathing - 1 minute',
+          'Full body stretching - 4 minutes'
+        ],
+        tips: aiWorkoutPlan.tips || [
+          'Focus on proper form over speed',
+          'Listen to your body and rest when needed',
+          'Stay hydrated throughout the workout'
+        ],
+        estimatedCalories: aiWorkoutPlan.calories || Math.floor(availableTime * 6),
+        createdAt: new Date().toISOString(),
+        generatedBy: aiWorkoutPlan.generated_by || 'TribeFit AI Coach (GPT-4o-mini)',
+        aiContent: aiWorkoutPlan.content, // Raw AI response if available
+        difficulty: aiWorkoutPlan.difficulty || experienceLevel
+      };
+
+      console.log('GPT-4o-mini generated workout plan:', workoutPlan);
+
+      return NextResponse.json({ 
+        success: true, 
+        workoutPlan,
+        message: 'AI workout plan generated successfully with GPT-4o-mini' 
+      });
+
+    } catch (aiError) {
+      console.error('AI generation failed, using fallback:', aiError);
+      
+      // Fallback to mock system if AI fails
+      const fallbackWorkout = generateFallbackWorkout(userProfile);
+      
+      return NextResponse.json({ 
+        success: true, 
+        workoutPlan: fallbackWorkout,
+        message: 'Workout plan generated (fallback mode)',
+        note: 'AI temporarily unavailable - using smart fallback system'
+      });
+    }
+
   } catch (error) {
-    console.error('Error generating workout plan:', error);
+    console.error('Workout generation error:', error);
     return NextResponse.json(
-      { error: `Failed to generate workout plan: ${error.message}` },
+      { error: 'Failed to generate workout plan' },
       { status: 500 }
     );
   }
+}
+
+// Fallback function for when AI is unavailable
+function generateFallbackWorkout({ fitnessGoals, availableTime, equipment, experienceLevel, userId }) {
+  const mockWorkoutPlans = {
+    'Muscle Building': {
+      beginner: {
+        title: 'Beginner Muscle Building',
+        exercises: [
+          { name: 'Push-ups', sets: 3, reps: '8-12', rest: '60s', description: 'Keep body straight, lower chest to ground' },
+          { name: 'Squats', sets: 3, reps: '10-15', rest: '60s', description: 'Lower hips back and down, keep chest up' },
+          { name: 'Plank', sets: 3, reps: '30-60s', rest: '60s', description: 'Hold straight body position' }
+        ]
+      },
+      intermediate: {
+        title: 'Intermediate Muscle Building',
+        exercises: [
+          { name: 'Diamond Push-ups', sets: 4, reps: '10-15', rest: '90s', description: 'Hands form diamond shape' },
+          { name: 'Jump Squats', sets: 4, reps: '12-15', rest: '90s', description: 'Explode up from squat position' },
+          { name: 'Pike Push-ups', sets: 3, reps: '8-12', rest: '90s', description: 'Hands and feet form inverted V' }
+        ]
+      },
+      advanced: {
+        title: 'Advanced Muscle Building',
+        exercises: [
+          { name: 'One-arm Push-ups', sets: 5, reps: '5-8 each arm', rest: '2min', description: 'Ultimate push-up challenge' },
+          { name: 'Pistol Squats', sets: 4, reps: '6-10 each leg', rest: '2min', description: 'Single-leg squat to ground' }
+        ]
+      }
+    },
+    'Weight Loss': {
+      beginner: {
+        title: 'Beginner Fat Burn',
+        exercises: [
+          { name: 'Marching in Place', sets: 3, reps: '30s', rest: '30s', description: 'High knees, pump arms' },
+          { name: 'Wall Sits', sets: 3, reps: '20-30s', rest: '45s', description: 'Back against wall, thighs parallel' }
+        ]
+      },
+      intermediate: {
+        title: 'Intermediate HIIT Burn',
+        exercises: [
+          { name: 'Burpees', sets: 4, reps: '8-12', rest: '45s', description: 'Full body explosive movement' },
+          { name: 'Mountain Climbers', sets: 4, reps: '20-30', rest: '45s', description: 'Run in plank position' }
+        ]
+      },
+      advanced: {
+        title: 'Advanced Cardio Blast',
+        exercises: [
+          { name: 'Burpee Box Jumps', sets: 5, reps: '8-10', rest: '60s', description: 'Burpee + explosive jump' },
+          { name: 'Tabata Sprints', sets: 4, reps: '20s on/10s off', rest: '1min', description: 'High intensity intervals' }
+        ]
+      }
+    }
+  };
+
+  const goalPlans = mockWorkoutPlans[fitnessGoals] || mockWorkoutPlans['Weight Loss'];
+  const levelKey = experienceLevel.toLowerCase();
+  const workout = goalPlans[levelKey] || goalPlans['beginner'];
+
+  return {
+    planId: `fallback-plan-${Date.now()}`,
+    title: workout.title,
+    goal: fitnessGoals,
+    duration: availableTime,
+    level: experienceLevel,
+    equipment: equipment,
+    exercises: workout.exercises,
+    warmup: [
+      'Light stretching - 2 minutes',
+      'Arm circles and leg swings - 2 minutes',
+      'Light cardio movement - 1 minute'
+    ],
+    cooldown: [
+      'Deep breathing - 1 minute',
+      'Full body stretching - 4 minutes'
+    ],
+    tips: [
+      'Focus on proper form over speed',
+      'Listen to your body and rest when needed',
+      'Stay hydrated throughout the workout',
+      'Gradually increase intensity as you get stronger'
+    ],
+    estimatedCalories: Math.floor(availableTime * (experienceLevel === 'Advanced' ? 8 : experienceLevel === 'Intermediate' ? 6 : 4)),
+    createdAt: new Date().toISOString(),
+    generatedBy: 'TribeFit Smart Fallback System'
+  };
 }
