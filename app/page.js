@@ -976,37 +976,57 @@ function TribeFitApp() {
 
   const renderTribe = () => (
     <div className="space-y-6 animate-fade-in">
-      {/* Tribe Header */}
+      {/* Enhanced Tribe/Squad Header */}
       <div className="card">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center">
-            <Trophy size={32} className="text-white" />
+            {Features.SQUADS && squads.length > 0 ? (
+              <div className="flex">
+                <span className="text-2xl">🔥</span>
+                <span className="text-2xl">🪶</span>
+              </div>
+            ) : (
+              <Trophy size={32} className="text-white" />
+            )}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-surface-50">{t('founders_tribe')}</h2>
-            <p className="text-surface-400">{t('tribe_members_rank', { members: 15, rank: 1 })}</p>
+            <h2 className="text-xl font-bold text-surface-50">
+              {Features.SQUADS ? t('squads_and_tribes') || 'Squads & Tribes' : t('founders_tribe')}
+            </h2>
+            <p className="text-surface-400">
+              {Features.SQUADS 
+                ? `${squads.length} squads • ${tribes.length} tribes` 
+                : t('tribe_members_rank', { members: 15, rank: 1 })
+              }
+            </p>
           </div>
         </div>
         
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary number-display">{pactBalance}</div>
-            <div className="text-xs text-surface-400">{t('pact_balance')}</div>
+        {/* Current Group Stats (if member) */}
+        {(tribes.some(t => t.is_member) || squads.some(s => s.is_member)) && (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary number-display">{pactBalance}</div>
+              <div className="text-xs text-surface-400">{t('deal_vault') || 'Deal Vault'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-accent number-display">28</div>
+              <div className="text-xs text-surface-400">{t('day_streak')}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-success number-display">15</div>
+              <div className="text-xs text-surface-400">{t('members')}</div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-accent number-display">28</div>
-            <div className="text-xs text-surface-400">{t('day_streak')}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-success number-display">15</div>
-            <div className="text-xs text-surface-400">{t('members')}</div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Pact Actions */}
+      {/* Deal Vault Actions */}
       <div className="card">
-        <h3 className="text-lg font-bold text-surface-50 mb-4">{t('pact_wallet')}</h3>
+        <h3 className="text-lg font-bold text-surface-50 mb-4 flex items-center space-x-2">
+          <TrendingUp size={20} className="text-accent" />
+          <span>{t('deal_vault') || 'Deal Vault'}</span>
+        </h3>
         <div className="grid grid-cols-2 gap-4">
           <Button
             onClick={() => setShowEquipmentCatalog(true)}
@@ -1025,6 +1045,104 @@ function TribeFitApp() {
             <span className="text-sm">{t('donate_to_gym')}</span>
           </Button>
         </div>
+      </div>
+
+      {/* Squads Section (if feature enabled) */}
+      {Features.SQUADS && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-surface-50 flex items-center space-x-2">
+              <span className="text-2xl">🔥</span>
+              <span>Squads</span>
+            </h3>
+            <Button
+              onClick={() => setShowSquadCreationModal(true)}
+              variant="primary"
+              size="sm"
+            >
+              <Plus size={16} />
+              Create Squad
+            </Button>
+          </div>
+          
+          {squads.length === 0 ? (
+            <div className="text-center py-8 card">
+              <span className="text-6xl mb-4 block">🔥</span>
+              <div className="text-surface-400 mb-4">No squads yet</div>
+              <Button
+                onClick={() => setShowSquadCreationModal(true)}
+                variant="primary"
+              >
+                Create Your First Squad
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {squads.map((squad) => (
+                <SquadCard
+                  key={squad.id}
+                  squad={squad}
+                  onJoin={handleJoinSquad}
+                  onUpgrade={(squad) => {
+                    setSelectedSquadForUpgrade(squad);
+                    setShowSquadUpgradeModal(true);
+                  }}
+                  onView={handleViewSquad}
+                  isOwner={squad.is_member && squad.owner_id === user?.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tribes Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-surface-50 flex items-center space-x-2">
+            <span className="text-2xl">🪶</span>
+            <span>Tribes</span>
+          </h3>
+          {!Features.SQUADS && (
+            <Button
+              variant="primary"
+              size="sm"
+            >
+              <Plus size={16} />
+              Create Tribe
+            </Button>
+          )}
+        </div>
+        
+        {tribes.length === 0 ? (
+          <div className="text-center py-8 card">
+            <span className="text-6xl mb-4 block">🪶</span>
+            <div className="text-surface-400 mb-4">No tribes yet</div>
+            {Features.SQUADS ? (
+              <div className="space-y-2">
+                <p className="text-surface-500 text-sm">
+                  Create a Squad first, then upgrade it to a Tribe after building a 30-day streak!
+                </p>
+              </div>
+            ) : (
+              <Button variant="primary">
+                Create Your First Tribe
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {tribes.map((tribe) => (
+              <SquadCard
+                key={tribe.id}
+                squad={tribe}
+                onJoin={handleJoinSquad}
+                onView={handleViewSquad}
+                isOwner={tribe.is_member && tribe.owner_id === user?.id}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pending Votes */}
@@ -1088,37 +1206,44 @@ function TribeFitApp() {
         </div>
       )}
 
-      {/* Leaderboard */}
-      <div className="card">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp size={20} className="text-accent" />
-          <h3 className="text-lg font-bold text-surface-50">{t('tribe_leaderboard')}</h3>
-        </div>
-        <div className="space-y-3">
-          {leaderboard.map((tribe, index) => (
-            <div key={tribe.id} className="flex items-center justify-between p-3 bg-surface-800 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  index === 0 ? 'bg-yellow-500 text-black' :
-                  index === 1 ? 'bg-gray-400 text-black' :
-                  index === 2 ? 'bg-amber-600 text-white' :
-                  'bg-surface-700 text-surface-300'
-                }`}>
-                  {index + 1}
+      {/* Enhanced Leaderboard with Squad/Tribe separation */}
+      {Features.SQUAD_LEADERBOARDS ? (
+        <SquadLeaderboards
+          squads={squads}
+          tribes={tribes}
+        />
+      ) : (
+        <div className="card">
+          <div className="flex items-center space-x-2 mb-4">
+            <TrendingUp size={20} className="text-accent" />
+            <h3 className="text-lg font-bold text-surface-50">{t('tribe_leaderboard')}</h3>
+          </div>
+          <div className="space-y-3">
+            {leaderboard.map((tribe, index) => (
+              <div key={tribe.id} className="flex items-center justify-between p-3 bg-surface-800 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    index === 0 ? 'bg-yellow-500 text-black' :
+                    index === 1 ? 'bg-gray-400 text-black' :
+                    index === 2 ? 'bg-amber-600 text-white' :
+                    'bg-surface-700 text-surface-300'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div className="font-medium text-surface-100">{tribe.name}</div>
+                    <div className="text-sm text-surface-400">{tribe.members} {t('members')}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-surface-100">{tribe.name}</div>
-                  <div className="text-sm text-surface-400">{tribe.members} {t('members')}</div>
+                <div className="text-right">
+                  <div className="font-bold text-primary">{tribe.streak_days || tribe.streak} {t('days')}</div>
+                  <div className="text-xs text-surface-400">{tribe.balance} TC</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-primary">{tribe.streak} {t('days')}</div>
-                <div className="text-xs text-surface-400">{tribe.balance} TC</div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
