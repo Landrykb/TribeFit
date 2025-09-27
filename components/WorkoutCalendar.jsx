@@ -287,6 +287,7 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
           onClose={() => setShowScheduler(false)}
           selectedDate={selectedDate}
           onSchedule={handleScheduleWorkout}
+          user={user}
         />
       )}
     </Modal>
