@@ -1831,7 +1831,9 @@ export default function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <TribeFitApp />
+        <div className={isDarkMode ? 'dark' : 'light'}>
+          <TribeFitApp />
+        </div>
       </AuthProvider>
     </ToastProvider>
   );
