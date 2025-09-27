@@ -1200,24 +1200,26 @@ function TribeFitApp() {
             <span className="text-2xl">🪶</span>
             <span>Tribes</span>
           </h3>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             {Features.SQUADS && (
               <Button
                 onClick={() => toast.info('Browse tribes in leaderboard below to request membership')}
                 variant="ghost"
                 size="sm"
+                className="text-xs px-3 py-2"
               >
-                <Users size={16} />
-                Request to Join
+                <Users size={14} />
+                <span className="ml-1">Request Join</span>
               </Button>
             )}
             <Button
               onClick={() => setShowSquadCreationModal(true)}
               variant="primary"
               size="sm"
+              className="text-xs px-3 py-2"
             >
-              <Plus size={16} />
-              Create Tribe
+              <Plus size={14} />
+              <span className="ml-1">Create Tribe</span>
             </Button>
           </div>
         </div>
