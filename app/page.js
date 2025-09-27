@@ -138,14 +138,69 @@ function TribeFitApp() {
   };
 
   const loadTribesAndLeaderboard = async () => {
-    // Mock tribe data with leaderboard
+    // Enhanced mock tribe and squad data with progression system
     const mockTribes = [
-      { id: '1', name: 'Founders Tribe', members: 15, streak: 28, balance: 1250, rank: 1 },
-      { id: '2', name: 'Iron Warriors', members: 23, streak: 21, balance: 980, rank: 2 },
-      { id: '3', name: 'Fit Legends', members: 18, streak: 19, balance: 750, rank: 3 },
-      { id: '4', name: 'Strength Squad', members: 12, streak: 14, balance: 650, rank: 4 },
+      { 
+        id: '1', 
+        name: 'Founders Tribe', 
+        description: 'Elite fitness community of founding members',
+        group_type: 'tribe',
+        members: 15, 
+        member_count: 15,
+        streak_days: 45, 
+        participation_rate: 89.5,
+        balance: 1250, 
+        pact_balance: 1250,
+        rank: 1,
+        is_member: true,
+        customization_data: { theme_color: 'indigo', logo_url: '/tribe-logos/founders.png' }
+      },
+      { 
+        id: '30000000-0000-0000-0000-000000000001', 
+        name: 'Morning Legends', 
+        description: 'Early bird workout squad ready for upgrade!',
+        group_type: 'squad',
+        members: 6, 
+        member_count: 6,
+        streak_days: 32, 
+        participation_rate: 85.5,
+        balance: 450, 
+        pact_balance: 450,
+        rank: 2,
+        is_member: true
+      },
+      { 
+        id: '30000000-0000-0000-0000-000000000002', 
+        name: 'Iron Hearts', 
+        description: 'Strength training focused squad',
+        group_type: 'squad',
+        members: 8, 
+        member_count: 8,
+        streak_days: 18, 
+        participation_rate: 72.0,
+        balance: 680, 
+        pact_balance: 680,
+        rank: 3,
+        is_member: false
+      },
+      { 
+        id: '30000000-0000-0000-0000-000000000003', 
+        name: 'Cardio Crushers', 
+        description: 'High-energy cardio squad',
+        group_type: 'squad',
+        members: 5, 
+        member_count: 5,
+        streak_days: 15, 
+        participation_rate: 65.0,
+        balance: 230, 
+        pact_balance: 230,
+        rank: 4,
+        is_member: false
+      }
     ];
-    setTribes(mockTribes);
+    
+    setTribes(mockTribes.filter(t => t.group_type === 'tribe'));
+    setSquads(mockTribes.filter(t => t.group_type === 'squad'));
     setLeaderboard(mockTribes);
   };
 
