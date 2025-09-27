@@ -1233,6 +1233,21 @@ function TribeFitApp() {
         <Modal isOpen={showSkipModal} onClose={() => setShowSkipModal(false)} title={t('skip_workout_question')}>
           <p className="text-surface-400 mb-6">{t('choose_skip_method')}</p>
           
+          {/* Ad watch warning */}
+          {adSkipsThisWeek >= 2 && (
+            <div className="bg-warning/20 border border-warning/30 rounded-lg p-3 mb-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-warning">⚠️</span>
+                <p className="text-warning text-sm">
+                  {adSkipsThisWeek === 2 ? 
+                    t('ad_warning_approaching') || "You've watched 2 ads this week. One more and your tribe gets notified!" :
+                    t('ad_warning_exceeded') || `You've watched ${adSkipsThisWeek} ads this week! Your tribe will be notified of excessive ad watching.`
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-3">
             <Button
               onClick={() => handleSkip('pay')}
@@ -1246,7 +1261,7 @@ function TribeFitApp() {
               variant="primary"
               className="w-full"
             >
-              {t('watch_ad_skip')}
+              {t('watch_ad_skip')} {adSkipsThisWeek > 0 && `(${adSkipsThisWeek} this week)`}
             </Button>
             <Button
               onClick={() => setShowSkipModal(false)}
