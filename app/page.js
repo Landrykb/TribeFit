@@ -1828,13 +1828,21 @@ function TribeFitApp() {
 
 // Wrap with providers
 export default function App() {
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <div className={isDarkMode ? 'dark' : 'light'}>
-          <TribeFitApp />
-        </div>
-      </AuthProvider>
-    </ToastProvider>
+    <div className={isDarkMode ? 'dark' : ''}>
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-surface-950 text-surface-50' 
+          : 'bg-white text-gray-900'
+      }`}>
+        <ToastProvider>
+          <AuthProvider>
+            <TribeFitApp isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+          </AuthProvider>
+        </ToastProvider>
+      </div>
+    </div>
   );
 }
