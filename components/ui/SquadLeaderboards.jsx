@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from './button';
 import { 
   Trophy, TrendingUp, Users, Flame, Crown, 
-  Medal, Star, ChevronDown, ChevronUp
+  Medal, Star, ChevronDown, ChevronUp, Check
 } from 'lucide-react';
 import { Features } from '../../lib/feature-flags';
 
@@ -75,80 +75,51 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
             {displayGroups.map((group, index) => {
               const rank = index + 1;
               const isTop3 = rank <= 3;
-              
+
               return (
                 <div
                   key={group.id}
-                  className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer group ${
-                    isTop3 
-                      ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30 hover:border-primary/50 light:bg-gradient-to-r light:from-white light:to-gray-50 light:border-primary/40 light:hover:border-primary/60' 
-                      : 'bg-surface-800 border-surface-700 hover:border-surface-600 light:bg-white light:border-gray-200 light:hover:border-gray-300'
+                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                    isTop3
+                      ? 'bg-surface-800/80 border-primary/30 light:bg-primary-50 light:border-primary/30'
+                      : 'bg-surface-800/60 border-surface-700/60 light:bg-white light:border-gray-200'
                   }`}
                   onClick={() => handleGroupClick(group)}
                 >
                   {/* Rank */}
-                  <div className="flex-shrink-0 w-8 flex justify-center">
+                  <div className="flex-shrink-0 w-9 flex justify-center">
                     {getRankIcon(rank)}
                   </div>
 
                   {/* Group Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium text-surface-50 truncate">{group.name}</h4>
-                      <div className={`px-2 py-0.5 rounded-full text-xs border ${
-                        type === 'tribe'
-                          ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'
-                          : 'bg-primary/20 text-primary border-primary/30'
-                      }`}>
-                        {type}
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-surface-50 truncate text-sm">{group.name}</h4>
+                      {isTop3 && <Star size={12} className="text-accent flex-shrink-0" />}
                     </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm">
-                      <div className="flex items-center space-x-1">
-                        <Users size={12} className="text-surface-400" />
-                        <span className="text-surface-300">{group.member_count || 0}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Flame size={12} className="text-orange-500" />
-                        <span className="text-orange-500 font-medium">{group.streak_days || 0}d</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <TrendingUp size={12} className="text-accent" />
-                        <span className="text-accent">{Math.round(group.participation_rate || 0)}%</span>
-                      </div>
+                    <div className="flex items-center gap-3 text-[11px] text-surface-400 mt-0.5">
+                      <span className="flex items-center gap-1"><Users size={11} />{group.member_count || 0}</span>
+                      <span className="flex items-center gap-1 text-accent"><Flame size={11} />{group.streak_days || 0}d</span>
+                      <span className="flex items-center gap-1"><TrendingUp size={11} />{Math.round(group.participation_rate || 0)}%</span>
                     </div>
                   </div>
 
-                  {/* Deal Vault */}
-                  <div className="text-right mr-3">
-                    <div className="font-bold text-surface-50">{group.pact_balance || 0}</div>
-                    <div className="text-surface-400 text-xs">TC</div>
+                  {/* Right: TC + status */}
+                  <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                    <div className="font-bold text-surface-50 text-sm leading-none">{group.pact_balance || 0}<span className="text-[10px] font-medium text-surface-400 ml-0.5">TC</span></div>
+                    {group.is_member ? (
+                      <span className="inline-flex items-center gap-1 bg-success/15 text-success border border-success/30 px-1.5 py-0.5 rounded-lg text-[10px] font-semibold">
+                        <Check size={10} /> Member
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => handleJoinClick(e, group)}
+                        className="bg-primary text-surface-950 px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap"
+                      >
+                        {type === 'squad' ? 'Join' : 'Request'}
+                      </button>
+                    )}
                   </div>
-
-                  {/* Join Button - Only show if not a member */}
-                  {!group.is_member && (
-                    <button
-                      onClick={(e) => handleJoinClick(e, group)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary-600 text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap"
-                    >
-                      {type === 'squad' ? 'Join' : 'Request'}
-                    </button>
-                  )}
-
-                  {/* Member indicator */}
-                  {group.is_member && (
-                    <div className="flex-shrink-0 bg-success/20 text-success px-2 py-1 rounded-lg text-xs font-medium">
-                      ✓ Member
-                    </div>
-                  )}
-
-                  {/* Special indicators */}
-                  {isTop3 && (
-                    <div className="flex-shrink-0">
-                      <Star size={16} className="text-accent" />
-                    </div>
-                  )}
                 </div>
               );
             })}
