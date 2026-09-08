@@ -952,4 +952,14 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
-}
+}/* scrollbar-none */ .scrollbar-none { scrollbar-width: none; } .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Light mode: literal text-white becomes dark ink, except on colored backgrounds */
+  .light .text-white { color: #14131B; }
+  .light .bg-accent .text-white, .light .bg-accent\/10 .text-white, .light .bg-accent\/15 .text-white,
+  .light .bg-accent\/20 .text-white, .light .bg-accent\/30 .text-white,
+  .light .bg-danger .text-white, .light .bg-red-500 .text-white, .light .bg-red-600 .text-white,
+  .light .bg-success .text-white, .light .bg-green-500 .text-white, .light .bg-green-600 .text-white,
+  .light .bg-blue-600 .text-white, .light .bg-purple-600 .text-white, .light .bg-pink-600 .text-white,
+  .light .bg-gradient-to-br .text-white, .light .bg-gradient-to-r .text-white,
+  .light .bg-black .text-white, .light .bg-black\/60 .text-white { color: #FFFFFF; }

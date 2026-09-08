@@ -47,7 +47,7 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
       <div className="space-y-6 max-h-[600px] overflow-y-auto">
         {/* Celebration Header */}
         <div className="text-center bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30">
-          <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Crown size={32} className="text-yellow-500" />
           </div>
           <h2 className="text-xl font-bold text-surface-50 mb-2">
@@ -185,7 +185,7 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
             <ArrowRight size={20} className="text-surface-400" />
             
             <div className="text-center">
-              <div className="w-12 h-12 bg-gradient-tribal rounded-lg flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-2xl flex items-center justify-center mb-2">
                 <Crown size={20} className="text-yellow-500" />
               </div>
               <div className="text-yellow-500 text-xs font-medium">Tribe</div>

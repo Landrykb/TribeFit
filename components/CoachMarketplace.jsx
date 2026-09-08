@@ -147,7 +147,7 @@ export function CoachMarketplace({
                   onClick={() => setFilterTribe('all')}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     filterTribe === 'all'
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
                   }`}
                 >
@@ -157,7 +157,7 @@ export function CoachMarketplace({
                   onClick={() => setFilterTribe('tribe')}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     filterTribe === 'tribe'
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
                   }`}
                 >
@@ -167,7 +167,7 @@ export function CoachMarketplace({
                   onClick={() => setFilterTribe('external')}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     filterTribe === 'external'
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
                   }`}
                 >
@@ -244,7 +244,7 @@ function CoachCard({ coach, onHire, onViewDetails, userTribeId, walletBalance })
       <div className="flex items-start gap-3">
         {/* Avatar */}
         <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-          <span className="text-xl font-bold text-white">
+          <span className="text-xl font-bold text-surface-950">
             {coach.name?.charAt(0) || 'C'}
           </span>
         </div>
@@ -495,7 +495,7 @@ function CoachDetailsModal({ coach, onClose, onHire, walletBalance }) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">
+                <span className="text-2xl font-bold text-surface-950">
                   {coach.name?.charAt(0) || 'C'}
                 </span>
               </div>

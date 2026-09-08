@@ -322,7 +322,7 @@ export function EnhancedWorkoutGenerator({
             <div key={num} className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                 step >= num 
-                  ? 'bg-primary text-white' 
+                  ? 'bg-primary text-surface-950' 
                   : 'bg-surface-700 light:bg-gray-300 text-surface-400 light:text-gray-600'
               }`}>
                 {step > num ? <Check size={16} /> : num}

@@ -192,7 +192,7 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
             onClick={() => setActiveTab('squads')}
             className={`px-3 py-1 rounded text-sm font-medium transition-all ${
               activeTab === 'squads'
-                ? 'bg-primary text-white'
+                ? 'bg-primary text-surface-950'
                 : 'text-surface-400 hover:text-surface-200 light:text-gray-600 light:hover:text-gray-800'
             }`}
           >
@@ -202,7 +202,7 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
             onClick={() => setActiveTab('tribes')}
             className={`px-3 py-1 rounded text-sm font-medium transition-all ${
               activeTab === 'tribes'
-                ? 'bg-primary text-white'
+                ? 'bg-primary text-surface-950'
                 : 'text-surface-400 hover:text-surface-200 light:text-gray-600 light:hover:text-gray-800'
             }`}
           >

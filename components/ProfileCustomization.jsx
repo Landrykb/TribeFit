@@ -104,7 +104,7 @@ export function ProfileCustomization({ isOpen, onClose, userId, currentName, cur
         <div className="bg-surface-800 rounded-xl p-4">
           <h3 className="text-sm font-medium text-surface-200 mb-3">Preview</h3>
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-tribal rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
               {React.createElement(ProfileIcons[selectedIcon].icon, {
                 size: 24,
                 className: "text-white"

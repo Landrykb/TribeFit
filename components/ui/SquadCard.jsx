@@ -7,8 +7,10 @@ import {
   Star, ChevronRight, Flame, ArrowUp, Settings, X, AlertTriangle, Clock, Lock, Feather
 } from 'lucide-react';
 import { SquadProgression } from '../../lib/squad-progression';
+import { useTranslation } from '../../lib/i18n-hooks';
 
 export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false }) {
+  const { t } = useTranslation();
   const progressionStatus = SquadProgression.getProgressionStatus(squad);
   const isSquad = squad.group_type === 'squad';
   const canUpgrade = progressionStatus?.isEligible && isOwner;
@@ -93,21 +95,21 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
               <Users size={16} className="text-primary" />
               <span className="font-bold text-primary">{squad.member_count || 0}</span>
             </div>
-            <div className="text-xs text-surface-300 font-medium mt-1">members</div>
+            <div className="text-xs text-surface-300 font-medium mt-1">{t('members_label')}</div>
           </div>
           <div className="text-center p-3 bg-surface-800/60 rounded-2xl border border-surface-700/60">
             <div className="flex items-center justify-center space-x-1">
               <Flame size={16} className="text-orange-500" />
               <span className="font-bold text-orange-500">{squad.streak_days || 0}</span>
             </div>
-            <div className="text-xs text-surface-300 font-medium mt-1">streak</div>
+            <div className="text-xs text-surface-300 font-medium mt-1">{t('day_streak_label')}</div>
           </div>
           <div className="text-center p-3 bg-surface-800/60 rounded-2xl border border-surface-700/60">
             <div className="flex items-center justify-center space-x-1">
               <Trophy size={16} className="text-accent" />
               <span className="font-bold text-accent">{Math.round(squad.participation_rate || 0)}%</span>
             </div>
-            <div className="text-xs text-surface-300 font-medium mt-1">active</div>
+            <div className="text-xs text-surface-300 font-medium mt-1">{t('active')}</div>
           </div>
         </div>
 
@@ -211,7 +213,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
               className="flex-1"
             >
               <Users size={16} />
-              Join {isSquad ? 'Squad' : 'Tribe'}
+              {t('join_squad')} {isSquad ? 'Squad' : 'Tribe'}
             </Button>
           )}
         </div>

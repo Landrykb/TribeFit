@@ -408,22 +408,22 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex bg-surface-900 rounded-2xl p-1 border border-surface-700/60">
+        {/* Tabs — scrollable on mobile, no overflow */}
+        <div className="flex bg-surface-900 rounded-2xl p-1 border border-surface-700/60 overflow-x-auto scrollbar-none">
           {tabs.slice(0, isMember ? tabs.length : 2).map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded text-sm font-medium transition-all ${
+                className={`flex-shrink-0 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all ${
                   activeTab === tab.id
                     ? 'bg-primary text-surface-950'
                     : 'text-surface-400 hover:text-surface-200'
                 }`}
               >
-                <Icon size={16} />
-                <span>{tab.label}</span>
+                <Icon size={14} />
+                <span className="hidden min-[400px]:inline">{tab.label}</span>
               </button>
             );
           })}

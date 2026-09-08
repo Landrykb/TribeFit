@@ -208,7 +208,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       const js = await res.json();
       if (res.ok) {
         setSkipMode(js.skipMode);
-        toast.success(`Skip mode set to ${js.skipMode === 'tribe_fund' ? 'Tribe Fund' : 'Teammate Boost'}`);
+        toast.success(`Skip mode set to ${js.skipMode === 'tribe_fund' ? t('tribe_fund') : t('teammate_boost')}`);
       } else {
         toast.error(js.error || 'Failed to set mode');
       }
@@ -1284,7 +1284,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             setSkipMode(msg.skipMode);
             setModeVote(null);
             setModeVoteTotals(null);
-            toast.info(`Skip mode changed to ${msg.skipMode === 'tribe_fund' ? 'Tribe Fund' : 'Teammate Boost'}`);
+            toast.info(`Skip mode changed to ${msg.skipMode === 'tribe_fund' ? t('tribe_fund') : t('teammate_boost')}`);
             return;
           }
           if (msg.type === 'vote_started') {
@@ -2948,7 +2948,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       const isComplete = newAmount >= prev.targetAmount;
       
       if (isComplete) {
-        toast.success(`🎉 ${prev.currentItem} fully funded! Ready to purchase!`);
+        toast.success(`🎉 ${prev.currentItem} fully funded! {t('ready_purchase')}`);
         
         // Move to next item or clear progress
         return {
@@ -3001,7 +3001,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       <div className="min-h-screen bg-surface-950 flex items-center justify-center tribal-pattern">
         <div className="max-w-md w-full p-8">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-tribal rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Zap size={40} className="text-white" />
             </div>
             <h1 className="text-3xl font-bold text-surface-50 mb-2">TribeFit</h1>
@@ -3346,7 +3346,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {/* Enhanced Tribe/Squad Header */}
       <div className="card">
         <div className="flex items-center space-x-4 mb-2">
-          <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
             {Features.SQUADS && (squads.length > 0 || tribes.length > 0) ? (
               <div className="flex">
                 <Flame size={26} className="text-accent" />
@@ -3393,7 +3393,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <div className="bg-surface-700 border border-surface-600 rounded-xl p-3 pointer-events-auto">
             <div className="flex items-start justify-between pointer-events-auto">
               <div>
-                <div className="text-sm text-surface-300">Catch-Up Credits</div>
+                <div className="text-sm text-surface-300">{t('catch_up_credits')}</div>
                 <div className="text-xl font-bold text-surface-50">{catchUpCredits}</div>
               </div>
               <Button 
@@ -3440,11 +3440,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-surface-50 flex items-center space-x-2">
             <TrendingUp size={24} className="text-accent" />
-            <span>Tribe Vault</span>
+            <span>{t('tribe_vault')}</span>
           </h3>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">{pactBalance} TC</div>
-            <div className="text-xs text-surface-400">Community Fund</div>
+            <div className="text-xs text-surface-400">{t('community_fund')}</div>
           </div>
         </div>
         
@@ -3452,18 +3452,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="mb-4 p-3 bg-surface-800/60 border border-surface-700/60 rounded-2xl">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-surface-300"><Coins size={14} className="text-primary" /> Skip Mode</span>
+              <span className="flex items-center gap-2 text-surface-300"><Coins size={14} className="text-primary" /> {t('skip_mode')}</span>
               <span className="font-semibold text-surface-100">
-                {skipMode === 'tribe_fund' ? 'Tribe Fund' : 'Teammate Boost'}
+                {skipMode === 'tribe_fund' ? t('tribe_fund') : t('teammate_boost')}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-surface-300"><Users size={14} className="text-primary" /> Active Members</span>
+              <span className="flex items-center gap-2 text-surface-300"><Users size={14} className="text-primary" /> {t('active_members')}</span>
               <span className="font-semibold text-surface-100">{testUsers?.length || 0}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-surface-300"><TrendingUp size={14} className="text-primary" /> Vault Usage</span>
-              <span className="font-semibold text-surface-100">Gear & Donations</span>
+              <span className="flex items-center gap-2 text-surface-300"><TrendingUp size={14} className="text-primary" /> {t('vault_usage')}</span>
+              <span className="font-semibold text-surface-100">{t('gear_and_donations')}</span>
             </div>
           </div>
         </div>
@@ -3473,7 +3473,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <div className="bg-surface-700 border border-surface-600 rounded-xl p-4 flex flex-col gap-3 h-full">
             <div className="flex items-center gap-2">
               <Gift size={18} className="text-accent" />
-              <span className="text-surface-50 font-semibold text-sm">Next Goal</span>
+              <span className="text-surface-50 font-semibold text-sm">{t('next_goal')}</span>
             </div>
 
             <div className="space-y-2">
@@ -3500,7 +3500,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               {wishlistProgress.nextNeeded > 0 ? (
                 <div className="text-xs text-surface-300 font-medium">Remaining: <span className="text-accent font-bold">+{wishlistProgress.nextNeeded} TC</span></div>
               ) : (
-                <div className="text-xs text-success font-semibold flex items-center gap-1"><CheckCircle size={12} className="text-success" /> Ready to purchase!</div>
+                <div className="text-xs text-success font-semibold flex items-center gap-1"><CheckCircle size={12} className="text-success" /> {t('ready_purchase')}</div>
               )}
 
               {/* Simplified: hide donors list and dev/test controls to keep card focused */}
@@ -3513,8 +3513,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   size="sm"
                   className="w-full h-9"
                 >
-                  <Dumbbell size={16} />
-                  Next Gear
+                  {t('spend_next_gear')}
                 </Button>
               </div>
             </div>
@@ -3527,7 +3526,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 <Heart size={18} className="text-accent" />
                 <span className="text-surface-50 font-semibold text-sm">{t('donate_to_gym')}</span>
               </div>
-              <p className="text-xs text-surface-400">Support local gym gear</p>
+              <p className="text-xs text-surface-400">{t('donate_to_gym_desc')}</p>
             </div>
             <div className="pt-3">
               <Button
@@ -3536,7 +3535,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 size="sm"
                 className="w-full h-9"
               >
-                <Heart size={16} />
                 Donate
               </Button>
             </div>
@@ -3551,7 +3549,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-surface-50 flex items-center space-x-3">
               <Flame size={26} className="text-accent" />
-              <span>Squads</span>
+              <span>{t('squads_label')}</span>
             </h3>
             <div className="flex gap-2">
               <Button
@@ -3560,7 +3558,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 className="h-9 px-3 bg-primary/10 border border-primary/30 hover:bg-primary/20 text-primary flex items-center gap-1"
               >
                 <Users size={16} />
-                <span className="text-sm font-medium">Join Squad</span>
+                <span className="text-sm font-medium">{t('join_squad')}</span>
               </Button>
               <Button
                 onClick={() => setShowSquadCreationModal(true)}
@@ -3568,7 +3566,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 className="h-9 px-3 flex items-center gap-1"
               >
                 <Plus size={16} />
-                <span className="text-sm font-bold">Create</span>
+                <span className="text-sm font-bold">{t('create')}</span>
               </Button>
             </div>
           </div>
@@ -3585,7 +3583,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Crown size={20} className="text-yellow-500" />
-                      <h3 className="text-lg font-bold text-surface-50">Tribes</h3>
+                      <h3 className="text-lg font-bold text-surface-50">{t('tribes_label')}</h3>
                       <span className="text-xs px-2 py-1 rounded bg-yellow-500/20 text-yellow-500">{tribes.length}</span>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
@@ -3611,7 +3609,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   <div className="space-y-4" id="squad-leaderboard">
                     <div className="flex items-center gap-2">
                       <Users size={20} className="text-primary" />
-                      <h3 className="text-lg font-bold text-surface-50">Squads</h3>
+                      <h3 className="text-lg font-bold text-surface-50">{t('squads_label')}</h3>
                       <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">{onlySquads.length}</span>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
@@ -3781,20 +3779,20 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           </div>
           <h2 className="text-3xl font-bold text-surface-50 mb-2">{t('coaches')}</h2>
           <p className="text-surface-400 light:text-gray-600 mb-6 max-w-md mx-auto">
-            Pick a certified coach to level up your training — or become one and earn TC.
+            {t('coach_sub')}
           </p>
           <Button onClick={() => setShowCoachMarketplace(true)} variant="primary" size="lg" className="min-w-[220px] h-12">
             <Sparkles size={18} className="mr-2" />
-            Open Marketplace
+            {t('open_marketplace')}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
-          { name: 'AI Coach', icon: Bot, color: 'primary', desc: 'Free workouts & instant feedback', price: 'Free' },
-          { name: 'Strength Pro', icon: Dumbbell, color: 'accent', desc: 'Progressive overload plans', price: '150 TC/session' },
-          { name: 'Run Coach', icon: Footprints, color: 'success', desc: 'Outdoor & treadmill programs', price: '120 TC/session' },
+          { name: t('ai_coach'), icon: Bot, color: 'primary', desc: t('ai_coach_desc'), price: t('free') },
+          { name: 'Strength Pro', icon: Dumbbell, color: 'accent', desc: t('strength_coach_desc'), price: `150 ${t('per_session')}` },
+          { name: 'Run Coach', icon: Footprints, color: 'success', desc: t('run_coach_desc'), price: `120 ${t('per_session')}` },
         ].map((c) => (
           <div key={c.name} className="card hover-elevate p-4 flex gap-3 items-start">
             <div className={`w-11 h-11 rounded-xl bg-${c.color}/15 border border-${c.color}/30 flex items-center justify-center flex-shrink-0`}>
@@ -3832,7 +3830,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 />
               </StreakRing>
             ) : (
-              <div className="w-20 h-20 bg-gradient-tribal rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
                 <span className="text-white font-bold text-2xl">{effectiveUserName?.charAt(0) || 'A'}</span>
               </div>
             )}
@@ -4105,12 +4103,21 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   return (
     <div className="min-h-screen bg-surface-950">
-      <div className="max-w-md mx-auto bg-surface-950 min-h-screen shadow-2xl">
+      <div className="max-w-md mx-auto bg-surface-950 min-h-screen shadow-2xl relative">
+        {/* Global ambient blobs */}
+        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+          <svg className="absolute -top-32 -left-24 w-96 h-96 opacity-40 animate-blob-a" viewBox="0 0 200 200">
+            <path fill="#A3E635" fillOpacity="0.08" d="M45.7,-58.9C58.9,-51.1,69.4,-36.5,73.5,-20.7C77.6,-4.9,75.3,12.1,67.8,25.9C60.3,39.7,47.7,50.4,33.4,57.8C19.1,65.2,3.1,69.4,-12.4,66.9C-27.9,64.4,-42.8,55.3,-53.2,42.8C-63.6,30.3,-69.5,14.4,-68.6,-0.8C-67.7,-16,-60,-30.5,-49.6,-38.4C-39.2,-46.3,-26,-47.6,-13.4,-51.9C-0.8,-56.2,11.2,-63.5,22.5,-64.4C33.8,-65.3,44.4,-59.7,45.7,-58.9Z" transform="translate(100 100)" />
+          </svg>
+          <svg className="absolute -bottom-32 -right-24 w-96 h-96 opacity-30 animate-blob-b" viewBox="0 0 200 200">
+            <path fill="#FF5436" fillOpacity="0.07" d="M39.9,-51.2C53.4,-42.9,67.3,-32.5,72.6,-18.4C77.9,-4.3,74.6,13.5,66.5,27.5C58.4,41.5,45.5,51.7,31.3,57.9C17.1,64.1,1.6,66.3,-13.4,63.6C-28.4,60.9,-42.9,53.3,-52.9,41.5C-62.9,29.7,-68.4,13.6,-67.6,-1.7C-66.8,-17,-59.7,-31.5,-49.1,-39.9C-38.5,-48.3,-24.4,-50.6,-10.4,-55.5C3.6,-60.4,18,-67.9,29.6,-66.4C41.2,-64.9,50,-54.4,39.9,-51.2Z" transform="translate(100 100)" />
+          </svg>
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700 bg-surface-900">
           <button onClick={handleLogoTap} className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-gradient-tribal rounded-xl flex items-center justify-center">
-              <Zap size={20} className="text-white" />
+            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
+              <Zap size={20} className="text-surface-950" />
             </div>
             <h1 className="text-lg font-bold text-surface-50">TribeFit</h1>
           </button>
@@ -4550,7 +4557,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {/* Propose Mode Change Modal */}
       <Modal isOpen={showModeChangeModal} onClose={() => setShowModeChangeModal(false)} title="Propose Skip Mode Change">
         <div className="space-y-3">
-          <div className="text-sm text-surface-300">Current: <span className="font-semibold text-surface-50">{skipMode === 'tribe_fund' ? 'Tribe Fund' : 'Teammate Boost'}</span></div>
+          <div className="text-sm text-surface-300">Current: <span className="font-semibold text-surface-50">{skipMode === 'tribe_fund' ? t('tribe_fund') : t('teammate_boost')}</span></div>
           <div>
             <label className="text-sm text-surface-300 block mb-1">Target Mode</label>
             <select
