@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { name, group_type = 'squad', description, created_by } = await request.json();
 
-    console.log('Group creation request:', { name, group_type, description, created_by });
-
     // Validate required fields
     if (!name || !created_by) {
       return NextResponse.json(
@@ -105,8 +103,6 @@ export async function POST(request) {
       console.error('Wishlist creation error:', wishlistError);
       // Non-fatal error, continue
     }
-
-    console.log('Group created successfully:', newGroup);
 
     return NextResponse.json({
       success: true,

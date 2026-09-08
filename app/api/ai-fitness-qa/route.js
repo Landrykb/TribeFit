@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { question, userId } = await request.json();
 
-    console.log('AI Fitness Q&A request:', { question, userId });
-
     // Validate required fields
     if (!question || !question.trim()) {
       return NextResponse.json(
@@ -19,8 +17,6 @@ export async function POST(request) {
     try {
       const aiResponse = await askAIFitnessQuestion(question, userId || 'default-user');
       
-      console.log('AI Fitness Q&A response generated:', aiResponse);
-
       return NextResponse.json({ 
         success: true,
         question: aiResponse.question,

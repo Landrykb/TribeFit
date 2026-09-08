@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { t } from '@/lib/i18n';
+import { i18n } from '@/lib/i18n';
 import { Mail, Eye, EyeOff, Users } from 'lucide-react';
 
 export default function AuthForm({ onAuthSuccess }) {
@@ -203,7 +203,7 @@ export default function AuthForm({ onAuthSuccess }) {
             <Users className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold">TribeFit</h1>
-          <p className="text-muted-foreground">{t('app.tagline')}</p>
+          <p className="text-muted-foreground">{i18n.t('app.tagline')}</p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">

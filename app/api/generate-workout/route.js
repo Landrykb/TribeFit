@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { fitnessGoals, availableTime, equipment, experienceLevel, userId } = await request.json();
 
-    console.log('GPT-4o-mini workout generation request:', { fitnessGoals, availableTime, equipment, experienceLevel, userId });
-
     // Validate required fields
     if (!fitnessGoals || !availableTime || !equipment || !experienceLevel) {
       return NextResponse.json(
@@ -57,8 +55,6 @@ export async function POST(request) {
         aiContent: aiWorkoutPlan.content, // Raw AI response if available
         difficulty: aiWorkoutPlan.difficulty || experienceLevel
       };
-
-      console.log('GPT-4o-mini generated workout plan:', workoutPlan);
 
       return NextResponse.json({ 
         success: true, 

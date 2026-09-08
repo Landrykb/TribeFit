@@ -46,25 +46,34 @@ export const ToastProvider = ({ children }) => {
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
   );
+
 };
 
 const ToastContainer = ({ toasts, onRemove }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
-      {toasts.map((toast) => (
-        <Toast key={toast.id} toast={toast} onRemove={onRemove} />
-      ))}
+    <div
+      className="fixed z-50 max-w-sm pointer-events-none 
+                 sm:top-4 sm:right-4 sm:left-auto sm:bottom-auto sm:transform-none 
+                 left-1/2 -translate-x-1/2 bottom-4 
+                 px-3 sm:px-0"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="space-y-2">
+        {toasts.map((t) => (
+          <Toast key={t.id} toast={t} onRemove={onRemove} />
+        ))}
+      </div>
     </div>
   );
 };
 
 const Toast = ({ toast, onRemove }) => {
   const [isVisible, setIsVisible] = useState(false);
-
   useEffect(() => {
     setIsVisible(true);
+    setTimeout(() => setIsVisible(false), toast.duration);
   }, []);
 
   const handleRemove = () => {
@@ -86,15 +95,15 @@ const Toast = ({ toast, onRemove }) => {
     info: 'bg-primary border-primary-500',
   };
 
-  const IconComponent = icons[toast.type];
+  const IconComponent = icons[toast.type] || Info;
 
   return (
     <div
       className={`
         ${isVisible ? 'animate-slide-up' : 'opacity-0 translate-y-2'}
-        ${colors[toast.type]}
+        ${colors[toast.type] || 'bg-primary border-primary-500'}
         flex items-center p-4 rounded-lg shadow-soft border text-white
-        transition-all duration-200
+        transition-all duration-200 pointer-events-auto
       `}
     >
       <IconComponent size={20} className="flex-shrink-0 mr-3" />

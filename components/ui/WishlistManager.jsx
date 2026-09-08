@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Button } from './Button';
+import { Button } from './button';
 import { Card } from '@/components/ui/card';
 import { 
   Plus, ShoppingCart, Target, Users, Crown, 
-  Package, Zap, Gift, TrendingUp, Check, X
+  Package, Zap, Gift, TrendingUp, Check, X, Heart
 } from 'lucide-react';
 import { useTranslation } from '../../lib/i18n-hooks';
 import { Features } from '../../lib/feature-flags';
@@ -15,6 +15,8 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
   const [catalogItems, setCatalogItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSpendModal, setShowSpendModal] = useState(false);
+  const [selectedWishlistItem, setSelectedWishlistItem] = useState(null);
   const [pledgeAmount, setPledgeAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -150,24 +152,24 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
   return (
     <div className="space-y-6">
       {/* Wishlist Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Gift size={20} className="text-accent" />
-          <h3 className="text-lg font-bold text-surface-50">{t('wishlist')}</h3>
-          <span className="text-surface-400 text-sm">
-            ({wishlistItems.length} items)
+      <div className="flex items-center justify-between p-6 bg-gradient-to-br from-accent/10 via-accent/5 to-accent/10 border border-accent/20 rounded-2xl">
+        <div className="flex items-center space-x-3">
+          <Gift size={24} className="text-accent" />
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">{t('wishlist')}</h3>
+          <span className="bg-accent/20 text-accent px-3 py-1 rounded-xl text-sm font-medium">
+            {wishlistItems.length} items
           </span>
         </div>
         <Button
           onClick={() => setShowAddModal(true)}
-          variant="ghost"
-          size="sm"
-          className="px-3 py-2 flex items-center gap-1"
+          variant="primary"
+          className="h-10 px-4 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-accent/25 border-0 flex items-center gap-2 whitespace-nowrap min-w-[80px]"
         >
           <Plus size={16} />
-          <span className="text-xs">Add</span>
+          <span className="text-sm font-medium">Add</span>
         </Button>
       </div>
+
 
       {/* Wishlist Items */}
       {wishlistItems.length > 0 ? (
@@ -177,143 +179,143 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
             const isReady = item.pledged_tc >= item.target_tc;
             
             return (
-              <Card key={item.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
+              <Card key={item.id} className="p-4 space-y-3 hover-elevate bg-surface-800 border-surface-600">
+                {/* Compact Header */}
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-surface-50">{item.label}</h4>
-                    <div className="text-surface-400 text-sm">
-                      {item.catalog_items?.category || 'equipment'}
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-bold text-lg text-surface-50">{item.label}</h4>
+                      <span className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 text-accent px-2 py-1 rounded-lg text-xs font-medium">
+                        {item.target_tc} TC
+                      </span>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-accent">{item.target_tc} TC</div>
-                    <div className="text-xs text-surface-400">target</div>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Compact Progress */}
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-surface-400">Progress</span>
-                    <span className="text-surface-300">
-                      {item.pledged_tc}/{item.target_tc} TC ({Math.round(progressPct)}%)
-                    </span>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-surface-400">Progress: {item.pledged_tc}/{item.target_tc} TC</span>
+                    <span className="text-surface-300 font-medium">({Math.round(progressPct)}%)</span>
                   </div>
-                  <div className="w-full bg-surface-800 rounded-full h-2">
+                  <div className="w-full bg-surface-700 rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full transition-all ${
-                        isReady ? 'bg-success' : 'bg-primary'
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        isReady ? 'bg-gradient-to-r from-success to-green-500' : 'bg-gradient-to-r from-primary to-primary-400'
                       }`}
                       style={{ width: `${Math.min(progressPct, 100)}%` }}
                     />
                   </div>
                 </div>
 
+                {/* Action Row */}
+                <div className="flex items-center gap-3 pt-2">
+                  {!isReady && (
+                    <button
+                      onClick={() => {
+                        setSelectedWishlistItem(item);
+                        setShowSpendModal(true);
+                      }}
+                      className="flex-1 p-2 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-lg hover:from-accent/20 hover:to-primary/20 hover:border-accent/30 transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <Target size={14} className="text-accent" />
+                      <span className="text-sm font-semibold text-surface-100">Next Goal: +{item.target_tc - item.pledged_tc} TC</span>
+                    </button>
+                  )}
+                  <button className="px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-400/30 text-red-300 rounded-lg hover:bg-red-500/30 transition-all duration-200 flex items-center gap-2 text-sm font-medium">
+                    <Heart size={14} className="text-danger" />
+                    <span>Donate to Gym</span>
+                  </button>
+                </div>
                 {/* Specs (if any) */}
                 {item.specs && Object.keys(item.specs).length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {Object.entries(item.specs).map(([key, value]) => (
                       <span 
                         key={key}
-                        className="bg-surface-700 text-surface-300 px-2 py-1 rounded text-xs"
+                        className="bg-surface-700 border border-surface-600 text-surface-200 px-2 py-1 rounded-lg text-xs font-medium"
                       >
                         {key}: {value}
                       </span>
                     ))}
                   </div>
                 )}
-
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  {isReady ? (
-                    <Button
-                      onClick={() => {
-                        if (item.catalog_items) {
-                          handleDirectBuy(item.catalog_items, item.specs);
-                        }
-                      }}
-                      variant="success"
-                      className="flex-1 text-sm"
-                      disabled={loading}
-                    >
-                      <Check size={16} />
-                      <span>Purchase Now</span>
-                    </Button>
-                  ) : (
-                    <>
-                      <input
-                        type="number"
-                        placeholder="TC"
-                        className="flex-1 bg-surface-800 border border-surface-600 rounded px-3 py-2 text-sm"
-                        value={pledgeAmount}
-                        onChange={(e) => setPledgeAmount(e.target.value)}
-                      />
-                      <Button
-                        onClick={() => {
-                          if (pledgeAmount) {
-                            handlePledge(item.id, pledgeAmount);
-                            setPledgeAmount('');
-                          }
-                        }}
-                        variant="primary"
-                        className="text-sm"
-                        disabled={loading || !pledgeAmount}
-                      >
-                        <Target size={16} />
-                        {t('pledge')}
-                      </Button>
-                    </>
-                  )}
-                </div>
               </Card>
             );
           })}
         </div>
       ) : (
-        <div className="text-center py-8 card">
-          <Gift size={48} className="text-surface-600 mx-auto mb-4" />
-          <div className="text-surface-400 mb-4">No wishlist items yet</div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            variant="primary"
-            className="px-4 py-2 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add First Item
-          </Button>
+        <div className="text-center py-12 card bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+          <div className="flex flex-col items-center">
+            <Gift size={64} className="text-accent mb-4" />
+            <h3 className="text-lg font-bold text-surface-100 mb-2">No wishlist items yet</h3>
+            <p className="text-surface-300 mb-6 text-sm">Add equipment you'd like your tribe to fund!</p>
+            <Button
+              onClick={() => setShowAddModal(true)}
+              variant="primary"
+              className="h-12 px-6 text-sm font-bold bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-accent/25 flex items-center gap-2 whitespace-nowrap min-w-[140px]"
+            >
+              <Plus size={18} />
+              Add First Item
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Add to Wishlist Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-surface-50">Catalog</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden animate-scale-in">
+            <div className="p-6 border-b border-surface-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Package size={24} className="text-accent" />
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Equipment Catalog</h3>
+                </div>
                 <Button
                   onClick={() => setShowAddModal(false)}
                   variant="ghost"
-                  size="sm"
+                  className="h-10 w-10 p-0 hover:bg-surface-700 rounded-xl transition-all duration-200"
                 >
-                  <X size={16} />
+                  <X size={20} className="text-surface-300 hover:text-surface-100" />
                 </Button>
               </div>
+              <p className="text-surface-300 mt-2">Choose equipment to add to your tribe's wishlist</p>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {catalogItems.map((item) => (
-                  <Card key={item.id} className="p-4 space-y-3">
+                  <div key={item.id} className="bg-surface-800 border border-surface-600 rounded-2xl p-5 space-y-4 hover-elevate transition-all duration-200 cursor-pointer group">
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-medium text-surface-50">{item.name}</h4>
-                        <div className="text-surface-400 text-sm">{item.category}</div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-lg text-surface-50 group-hover:text-accent transition-colors">{item.name}</h4>
+                        <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 text-accent px-3 py-1 rounded-xl text-sm font-medium inline-block mt-2">
+                          {item.category}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-primary">{item.price_tc} TC</div>
+                      <div className="text-right ml-3">
+                        <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-xl px-3 py-2">
+                          <div className="font-bold text-lg text-primary">{item.price_tc} TC</div>
+                        </div>
                       </div>
                     </div>
 
-                    <p className="text-surface-300 text-sm">{item.description}</p>
+                    <p className="text-surface-300 text-sm leading-relaxed">{item.description}</p>
+                    
+                    <div className="pt-2 border-t border-surface-700">
+                      <Button
+                        onClick={() => {
+                          // Add to wishlist logic here
+                          setShowAddModal(false);
+                        }}
+                        variant="primary"
+                        className="w-full h-11 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-accent/25 border-0 flex items-center justify-center gap-2 whitespace-nowrap"
+                      >
+                        <Plus size={16} />
+                        <span className="font-bold text-sm">Add to Wishlist</span>
+                      </Button>
+                    </div>
 
                     {/* Specs Selection */}
                     {item.specs && Object.keys(item.specs).length > 0 && (
@@ -335,31 +337,103 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
                       </div>
                     )}
 
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleDirectBuy(item)}
-                        variant="success"
-                        className="flex-1 text-sm"
-                        disabled={loading}
-                      >
-                        <ShoppingCart size={16} />
-                        {t('buy_with_balance')}
-                      </Button>
-                      <Button
-                        onClick={() => handleAddToWishlist(item)}
-                        variant="ghost"
-                        className="flex-1 text-sm"
-                        disabled={loading}
-                      >
-                        <Plus size={16} />
-                        {t('add_to_wishlist')}
-                      </Button>
-                    </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             </div>
-          </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Spend on Next Gear Modal */}
+      {showSpendModal && selectedWishlistItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
+            <div className="p-6 border-b border-surface-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Target size={24} className="text-accent" />
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Next Gear</h3>
+                </div>
+                <Button
+                  onClick={() => setShowSpendModal(false)}
+                  variant="ghost"
+                  className="h-10 w-10 p-0 hover:bg-surface-700 rounded-xl"
+                >
+                  <X size={20} className="text-surface-300" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Item Info */}
+              <div className="text-center">
+                <h4 className="text-2xl font-bold text-surface-50 mb-2">{selectedWishlistItem.label}</h4>
+                <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 text-primary px-4 py-2 rounded-xl text-sm font-medium inline-block">
+                  {selectedWishlistItem.catalog_items?.category || 'equipment'}
+                </div>
+              </div>
+
+              {/* Target and Progress */}
+              <div className="bg-surface-800 rounded-xl p-4 border border-surface-700 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-surface-400 font-medium">Target</span>
+                  <div className="text-accent font-bold text-2xl">{selectedWishlistItem.target_tc} TC</div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-surface-400">Progress</span>
+                    <span className="text-surface-300">
+                      {selectedWishlistItem.pledged_tc}/{selectedWishlistItem.target_tc} TC ({Math.round((selectedWishlistItem.pledged_tc / selectedWishlistItem.target_tc) * 100)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-surface-700 rounded-full h-4 shadow-inner">
+                    <div 
+                      className="h-4 rounded-full transition-all duration-500 bg-gradient-to-r from-primary to-primary-400 shadow-primary/25"
+                      style={{ width: `${Math.min((selectedWishlistItem.pledged_tc / selectedWishlistItem.target_tc) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center p-4 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-xl">
+                  <div className="text-surface-100 font-bold text-sm mb-1">Next Goal</div>
+                  <div className="text-accent font-bold text-2xl">
+                    +{selectedWishlistItem.target_tc - selectedWishlistItem.pledged_tc} TC
+                  </div>
+                  <div className="text-surface-300 text-sm">needed to unlock</div>
+                </div>
+              </div>
+
+              {/* Pledge Input */}
+              <div className="space-y-4">
+                <div className="flex space-x-3">
+                  <input
+                    type="number"
+                    placeholder="Enter TC amount"
+                    className="flex-1 bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
+                    value={pledgeAmount}
+                    onChange={(e) => setPledgeAmount(e.target.value)}
+                  />
+                  <Button
+                    onClick={() => {
+                      if (pledgeAmount && selectedWishlistItem) {
+                        handlePledge(selectedWishlistItem.id, pledgeAmount);
+                        setPledgeAmount('');
+                        setShowSpendModal(false);
+                      }
+                    }}
+                    variant="primary"
+                    className="min-w-[100px] bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700"
+                    disabled={loading || !pledgeAmount}
+                  >
+                    <Target size={16} />
+                    Pledge
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

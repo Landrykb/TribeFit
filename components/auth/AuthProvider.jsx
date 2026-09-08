@@ -66,16 +66,36 @@ export const AuthProvider = ({ children }) => {
     try {
       // Simulate signup API call
       if (email && password && name) {
+        const userId = `user_${Date.now()}`;
         const userData = {
-          id: `user-${Date.now()}`,
+          id: userId,
           email,
           name,
           avatar: null,
           tribe_id: null,
           wallet_balance_tc: 100, // Welcome bonus
-          streak_days: 0,
+          snatched_balance_tc: 0,
+          streak: 0,
+          total_workouts: 0,
+          group_type: null,
           created_at: new Date().toISOString()
         };
+        
+        // Add user to database (for dev mode)
+        try {
+          await fetch('/api/dev/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              action: 'create', 
+              name: name,
+              userId: userId,
+              initialData: userData
+            })
+          });
+        } catch (dbError) {
+          console.log('Note: Could not add to database, but user created locally');
+        }
         
         localStorage.setItem('tribefit_user', JSON.stringify(userData));
         setUser(userData);

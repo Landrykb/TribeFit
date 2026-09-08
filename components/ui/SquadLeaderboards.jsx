@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from './Button';
+import { Button } from './button';
 import { 
   Trophy, TrendingUp, Users, Flame, Crown, 
   Medal, Star, ChevronDown, ChevronUp
@@ -81,8 +81,8 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
                   key={group.id}
                   className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer group ${
                     isTop3 
-                      ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30 hover:border-primary/50' 
-                      : 'bg-surface-800 border-surface-700 hover:border-surface-600'
+                      ? 'bg-gradient-to-r from-surface-800 to-surface-700 border-primary/30 hover:border-primary/50 light:bg-gradient-to-r light:from-white light:to-gray-50 light:border-primary/40 light:hover:border-primary/60' 
+                      : 'bg-surface-800 border-surface-700 hover:border-surface-600 light:bg-white light:border-gray-200 light:hover:border-gray-300'
                   }`}
                   onClick={() => handleGroupClick(group)}
                 >
@@ -187,13 +187,13 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
           <span>Leaderboards</span>
         </h2>
         
-        <div className="flex bg-surface-800 rounded-lg p-1 border border-surface-700">
+        <div className="flex bg-surface-800 light:bg-white rounded-lg p-1 border border-surface-700 light:border-gray-200">
           <button
             onClick={() => setActiveTab('squads')}
             className={`px-3 py-1 rounded text-sm font-medium transition-all ${
               activeTab === 'squads'
                 ? 'bg-primary text-white'
-                : 'text-surface-400 hover:text-surface-200'
+                : 'text-surface-400 hover:text-surface-200 light:text-gray-600 light:hover:text-gray-800'
             }`}
           >
             Squads
@@ -203,21 +203,20 @@ export function SquadLeaderboards({ squads = [], tribes = [], onSquadClick, onJo
             className={`px-3 py-1 rounded text-sm font-medium transition-all ${
               activeTab === 'tribes'
                 ? 'bg-primary text-white'
-                : 'text-surface-400 hover:text-surface-200'
+                : 'text-surface-400 hover:text-surface-200 light:text-gray-600 light:hover:text-gray-800'
             }`}
           >
             Tribes
           </button>
         </div>
       </div>
-
       {activeTab === 'squads' && renderLeaderboard(squads, 'Squad Rankings', 'squad')}
       {activeTab === 'tribes' && renderLeaderboard(tribes, 'Tribe Rankings', 'tribe')}
 
       {/* Legend */}
-      <div className="border-t border-surface-700 pt-4">
-        <div className="text-surface-400 text-xs mb-2">Ranking based on:</div>
-        <div className="flex items-center space-x-4 text-xs text-surface-500">
+      <div className="border-t border-surface-700 light:border-gray-200 pt-4">
+        <div className="text-surface-400 light:text-gray-600 text-xs mb-2">Ranking based on:</div>
+        <div className="flex items-center space-x-4 text-xs text-surface-500 light:text-gray-500">
           <div className="flex items-center space-x-1">
             <Flame size={10} className="text-orange-500" />
             <span>Streak Days</span>

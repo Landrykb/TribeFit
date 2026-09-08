@@ -1,15 +1,17 @@
 'use client';
 import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
+import { useToast } from './ui/Toast';
 import { WorkoutGenerator } from './WorkoutGenerator';
 import { 
   Calendar, Clock, Users, Eye, EyeOff, ArrowLeft, 
-  Save, Zap, Dumbbell, Plus, X
+  Save, Zap, Dumbbell, Plus, X, Star
 } from 'lucide-react';
 
-export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, user }) {
+export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, user, userId, customWorkouts = [] }) {
   const [showWorkoutGenerator, setShowWorkoutGenerator] = useState(false);
+  const toast = useToast();
   const [workoutData, setWorkoutData] = useState({
     date: selectedDate || '',
     time: '07:00',
@@ -31,6 +33,34 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
     }
   }, [selectedDate]);
 
+  // Default time to next 15-minute slot when opening or date changes
+  React.useEffect(() => {
+    if (!isOpen) return;
+    try {
+      // Local date string to avoid UTC off-by-one
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const base = new Date();
+      if (selectedDate && selectedDate !== todayStr) {
+        // use 07:00 for non-today dates unless user already changed
+        setWorkoutData(prev => ({ ...prev, time: prev.time || '07:00', date: prev.date || selectedDate }));
+        return;
+      }
+      // next quarter hour
+      const minutes = base.getMinutes();
+      const next = Math.ceil((minutes + 1) / 15) * 15; // +1 to avoid immediate minute
+      if (next >= 60) {
+        base.setHours(base.getHours() + 1);
+        base.setMinutes(0);
+      } else {
+        base.setMinutes(next);
+      }
+      const hh = String(base.getHours()).padStart(2, '0');
+      const mm = String(base.getMinutes()).padStart(2, '0');
+      setWorkoutData(prev => ({ ...prev, time: prev.time && prev.time !== '07:00' ? prev.time : `${hh}:${mm}` }));
+    } catch {}
+  }, [isOpen, selectedDate]);
+
   // Update user info when user prop changes
   React.useEffect(() => {
     if (user) {
@@ -41,6 +71,13 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
       }));
     }
   }, [user]);
+
+  // Override user id from prop if provided
+  React.useEffect(() => {
+    if (userId) {
+      setWorkoutData(prev => ({ ...prev, user_id: userId }));
+    }
+  }, [userId]);
 
   const predefinedWorkouts = [
     { name: 'Push/Pull/Legs', duration: '45 min', type: 'strength' },
@@ -54,15 +91,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
   const handleSchedule = async () => {
     // Validate all required fields
     if (!workoutData.workout_name || !workoutData.time || !workoutData.date || !workoutData.user_id) {
-      console.error('Missing required fields:', {
-        workout_name: workoutData.workout_name,
-        time: workoutData.time,
-        date: workoutData.date,
-        user_id: workoutData.user_id
-      });
-      
-      // Show user-friendly error
-      alert('Please fill in all required fields: workout name, date, time, and ensure you are logged in.');
+      toast.error('Please fill in workout name, date, time.');
       return;
     }
     
@@ -76,10 +105,10 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
         user_id: workoutData.user_id,
         user_name: workoutData.user_name,
         shared: workoutData.shared,
-        duration: workoutData.duration
+        duration: workoutData.duration,
+        ai_plan: workoutData.ai_plan || null
       };
       
-      console.log('Scheduling workout with payload:', schedulePayload);
       const result = await onSchedule(schedulePayload);
       
       if (result !== false) { // onSchedule returns false on error
@@ -87,7 +116,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
       }
     } catch (error) {
       console.error('Failed to schedule workout:', error);
-      alert('Failed to schedule workout: ' + error.message);
+      toast.error('Failed to schedule workout');
     }
   };
 
@@ -123,7 +152,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
         {/* Date and Time */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-2">
+            <label className="block text-sm font-medium text-surface-200 light:text-gray-700 mb-2">
               <Calendar size={16} className="inline mr-2" />
               Date
             </label>
@@ -131,12 +160,12 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
               type="date"
               value={workoutData.date}
               onChange={(e) => setWorkoutData(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full p-3 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full p-3 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 focus:ring-2 focus:ring-primary focus:border-transparent light:bg-white light:border-gray-300 light:text-gray-900"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-2">
+            <label className="block text-sm font-medium text-surface-200 light:text-gray-700 mb-2">
               <Clock size={16} className="inline mr-2" />
               Time
             </label>
@@ -144,7 +173,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
               type="time"
               value={workoutData.time}
               onChange={(e) => setWorkoutData(prev => ({ ...prev, time: e.target.value }))}
-              className="w-full p-3 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full p-3 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 focus:ring-2 focus:ring-primary focus:border-transparent light:bg-white light:border-gray-300 light:text-gray-900"
             />
           </div>
         </div>
@@ -160,49 +189,99 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
             {/* AI Generate Option */}
             <button
               onClick={() => setShowWorkoutGenerator(true)}
-              className="w-full p-4 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-lg hover:from-primary/30 hover:to-accent/30 transition-all group"
+              className="w-full p-4 bg-gradient-to-r from-primary/20 to-accent/20 light:bg-gradient-to-r light:from-blue-50 light:to-purple-50 border border-primary/30 light:border-blue-200 rounded-lg hover:from-primary/30 hover:to-accent/30 light:hover:from-blue-100 light:hover:to-purple-100 transition-all group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                <div className="w-10 h-10 bg-primary/20 light:bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-primary/30 light:group-hover:bg-blue-200 transition-colors">
                   <Zap size={20} className="text-primary" />
                 </div>
                 <div className="text-left flex-1">
-                  <div className="font-medium text-surface-50">AI Generate Workout</div>
-                  <div className="text-sm text-surface-400">Create a personalized workout plan</div>
+                  <div className="font-medium text-surface-50 light:text-gray-900">AI Generate Workout</div>
+                  <div className="text-sm text-surface-400 light:text-gray-600">Create a personalized workout plan</div>
                 </div>
                 <Plus size={16} className="text-primary" />
               </div>
             </button>
             
-            {/* Predefined Workouts */}
-            <div className="grid grid-cols-1 gap-2">
-              {predefinedWorkouts.map((workout, index) => (
-                <button
-                  key={index}
-                  onClick={() => setWorkoutData(prev => ({ 
-                    ...prev, 
-                    workout_name: workout.name,
-                    workout_type: 'predefined'
-                  }))}
-                  className={`p-3 text-left rounded-lg border transition-all ${
-                    workoutData.workout_name === workout.name
-                      ? 'bg-primary/20 border-primary text-primary'
-                      : 'bg-surface-800 border-surface-700 text-surface-300 hover:border-surface-600 hover:bg-surface-700'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{workout.name}</div>
-                      <div className="text-sm opacity-75">{workout.duration} • {workout.type}</div>
-                    </div>
-                    {workoutData.workout_name === workout.name && (
-                      <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full" />
+            {/* My Custom Workouts */}
+            {customWorkouts.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-surface-200 light:text-gray-700">
+                  <Star size={14} className="text-success" />
+                  <span>My Workouts</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {customWorkouts.map((workout) => (
+                    <button
+                      key={workout.id}
+                      onClick={() => setWorkoutData(prev => ({ 
+                        ...prev, 
+                        workout_name: workout.name,
+                        workout_type: 'custom',
+                        duration: `${workout.duration} min`
+                      }))}
+                      className={`p-3 text-left rounded-lg border transition-all ${
+                        workoutData.workout_name === workout.name
+                          ? 'bg-success/20 border-success text-success'
+                          : 'bg-surface-800 light:bg-white border-surface-700 light:border-gray-300 text-surface-300 light:text-gray-700 hover:border-success/50 hover:bg-surface-700 light:hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium">{workout.name}</div>
+                            <span className="text-xs px-1.5 py-0.5 bg-success/20 text-success rounded">
+                              Custom
+                            </span>
+                          </div>
+                          <div className="text-sm opacity-75 mt-0.5">
+                            {workout.duration} min • {workout.exercises?.length || 0} exercises
+                          </div>
+                        </div>
+                        {workoutData.workout_name === workout.name && (
+                          <div className="w-5 h-5 bg-success rounded-full flex items-center justify-center">
+                            <Star size={12} fill="white" className="text-white" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </button>
-              ))}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Predefined Workouts */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-surface-200 light:text-gray-700">Templates</div>
+              <div className="grid grid-cols-1 gap-2">
+                {predefinedWorkouts.map((workout, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setWorkoutData(prev => ({ 
+                      ...prev, 
+                      workout_name: workout.name,
+                      workout_type: 'predefined'
+                    }))}
+                    className={`p-3 text-left rounded-lg border transition-all ${
+                      workoutData.workout_name === workout.name
+                        ? 'bg-primary/20 border-primary text-primary'
+                        : 'bg-surface-800 light:bg-white border-surface-700 light:border-gray-300 text-surface-300 light:text-gray-700 hover:border-surface-600 hover:bg-surface-700 light:hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">{workout.name}</div>
+                        <div className="text-sm opacity-75">{workout.duration} • {workout.type}</div>
+                      </div>
+                      {workoutData.workout_name === workout.name && (
+                        <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Custom Workout Input */}

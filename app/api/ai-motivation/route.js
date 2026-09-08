@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { userId, userName, goal, streakDays, completionRate } = await request.json();
 
-    console.log('AI Motivation request:', { userId, userName, goal, streakDays, completionRate });
-
     // Use GPT-4o-mini to generate personalized motivation
     const userContext = {
       userId: userId || 'default-user',
@@ -19,8 +17,6 @@ export async function POST(request) {
     try {
       const motivationResponse = await getAIMotivation(userContext);
       
-      console.log('AI Motivation response generated:', motivationResponse);
-
       return NextResponse.json({ 
         success: true,
         message: motivationResponse.message,

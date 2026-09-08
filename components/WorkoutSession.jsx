@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { 
   Play, Pause, SkipForward, Check, Timer, 
-  Dumbbell, Trophy 
+  Dumbbell, Trophy, Coins, Tv, Zap, Footprints, Bike, MonitorPlay
 } from 'lucide-react';
+import { Confetti } from './Confetti';
+import { PowerBurst } from './PowerBurst';
 
-export function WorkoutSession({ isOpen, onClose, workoutData }) {
+export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, userName }) {
   const toast = useToast();
   const [currentExercise, setCurrentExercise] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
@@ -17,9 +19,19 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
   const [completedSets, setCompletedSets] = useState([]);
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [totalWorkoutTime, setTotalWorkoutTime] = useState(0);
+  const [showSkipOptions, setShowSkipOptions] = useState(false);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const [adProgress, setAdProgress] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
+  const [activityType, setActivityType] = useState('workout');
 
-  // Mock workout exercises
-  const exercises = workoutData?.exercises || [
+  // Normalize plan shape (direct or nested under workoutPlan)
+  const plan = workoutData && typeof workoutData === 'object'
+    ? (workoutData.workoutPlan ? workoutData.workoutPlan : workoutData)
+    : null;
+
+  // Mock workout exercises (fallback)
+  const defaultExercises = [
     {
       name: 'Push-ups',
       sets: 3,
@@ -50,29 +62,65 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
     }
   ];
 
+  const exercises = Array.isArray(plan?.exercises) && plan.exercises.length > 0
+    ? plan.exercises.map((ex) => ({
+        name: ex.name || 'Exercise',
+        sets: Number(ex.sets || 3),
+        reps: ex.reps || '10-12',
+        restTime: (() => {
+          const r = String(ex.rest || '').match(/(\d+)/);
+          return r ? Number(r[1]) : 60;
+        })(),
+        instructions: ex.description || 'Perform with controlled form.'
+      }))
+    : defaultExercises;
+
   const currentExerciseData = exercises[currentExercise];
   const isLastExercise = currentExercise === exercises.length - 1;
-  const isLastSet = currentSet === currentExerciseData?.sets;
+
+  // Derive display title and estimated duration
+  const plannedTitle = plan?.title || "Today's Workout";
+  const estimatedMinutes = typeof plan?.duration === 'number'
+    ? plan.duration
+    : Math.max(
+        Math.round(
+          exercises.reduce((total, ex) => {
+            const sets = Number(ex.sets || 1);
+            const rest = Number(ex.restTime || 0);
+            // Approx 45s per set effort + rest
+            return total + sets * 45 + sets * rest;
+          }, 0) / 60
+        ),
+        5
+      );
 
   useEffect(() => {
     let interval;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft(time => {
-          if (time <= 1) {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setIsResting(false);
             setIsRunning(false);
-            if (isResting) {
-              toast.success('Rest complete! Ready for next set 💪');
-              setIsResting(false);
-            }
+            setShowSkipOptions(false);
+            toast.success('Rest complete! Ready for next set! 🔥');
             return 0;
           }
-          return time - 1;
+          return prev - 1;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft, isResting, toast]);
+  }, [isRunning, timeLeft]);
+
+  useEffect(() => {
+    return () => {
+      if (isWatchingAd) {
+        setIsWatchingAd(false);
+        setAdProgress(0);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let totalTimer;
@@ -86,51 +134,116 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
 
   const startWorkout = () => {
     setWorkoutStarted(true);
-    toast.success('Workout started! Let us go! 🔥');
+    toast.success('Workout started! Let\'s go! 🔥');
   };
 
   const completeSet = () => {
-    const setData = {
+    const newCompletedSet = {
       exercise: currentExercise,
-      set: currentSet,
-      reps: currentExerciseData.reps,
-      completedAt: new Date()
+      set: currentSet
     };
+    setCompletedSets(prev => [...prev, newCompletedSet]);
     
-    setCompletedSets(prev => [...prev, setData]);
-    
-    if (isLastSet && isLastExercise) {
-      // Workout complete
-      completeWorkout();
-    } else if (isLastSet) {
+    if (currentSet < currentExerciseData.sets) {
+      // More sets in current exercise
+      setCurrentSet(prev => prev + 1);
+      setIsResting(true);
+      setTimeLeft(currentExerciseData.restTime);
+      setIsRunning(true);
+      toast.info(`Set ${currentSet} complete! Rest for ${currentExerciseData.restTime}s`);
+    } else if (currentExercise < exercises.length - 1) {
       // Move to next exercise
       setCurrentExercise(prev => prev + 1);
       setCurrentSet(1);
-      toast.success(`${currentExerciseData.name} complete! Moving to next exercise 🎯`);
-    } else {
-      // Rest between sets
-      setCurrentSet(prev => prev + 1);
-      setTimeLeft(currentExerciseData.restTime);
       setIsResting(true);
+      setTimeLeft(exercises[currentExercise + 1].restTime);
       setIsRunning(true);
-      toast.info(`Set ${currentSet} complete! Rest for ${currentExerciseData.restTime}s`);
+      toast.success(`${currentExerciseData.name} complete! Moving to ${exercises[currentExercise + 1].name}`);
+    } else {
+      // Workout complete
+      completeWorkout();
     }
   };
 
   const skipRest = () => {
+    setIsResting(false);
     setIsRunning(false);
     setTimeLeft(0);
-    setIsResting(false);
-    toast.success('Rest skipped! Ready for next set 💨');
+    setShowSkipOptions(false);
+    toast.success('Rest skipped! 💪');
   };
 
-  const completeWorkout = () => {
+  const handlePayToSkip = () => {
+    // Mock payment logic - in real app, integrate with payment system
+    toast.success('Paid 5 TC to skip rest! 💰');
+    skipRest();
+  };
+
+  const handleWatchAd = () => {
+    setIsWatchingAd(true);
+    setAdProgress(0);
+    
+    // Simulate 10-second ad
+    const adInterval = setInterval(() => {
+      setAdProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(adInterval);
+          setIsWatchingAd(false);
+          toast.success('Ad completed! Rest skipped! 📺');
+          skipRest();
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 1000);
+  };
+
+  const completeWorkout = async () => {
     setWorkoutStarted(false);
+    setCelebrating(true);
     toast.success('🎉 Workout Complete! Amazing work! 🏆');
     
-    setTimeout(() => {
-      onClose();
-    }, 2000);
+    // Persist session results
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId || 'dev_user',
+          title: plannedTitle || 'Workout',
+          duration_sec: totalWorkoutTime,
+          completed_sets: completedSets.length,
+          type: activityType,
+          date: new Date().toISOString(),
+        })
+      });
+      
+      if (!res.ok) {
+        console.error('Failed to save progress:', await res.text());
+      }
+    } catch (err) {
+      console.error('Progress save error:', err);
+    }
+
+    // Broadcast completion to group (Virtual Gym presence)
+    try {
+      if (groupId && userId) {
+        await fetch('/api/events/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: groupId || 'default',
+            type: 'workout_completed',
+            originUserId: userId,
+            data: { originUserName: userName || 'Member' }
+          })
+        }).catch(err => console.error('Broadcast error:', err));
+      }
+    } catch (err) {
+      console.error('Broadcast error:', err);
+    }
+
+    setTimeout(() => { if (onClose) onClose(); }, 2000);
   };
 
   const formatTime = (seconds) => {
@@ -154,56 +267,83 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Workout Session" size="xl">
+      {celebrating && <><PowerBurst /><Confetti count={50} /></>}
       <div className="max-h-[70vh] overflow-y-auto">
         <div className="space-y-6 p-1">
           {/* Workout Header */}
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-surface-50 mb-2">
+          <div className="text-center p-6 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 light:bg-gradient-to-br light:from-blue-50 light:via-purple-50 light:to-blue-50 border border-primary/20 light:border-blue-200 rounded-2xl">
+            <h2 className="text-2xl font-bold text-primary mb-3">
               {workoutStarted ? 'Workout In Progress' : 'Ready to Start?'}
             </h2>
-            <div className="text-primary text-lg font-semibold">
+            <div className="text-primary text-xl font-bold bg-primary/20 light:bg-blue-100 light:text-blue-800 px-4 py-2 rounded-xl inline-block">
               Total Time: {formatTotalTime(totalWorkoutTime)}
             </div>
           </div>
-
         {!workoutStarted ? (
           <div className="text-center py-8">
+            {/* Activity type picker — original styles: outdoor, treadmill, etc. */}
             <div className="mb-6">
-              <Dumbbell size={64} className="text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-surface-50 mb-2">Today&apos;s Workout</h3>
-              <p className="text-surface-400">
-                {exercises.length} exercises • Estimated {Math.round(exercises.reduce((total, ex) => 
-                  total + (ex.sets * 45) + (ex.sets * ex.restTime), 0) / 60)} minutes
+              <div className="text-xs text-surface-400 uppercase tracking-wider mb-2">Activity type</div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  { id: 'workout',       label: 'Gym',      Icon: Dumbbell },
+                  { id: 'run_outdoor',   label: 'Outdoor run', Icon: Footprints },
+                  { id: 'run_treadmill', label: 'Treadmill', Icon: MonitorPlay },
+                  { id: 'walk',          label: 'Walk',     Icon: Footprints },
+                  { id: 'cycle',         label: 'Cycle',    Icon: Bike },
+                  { id: 'sports',        label: 'Sports',   Icon: Trophy },
+                ].map(({ id, label, Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setActivityType(id)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                      activityType === id
+                        ? 'bg-primary/20 border-primary text-primary-200 scale-105'
+                        : 'bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-500'
+                    }`}
+                  >
+                    <Icon size={14} /> {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mb-8">
+              <Dumbbell size={72} className="text-primary mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-surface-50 mb-3">
+                {workoutData?.title ? workoutData.title : plannedTitle}
+              </h3>
+              <p className="text-surface-300 light:text-gray-600 text-lg">
+                {exercises.length} exercises • estimated {workoutData?.durationMin ? workoutData.durationMin : estimatedMinutes} minutes
               </p>
             </div>
             
-            <div className="space-y-3 mb-8">
+            <div className="space-y-4 mb-8">
               {exercises.map((exercise, index) => (
-                <div key={index} className="bg-surface-800 rounded-lg p-3 text-left">
-                  <div className="font-medium text-surface-100">{exercise.name}</div>
-                  <div className="text-sm text-surface-400">
+                <div key={index} className="bg-gradient-to-br from-surface-700/50 to-surface-800/50 light:bg-white light:border-gray-200 border border-surface-600/50 rounded-xl p-4 text-left hover-elevate transition-all duration-200">
+                  <div className="font-bold text-surface-100 light:text-gray-900 text-lg">{exercise.name}</div>
+                  <div className="text-sm text-surface-300 light:text-gray-600 mt-1">
                     {exercise.sets} sets × {exercise.reps} reps
                   </div>
                 </div>
               ))}
             </div>
 
-            <Button onClick={startWorkout} variant="primary" size="lg" className="w-full">
-              <Play size={20} />
+            <Button onClick={startWorkout} variant="primary" className="w-full h-14 text-lg font-bold">
+              <Play size={24} />
               Start Workout
             </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Progress Indicator */}
-            <div className="bg-surface-800 rounded-lg p-4">
+            <div className="bg-surface-800 light:bg-gray-50 rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-surface-400">Exercise Progress</span>
-                <span className="text-sm text-surface-400">
+                <span className="text-sm text-surface-400 light:text-gray-600">Exercise Progress</span>
+                <span className="text-sm text-surface-400 light:text-gray-600">
                   {currentExercise + 1} of {exercises.length}
                 </span>
               </div>
-              <div className="w-full bg-surface-700 rounded-full h-2">
+              <div className="w-full bg-surface-700 light:bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-primary h-2 rounded-full transition-all duration-500"
                   style={{ width: `${((currentExercise + 1) / exercises.length) * 100}%` }}
@@ -213,14 +353,14 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
 
             {/* Current Exercise */}
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-surface-50 mb-2">
+              <h3 className="text-2xl font-bold text-surface-50 light:text-gray-900 mb-2">
                 {currentExerciseData.name}
               </h3>
               <div className="text-lg text-primary mb-4">
                 Set {currentSet} of {currentExerciseData.sets} • {currentExerciseData.reps} reps
               </div>
-              <div className="bg-surface-800 rounded-lg p-4 mb-4">
-                <p className="text-surface-300 text-sm">
+              <div className="bg-surface-800 light:bg-gray-50 rounded-lg p-4 mb-4">
+                <p className="text-surface-300 light:text-gray-600 text-sm">
                   {currentExerciseData.instructions}
                 </p>
               </div>
@@ -229,30 +369,23 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
             {/* Timer Display */}
             {isResting && (
               <div className="text-center">
-                <div className="bg-accent/20 border border-accent rounded-xl p-6 mb-4">
+                <div className="bg-accent/20 light:bg-orange-50 border border-accent light:border-orange-200 rounded-xl p-6 mb-4">
                   <Timer size={32} className="text-accent mx-auto mb-2" />
                   <div className="text-3xl font-bold text-accent mb-2">
                     {formatTime(timeLeft)}
                   </div>
-                  <div className="text-surface-300">Rest Time</div>
+                  <div className="text-surface-300 light:text-gray-600">Rest Time</div>
                 </div>
                 
-                <div className="flex space-x-3">
+                <div className="space-y-3">
+                  {/* Rest Timer Controls - Removed Skip Options (not useful) */}
                   <Button 
                     onClick={() => setIsRunning(!isRunning)}
                     variant="ghost"
-                    className="flex-1"
+                    className="w-full h-12"
                   >
-                    {isRunning ? <Pause size={16} /> : <Play size={16} />}
+                    {isRunning ? <Pause size={18} /> : <Play size={18} />}
                     {isRunning ? 'Pause' : 'Resume'}
-                  </Button>
-                  <Button 
-                    onClick={skipRest}
-                    variant="accent"
-                    className="flex-1"
-                  >
-                    <SkipForward size={16} />
-                    Skip Rest
                   </Button>
                 </div>
               </div>
@@ -275,12 +408,12 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
 
             {/* Completed Sets Summary */}
             {completedSets.length > 0 && (
-              <div className="bg-surface-800 rounded-lg p-4">
-                <h4 className="font-medium text-surface-200 mb-3">Completed Sets</h4>
+              <div className="bg-surface-800 light:bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-surface-200 light:text-gray-800 mb-3">Completed Sets</h4>
                 <div className="space-y-1">
                   {completedSets.map((set, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <span className="text-surface-300">
+                      <span className="text-surface-300 light:text-gray-600">
                         {exercises[set.exercise].name} - Set {set.set}
                       </span>
                       <span className="text-success">✓</span>
@@ -293,7 +426,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData }) {
         )}
 
         {/* Emergency Actions */}
-        <div className="flex space-x-3 pt-4 border-t border-surface-700">
+        <div className="flex space-x-3 pt-4 border-t border-surface-700 light:border-gray-200">
           <Button 
             onClick={onClose}
             variant="ghost"

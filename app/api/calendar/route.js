@@ -1,45 +1,46 @@
 import { NextResponse } from 'next/server';
-
-// Mock calendar data - in real app this would be in Supabase
-let workoutSchedule = {
-  '2024-01-15': [
-    { id: 'w1', user_id: '00000000-0000-0000-0000-000000000001', user_name: 'Alex Chen', time: '07:00', workout: 'Push/Pull/Legs', shared: true },
-    { id: 'w2', user_id: '00000000-0000-0000-0000-000000000002', user_name: 'Jordan Kim', time: '18:30', workout: 'Cardio HIIT', shared: true }
-  ],
-  '2024-01-16': [
-    { id: 'w3', user_id: '00000000-0000-0000-0000-000000000003', user_name: 'Sarah Wilson', time: '06:30', workout: 'Yoga Flow', shared: true },
-    { id: 'w4', user_id: '00000000-0000-0000-0000-000000000001', user_name: 'Alex Chen', time: '19:00', workout: 'Upper Body', shared: false }
-  ]
-};
+import { 
+  listCalendar,
+  getCalendarDay,
+  addCalendarEntry,
+  updateCalendarEntry,
+  deleteCalendarEntry,
+  getGroup
+} from '../_store/db';
 
 export async function GET(request) {
   try {
     const url = new URL(request.url);
     const date = url.searchParams.get('date');
-    const userId = url.searchParams.get('user_id');
-    const tribeId = url.searchParams.get('tribe_id');
+    const userId = url.searchParams.get('user_id') || 'anon';
+    const scope = url.searchParams.get('scope') || 'me';
+    const groupId = url.searchParams.get('group_id') || '';
 
     if (date) {
-      // Get workouts for specific date
-      const dateWorkouts = workoutSchedule[date] || [];
-      
-      // Filter by user if requested
-      if (userId) {
-        const userWorkouts = dateWorkouts.filter(w => w.user_id === userId);
-        return NextResponse.json({ workouts: userWorkouts });
+      // Single-day view
+      if (scope === 'group' && groupId) {
+        try {
+          const group = getGroup(groupId);
+          const memberIds = Array.isArray(group?.members) ? group.members : [];
+          const all = [];
+          memberIds.forEach((mid) => {
+            const items = getCalendarDay({ userId: mid, date });
+            items.forEach((it) => all.push({ ...it, user_id: mid }));
+          });
+          return NextResponse.json({ workouts: all });
+        } catch (_) {
+          // Fallback to just current user if any issue
+          const workouts = getCalendarDay({ userId, date });
+          return NextResponse.json({ workouts });
+        }
+      } else {
+        const workouts = getCalendarDay({ userId, date });
+        return NextResponse.json({ workouts });
       }
-      
-      // Filter by tribe (show only shared workouts from tribe members)
-      if (tribeId) {
-        const tribeWorkouts = dateWorkouts.filter(w => w.shared);
-        return NextResponse.json({ workouts: tribeWorkouts });
-      }
-      
-      return NextResponse.json({ workouts: dateWorkouts });
     }
 
-    // Get all scheduled workouts
-    return NextResponse.json({ schedule: workoutSchedule });
+    const schedule = listCalendar({ userId });
+    return NextResponse.json({ schedule });
     
   } catch (error) {
     console.error('Error fetching calendar:', error);
@@ -53,86 +54,80 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { date, time, workout_type, workout_name, user_id, user_name, shared = false } = body;
+    const { date, time, workout_type, workout_name, user_id, user_name, shared = false, duration, ai_plan } = body;
 
-    // Validate required fields
     if (!date || !time || !workout_name || !user_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: date, time, workout_name, user_id' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields: date, time, workout_name, user_id' }, { status: 400 });
     }
-
-    // Validate time format (HH:MM)
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(time)) {
-      return NextResponse.json(
-        { error: 'Invalid time format. Use HH:MM' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid time format. Use HH:MM' }, { status: 400 });
     }
-
-    // Validate date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
-      return NextResponse.json(
-        { error: 'Invalid date format. Use YYYY-MM-DD' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, { status: 400 });
     }
 
-    // Create new workout schedule entry
-    const newWorkout = {
-      id: `workout-${Date.now()}`,
-      user_id,
-      user_name: user_name || 'User',
+    // Sanitize ai_plan to ensure JSON-safe storage
+    let safePlan = null;
+    if (ai_plan) {
+      try {
+        safePlan = JSON.parse(JSON.stringify(ai_plan));
+      } catch (_) {
+        safePlan = null; // fallback
+      }
+    }
+
+    // Check conflicts handled client-side; here we just add
+    const entry = addCalendarEntry({
+      userId: user_id,
+      date,
       time,
       workout: workout_name,
       type: workout_type || 'general',
       shared: Boolean(shared),
-      created_at: new Date().toISOString()
-    };
-
-    // Add to schedule
-    if (!workoutSchedule[date]) {
-      workoutSchedule[date] = [];
-    }
-
-    // Check for conflicts (same user, same time)
-    const hasConflict = workoutSchedule[date].some(w => 
-      w.user_id === user_id && w.time === time
-    );
-
-    if (hasConflict) {
-      return NextResponse.json(
-        { error: 'You already have a workout scheduled at this time' },
-        { status: 409 }
-      );
-    }
-
-    workoutSchedule[date].push(newWorkout);
-
-    // Sort workouts by time
-    workoutSchedule[date].sort((a, b) => a.time.localeCompare(b.time));
-
-    // In a real app, save to Supabase:
-    // const { data, error } = await supabase
-    //   .from('workout_schedules')
-    //   .insert(newWorkout)
-    //   .select()
-    //   .single();
-
-    return NextResponse.json({ 
-      success: true, 
-      workout: newWorkout,
-      message: `Workout scheduled for ${date} at ${time}` 
+      duration: duration || '45 min',
+      user_name: user_name || 'User',
+      ai_plan: safePlan,
     });
+    return NextResponse.json({ success: true, workout: entry, message: `Workout scheduled for ${date} at ${time}` }, { status: 201 });
     
   } catch (error) {
     console.error('Error scheduling workout:', error);
-    return NextResponse.json(
-      { error: 'Failed to schedule workout' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error?.message || 'Failed to schedule workout' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    const { user_id, id, date, time, workout_name, workout_type, shared, duration } = body || {};
+    if (!user_id || !id) return NextResponse.json({ error: 'Missing user_id or id' }, { status: 400 });
+    const changes = {};
+    if (date) changes.date = date;
+    if (time) changes.time = time;
+    if (workout_name) changes.workout = workout_name;
+    if (workout_type) changes.type = workout_type;
+    if (typeof shared === 'boolean') changes.shared = shared;
+    if (duration) changes.duration = duration;
+    const updated = updateCalendarEntry({ userId: user_id, id, changes });
+    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ success: true, workout: updated });
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const url = new URL(request.url);
+    const user_id = url.searchParams.get('user_id') || 'anon';
+    const id = url.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    const ok = deleteCalendarEntry({ userId: user_id, id });
+    if (!ok) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
 }

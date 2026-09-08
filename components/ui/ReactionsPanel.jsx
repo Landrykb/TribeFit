@@ -1,10 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Button } from './Button';
+import { Button } from './button';
 import { Card } from '@/components/ui/card';
 import { X, Smile } from 'lucide-react';
 import { useTranslation } from '../../lib/i18n-hooks';
 import { Features } from '../../lib/feature-flags';
+import { ReactionGlyph, REACTION_TYPE_EMOJI } from '../ReactionIcons';
 
 const REACTION_STICKERS = [
   { type: 'fire', emoji: '🔥', label: 'Fire' },
@@ -152,7 +153,7 @@ export function ReactionsPanel({
                 className="h-16 flex-col space-y-1 hover:bg-surface-700 transition-colors"
                 disabled={sending}
               >
-                <span className="text-2xl">{reaction.emoji}</span>
+                <ReactionGlyph emoji={reaction.emoji} size={24} />
                 <span className="text-xs text-surface-400">{reaction.label}</span>
               </Button>
             ))}
@@ -170,7 +171,7 @@ export function ReactionsPanel({
                     key={index}
                     className="flex items-center space-x-2 text-sm"
                   >
-                    <span className="text-lg">{reaction.emoji}</span>
+                    <ReactionGlyph emoji={reaction.emoji} size={18} />
                     <span className="text-surface-300">
                       {reaction.from_user_name}
                     </span>
@@ -186,7 +187,7 @@ export function ReactionsPanel({
           {/* Footer */}
           <div className="text-center mt-6">
             <div className="text-surface-500 text-xs">
-              Reactions are playful and supportive! 🎉
+              Reactions are playful and supportive!
             </div>
           </div>
         </div>
@@ -221,7 +222,7 @@ export function ReactionDisplay({ reactions = [], compact = false }) {
               key={type}
               className="bg-surface-800 rounded-full px-2 py-1 text-xs flex items-center space-x-1"
             >
-              <span>{sticker?.emoji}</span>
+              <ReactionGlyph emoji={sticker?.emoji} size={14} />
               <span className="text-surface-400">{reactionList.length}</span>
             </div>
           );
@@ -237,7 +238,7 @@ export function ReactionDisplay({ reactions = [], compact = false }) {
         const sticker = REACTION_STICKERS.find(s => s.type === type);
         return (
           <div key={type} className="flex items-center space-x-2">
-            <span className="text-lg">{sticker?.emoji}</span>
+            <ReactionGlyph emoji={sticker?.emoji} size={18} />
             <div className="flex-1">
               <span className="text-surface-300 text-sm">
                 {reactionList.map(r => r.from_user_name).join(', ')}

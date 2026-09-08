@@ -1,10 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { Button } from './Button';
+import { Button } from './button';
 import { SquadProgression } from '../../lib/squad-progression';
 import { 
-  Crown, Star, Trophy, Zap, Users, Gift, 
+  Crown, Star, Trophy, Zap, Users, Gift, Coins, GraduationCap, Vote, TrendingUp,
   CheckCircle, ArrowRight, Sparkles, Award
 } from 'lucide-react';
 
@@ -15,6 +15,18 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
   
   const rewards = SquadProgression.getUpgradeRewards();
   const progressionStatus = SquadProgression.getProgressionStatus(squad);
+  
+  // Handle case where rewards might be empty object
+  const safeRewards = {
+    bonusTC: 0, // No TC bonus - sustainable model
+    perks: rewards.perks || [],
+    unlocks: rewards.unlocks || [],
+    economicPerks: rewards.economicPerks || [],
+    socialPerks: rewards.socialPerks || [],
+    coachPerks: rewards.coachPerks || [],
+    statusPerks: rewards.statusPerks || [],
+    capacityPerks: rewards.capacityPerks || []
+  };
   
   const handleUpgrade = async () => {
     setIsUpgrading(true);
@@ -29,10 +41,10 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="🎉 Squad → Tribe Upgrade" 
+      title="Squad → Tribe Upgrade" 
       size="lg"
     >
-      <div className="space-y-6 max-h-96 overflow-y-auto">
+      <div className="space-y-6 max-h-[600px] overflow-y-auto">
         {/* Celebration Header */}
         <div className="text-center bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30">
           <div className="w-16 h-16 bg-gradient-tribal rounded-full flex items-center justify-center mx-auto mb-4">
@@ -72,52 +84,92 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
           </div>
         </div>
 
-        {/* Upgrade Rewards */}
-        <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
-          <h3 className="font-bold text-surface-50 mb-3 flex items-center space-x-2">
-            <Gift size={16} className="text-accent" />
-            <span>Tribe Upgrade Rewards</span>
-          </h3>
-          
-          <div className="space-y-3">
-            {/* Bonus TribeCoins */}
-            <div className="flex items-center space-x-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
-              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                <Zap size={20} className="text-accent" />
-              </div>
-              <div>
-                <div className="font-medium text-accent">+{rewards.bonusTC} TribeCoins</div>
-                <div className="text-surface-400 text-xs">Instant reward for all members</div>
+        {/* Tribe Advantages - Comprehensive List */}
+        <div className="space-y-4">
+          {/* Economic Advantages */}
+          {safeRewards.economicPerks.length > 0 && (
+            <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-lg p-4 border border-green-500/20">
+              <h3 className="font-bold text-green-400 mb-3 flex items-center space-x-2 text-sm">
+                <Coins size={14} /> Economic Advantages
+              </h3>
+              <div className="grid grid-cols-1 gap-1.5">
+                {safeRewards.economicPerks.map((perk, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <CheckCircle size={12} className="text-green-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-surface-200">{perk}</span>
+                  </div>
+                ))}
               </div>
             </div>
-            
-            {/* Perks List */}
-            <div className="grid grid-cols-1 gap-2">
-              {rewards.perks.map((perk, index) => (
-                <div key={index} className="flex items-center space-x-2 text-sm">
-                  <Star size={12} className="text-primary flex-shrink-0" />
-                  <span className="text-surface-300">{perk}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          )}
 
-        {/* Exclusive Unlocks */}
-        <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
-          <h3 className="font-bold text-surface-50 mb-3 flex items-center space-x-2">
-            <Sparkles size={16} className="text-primary" />
-            <span>Exclusive Tribe Features</span>
-          </h3>
-          
-          <div className="grid grid-cols-1 gap-2">
-            {rewards.unlocks.map((unlock, index) => (
-              <div key={index} className="flex items-center space-x-2 text-sm">
-                <Award size={12} className="text-success flex-shrink-0" />
-                <span className="text-surface-300">{unlock}</span>
+          {/* Coach Marketplace Integration */}
+          {safeRewards.coachPerks.length > 0 && (
+            <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-lg p-4 border border-purple-500/20">
+              <h3 className="font-bold text-purple-400 mb-3 flex items-center space-x-2 text-sm">
+                <GraduationCap size={14} /> Coach Marketplace
+              </h3>
+              <div className="grid grid-cols-1 gap-1.5">
+                {safeRewards.coachPerks.map((perk, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <CheckCircle size={12} className="text-purple-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-surface-200">{perk}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Social & Governance */}
+          {safeRewards.socialPerks.length > 0 && (
+            <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-lg p-4 border border-blue-500/20">
+              <h3 className="font-bold text-blue-400 mb-3 flex items-center space-x-2 text-sm">
+                <Vote size={14} /> Social & Governance
+              </h3>
+              <div className="grid grid-cols-1 gap-1.5">
+                {safeRewards.socialPerks.map((perk, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <CheckCircle size={12} className="text-blue-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-surface-200">{perk}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Status & Achievement */}
+          {safeRewards.statusPerks.length > 0 && (
+            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 rounded-lg p-4 border border-yellow-500/20">
+              <h3 className="font-bold text-yellow-400 mb-3 flex items-center space-x-2 text-sm">
+                <Trophy size={14} /> Status & Achievement
+              </h3>
+              <div className="grid grid-cols-1 gap-1.5">
+                {safeRewards.statusPerks.map((perk, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <CheckCircle size={12} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-surface-200">{perk}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Growth & Capacity */}
+          {safeRewards.capacityPerks.length > 0 && (
+            <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-lg p-4 border border-orange-500/20">
+              <h3 className="font-bold text-orange-400 mb-3 flex items-center space-x-2 text-sm">
+                <TrendingUp size={14} /> Growth & Capacity
+              </h3>
+              <div className="grid grid-cols-1 gap-1.5">
+                {safeRewards.capacityPerks.map((perk, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <CheckCircle size={12} className="text-orange-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-surface-200">{perk}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Transformation Preview */}

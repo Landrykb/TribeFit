@@ -1,22 +1,41 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-inter'
+});
 
 export const metadata = {
   title: 'TribeFit - Stronger Together',
   description: 'Social pact fitness app. One tribe, one pact.',
   keywords: 'fitness, social, accountability, workout, tribe, pact',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TribeFit',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#7C5CFF',
+  colorScheme: 'dark light',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.className} bg-background text-foreground`}>
+      <body suppressHydrationWarning className={`${inter.className} ${inter.variable} antialiased bg-surface-950 text-surface-50 min-h-screen`}>
         {children}
       </body>
     </html>

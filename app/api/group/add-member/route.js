@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { tribe_id, user_id, invited_by } = await request.json();
 
-    console.log('Add member request:', { tribe_id, user_id, invited_by });
-
     // Validate required fields
     if (!tribe_id || !user_id) {
       return NextResponse.json(
@@ -85,8 +83,6 @@ export async function POST(request) {
         group.group_type === 'squad' && 
         newMemberCount >= tribeMin) {
       
-      console.log(`Auto-upgrading squad ${group.name} to tribe (${newMemberCount} members)`);
-
       // Upgrade the group to tribe
       const { error: upgradeError } = await client
         .from('tribes')
@@ -143,13 +139,6 @@ export async function POST(request) {
       .select('*')
       .eq('id', tribe_id)
       .single();
-
-    console.log('Member added successfully:', { 
-      tribe_id, 
-      user_id, 
-      new_member_count: newMemberCount,
-      upgrade_result: upgradeResult 
-    });
 
     return NextResponse.json({
       success: true,

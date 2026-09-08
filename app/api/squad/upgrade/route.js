@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
+import { getDB, saveDB } from '../../_store/db';
 
 export async function POST(request) {
   try {
     const { squadId, upgradedBy } = await request.json();
-
-    console.log('Squad upgrade request:', { squadId, upgradedBy });
 
     // Validate required fields
     if (!squadId || !upgradedBy) {
@@ -14,13 +13,39 @@ export async function POST(request) {
       );
     }
 
-    // Mock squad upgrade logic
-    // In a real app, this would:
-    // 1. Verify user owns the squad
-    // 2. Check upgrade eligibility (streak, participation)
-    // 3. Update squad to tribe in database
-    // 4. Award bonus TribeCoins
-    // 5. Send notifications to members
+    // Actually update the squad to tribe in the database
+    const db = getDB();
+    
+    // Find the squad in groups (groups is an object, not array)
+    let squad = null;
+    
+    if (db.groups && typeof db.groups === 'object') {
+      // Groups is stored as object with IDs as keys
+      squad = db.groups[squadId];
+    }
+    
+    if (!squad) {
+      return NextResponse.json(
+        { error: 'Squad not found', squadId, available: Object.keys(db.groups || {}) },
+        { status: 404 }
+      );
+    }
+    
+    // Update squad to tribe
+    squad.group_type = 'tribe';
+    squad.type = 'tribe'; // Some places use 'type'
+    squad.upgraded_at = new Date().toISOString();
+    squad.upgraded_by = upgradedBy;
+    
+    // Update max members for tribe
+    squad.max_members = 15;
+    
+    // Save changes - update global DB first
+    if (globalThis.__DB__ && globalThis.__DB__.groups) {
+      globalThis.__DB__.groups[squadId] = squad;
+    }
+    
+    saveDB(db);
 
     const mockUpgradeResponse = {
       success: true,
@@ -29,12 +54,12 @@ export async function POST(request) {
         id: squadId,
         previousType: 'squad',
         newType: 'tribe',
-        upgradedAt: new Date().toISOString(),
+        upgradedAt: squad.upgraded_at,
         upgradedBy: upgradedBy,
         bonusRewards: {
-          bonusTC: 500,
-          newFeatures: ['Custom logo', 'Tribe voting', 'Advanced challenges'],
-          memberBenefits: 'All members receive 100 TC bonus'
+          bonusTC: 0, // No TC bonus - sustainable model
+          newFeatures: ['Tribe voting', 'Advanced challenges', 'Verified badge'],
+          memberBenefits: 'All members get tribe perks'
         }
       },
       celebration: {
@@ -43,11 +68,6 @@ export async function POST(request) {
         effects: ['confetti', 'fanfare', 'tribal_horn']
       }
     };
-
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    console.log('Squad upgrade successful:', mockUpgradeResponse);
 
     return NextResponse.json(mockUpgradeResponse, { status: 200 });
 

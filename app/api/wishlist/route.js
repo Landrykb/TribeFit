@@ -61,8 +61,6 @@ export async function POST(request) {
   try {
     const { tribe_id, catalog_item_id, specs = {}, target_tc, user_id } = await request.json();
 
-    console.log('Add to wishlist request:', { tribe_id, catalog_item_id, specs, target_tc, user_id });
-
     // Validate required fields
     if (!tribe_id || !catalog_item_id || !user_id) {
       return NextResponse.json(

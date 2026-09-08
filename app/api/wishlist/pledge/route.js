@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { wishlist_item_id, pledge_amount, user_id } = await request.json();
 
-    console.log('Wishlist pledge request:', { wishlist_item_id, pledge_amount, user_id });
-
     // Validate required fields
     if (!wishlist_item_id || !pledge_amount || !user_id) {
       return NextResponse.json(
@@ -104,7 +102,7 @@ export async function POST(request) {
         };
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('Mock pledge transaction:', transactionData);
+          // Mock pledge transaction for development
         } else {
           await client.from('pact_transactions').insert(transactionData);
         }
@@ -137,8 +135,6 @@ export async function POST(request) {
       is_ready: isReady,
       pledged_at: new Date().toISOString()
     };
-
-    console.log('Wishlist pledge successful:', pledgeResult);
 
     return NextResponse.json({
       success: true,

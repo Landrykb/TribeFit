@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { Trophy, Medal, Award, TrendingUp, Users, Zap } from 'lucide-react';
 
 const getRankIcon = (rank) => {
@@ -103,7 +103,7 @@ export function TribeLeaderboard({ isOpen, onClose, tribes = [] }) {
             <div>🥇 #1 Tribe: Free coaching session for all members</div>
             <div>🥈 #2 Tribe: 50% discount on all equipment purchases</div>
             <div>🥉 #3 Tribe: 25% discount on equipment purchases</div>
-            <div>📈 All tribes: Extra TC bonuses for consistent streaks</div>
+            <div className="flex items-center gap-1"><TrendingUp size={12} /> All tribes: extra TC bonuses for consistent streaks</div>
           </div>
         </div>
 
@@ -112,7 +112,7 @@ export function TribeLeaderboard({ isOpen, onClose, tribes = [] }) {
           onClick={onClose}
           className="w-full"
         >
-          Keep Climbing! 🚀
+          Keep Climbing!
         </Button>
       </div>
     </Modal>

@@ -5,13 +5,12 @@ const nextConfig = {
   
   // Optimize images
   images: {
-    domains: [
-      'supabase.com', 
-      'your-supabase-project.supabase.co',
-      'images.unsplash.com',
-      'picsum.photos'
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
     ],
-    unoptimized: true // For static export compatibility
+    unoptimized: true,
   },
 
   // Security headers
@@ -61,7 +60,6 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
-    // Enable server components optimizations
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
 
@@ -76,15 +74,6 @@ const nextConfig = {
     ];
   },
 
-  // Rewrites for API routes
-  async rewrites() {
-    return [
-      {
-        source: '/api/health',
-        destination: '/api/health',
-      },
-    ];
-  }
 };
 
 module.exports = nextConfig;

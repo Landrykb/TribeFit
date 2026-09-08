@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { Button } from './Button';
+import { Button } from './button';
 import { 
   Users, Flame, Crown, Plus, X, Eye, EyeOff, 
   Target, Clock, Info
@@ -14,7 +14,8 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
     description: '',
     type: 'squad', // squad or tribe
     isPrivate: false,
-    maxMembers: Features.SQUAD_MAX_MEMBERS || 8
+    maxMembers: Features.SQUAD_MAX_MEMBERS || 8,
+    initialSkipMode: 'teammate_boost',
   });
   
   const [isCreating, setIsCreating] = useState(false);
@@ -51,7 +52,7 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
       subtitle: 'Start your fitness journey',
       description: 'Entry-level group perfect for building habits',
       maxMembers: Features.SQUAD_MAX_MEMBERS || 8,
-      features: ['Deal Vault access', 'Skip notifications', 'Basic challenges', 'Upgrade path to Tribe']
+      features: ['Skip notifications', 'Basic challenges', 'Upgrade path to Tribe']
     },
     {
       type: 'tribe',
@@ -154,6 +155,24 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
             />
             <div className="text-xs text-surface-500 mt-1">{formData.description.length}/200 characters</div>
           </div>
+
+          {/* Minimal initial tribe settings */}
+          {formData.type === 'tribe' && (
+            <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+              <h4 className="font-medium text-surface-50 mb-3">Initial Tribe Settings</h4>
+              <div>
+                <label className="block text-xs text-surface-300 mb-1">Skip Mode</label>
+                <select
+                  value={formData.initialSkipMode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, initialSkipMode: e.target.value }))}
+                  className="w-full p-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
+                >
+                  <option value="teammate_boost">Teammate Boost (80% to active, 20% to vault)</option>
+                  <option value="tribe_fund">Tribe Fund (100% to vault)</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Privacy Settings */}
@@ -210,7 +229,7 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
                 <ul className="text-sm text-surface-300 space-y-1">
                   <li>• Instant formation - no approval needed</li>
                   <li>• Build 30-day streak to unlock Tribe upgrade</li>
-                  <li>• Share Deal Vault for group purchases</li>
+                  <li>• Upgrade unlocks Tribe Vault for shared purchases</li>
                   <li>• Friendly competition and accountability</li>
                 </ul>
               </div>

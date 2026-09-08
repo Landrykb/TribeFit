@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabase, supabaseAdmin, isUsingMockData } from '@/lib/supabase';
 import { 
-  getCurrentUser, getUserById, adjustWalletTc, getOrCreateTribeWallet,
+  getCurrentUser, getUserById, adjustWalletTc, adjustSnatchedTc, getOrCreateTribeWallet,
   insertPactTx, getUserTribes, listTribeMembers, createTribe, joinByCode,
   getPactWallet, getPactTransactions
 } from '@/lib/supabase';
 import { i18n } from '@/lib/i18n';
+import { broadcastToGroup } from '../events/route';
+import { getUser as getStoreUser, getGroup as getStoreGroup } from '../_store/db';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if keys are provided)
@@ -181,18 +183,18 @@ const sendSnitchNotification = async (actorName, recipientIds, method, locale = 
   const message = i18n.t(key, { name: actorName }, locale);
   
   if (isUsingMockData) {
-    // Mock mode - just add to array
-    const notification = {
-      id: `notif-${Date.now()}`,
-      user_id: recipientIds[0], // Just add to first recipient for demo
+    // Mock mode - notify every recipient
+    const notifications = recipientIds.map((userId, i) => ({
+      id: `notif-${Date.now()}-${i}`,
+      user_id: userId,
       type: 'snitch',
       title: 'Tribe Update',
       body: message,
       created_at: new Date().toISOString(),
       read: false
-    };
-    mockData.notifications.unshift(notification);
-    return notification;
+    }));
+    mockData.notifications.unshift(...notifications);
+    return { message, count: notifications.length };
   } else {
     // Real mode - insert into database
     try {
@@ -499,7 +501,7 @@ export async function POST(request, { params }) {
     switch (path) {
       case 'skip':
         const { userId, method, tribeId = '10000000-0000-0000-0000-000000000001' } = body;
-        const feeTc = parseInt(process.env.DEAL_SKIP_FEE_TC || process.env.SKIP_FEE_TC || '100');
+        let baseFee = parseInt(process.env.DEAL_SKIP_FEE_TC || process.env.SKIP_FEE_TC || '2'); // Default: 2 TC for squads
         const donationPct = parseFloat(process.env.DEAL_DONATION_PCT || '0.10');
         const dealSplitEnabled = process.env.FEATURE_DEAL_SPLIT === 'true';
         
@@ -508,6 +510,21 @@ export async function POST(request, { params }) {
         if (!user) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
+        
+        // Check if USER belongs to a tribe (not just if the group is a tribe)
+        // Pricing is based on the user's membership status:
+        // - User in a tribe: 1 TC (tribe member discount)
+        // - User in a squad or no group: 2 TC (standard price)
+        // Membership is tracked in the dev store (group_type) or supabase user record
+        const storeUser = (() => { try { return getStoreUser(user.id); } catch { return null; } })();
+        const userInTribe = (storeUser?.group_type || user.group_type) === 'tribe'
+          || Boolean(user.settings?.active_tribe_id);
+        // Beast-stage evolution perk: skip fees -1 TC
+        const isBeast = Number(storeUser?.total_workouts || 0) >= 15;
+        
+        // Apply tribe member discount: 1 TC for tribe members, 2 TC for others
+        // Beast perk reduces it further (floor of 0 = free skip for legends of the tribe)
+        const feeTc = Math.max(0, (userInTribe ? 1 : 2) - (isBeast ? 1 : 0));
         
         // Check sufficient balance for pay method
         if (method === 'pay' && user.wallet_balance_tc < feeTc) {
@@ -536,31 +553,37 @@ export async function POST(request, { params }) {
           // Deduct from user wallet
           updatedUser = await adjustWalletTc(user.id, feeTc, 'subtract');
           
-          if (dealSplitEnabled && activeMembers.length > 0) {
-            // NEW DEAL SPLIT LOGIC
+          // 80/20 SPLIT: 80% to members' snatched balance, 20% to tribe vault
+          if (activeMembers.length > 0) {
             // Calculate split amounts
-            const donationAmount = Math.round(feeTc * donationPct);
-            const splitTotal = feeTc - donationAmount;
-            const splitPerMember = Math.round(splitTotal / activeMembers.length);
+            const vaultAmount = Math.round(feeTc * 0.20); // 20% to tribe vault
+            const membersTotal = feeTc - vaultAmount; // 80% to members
+            const splitPerMember = Math.floor(membersTotal / activeMembers.length);
             
-            // Add donation amount to donation pool
+            // Add 20% to tribe vault (pact_balance_tc)
             if (!isUsingMockData) {
               const client = supabaseAdmin || supabase;
+              // supabase-js v2 has no .raw(); read-modify-write the balance
+              const { data: pw } = await client
+                .from('pact_wallets')
+                .select('balance_tc')
+                .eq('id', pactWallet.id)
+                .single();
               await client
                 .from('pact_wallets')
                 .update({ 
-                  donation_pool_tc: supabase.raw(`COALESCE(donation_pool_tc, 0) + ${donationAmount}`),
+                  balance_tc: (pw?.balance_tc || 0) + vaultAmount,
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', pactWallet.id);
             } else {
-              pactWallet.donation_pool_tc = (pactWallet.donation_pool_tc || 0) + donationAmount;
+              pactWallet.balance_tc = (pactWallet.balance_tc || 0) + vaultAmount;
             }
             
-            // Split remainder among active members
+            // Split 80% among active members to their SNATCHED balance
             for (const member of activeMembers) {
-              // Credit each member's private wallet
-              await adjustWalletTc(member.id, splitPerMember, 'add');
+              // Credit each member's SNATCHED wallet (not regular wallet)
+              await adjustSnatchedTc(member.id, splitPerMember, 'add');
               
               // Record the split transaction
               await insertPactTx(
@@ -571,7 +594,7 @@ export async function POST(request, { params }) {
                 { 
                   from_user: user.id,
                   skipper_name: user.name,
-                  method: 'receive_split',
+                  method: 'snatched_split',
                   tribe_id: tribeId 
                 }
               );
@@ -579,33 +602,38 @@ export async function POST(request, { params }) {
               splitResults.push({
                 member_id: member.id,
                 member_name: member.name,
-                amount_received: splitPerMember
+                amount_received: splitPerMember,
+                wallet_type: 'snatched'
               });
             }
             
-            // Record donation accrual
+            // Record vault contribution
             await insertPactTx(
               pactWallet.id,
               user.id,
-              'donation_accrual',
-              donationAmount,
-              { method: 'skip_fee_split', tribe_id: tribeId }
+              'vault_contribution',
+              vaultAmount,
+              { method: 'skip_fee_vault', tribe_id: tribeId, split_ratio: '20%' }
             );
             
           } else {
-            // LEGACY BEHAVIOR (when deal split disabled)
-            // Add to pact wallet (old way)
+            // No active members - all goes to tribe vault
             if (!isUsingMockData) {
               const client = supabaseAdmin || supabase;
+              const { data: pw } = await client
+                .from('pact_wallets')
+                .select('balance_tc')
+                .eq('id', pactWallet.id)
+                .single();
               await client
                 .from('pact_wallets')
                 .update({ 
-                  balance_tc: supabase.raw(`balance_tc + ${feeTc}`),
+                  balance_tc: (pw?.balance_tc || 0) + feeTc,
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', pactWallet.id);
             } else {
-              pactWallet.balance_tc += feeTc;
+              pactWallet.balance_tc = (pactWallet.balance_tc || 0) + feeTc;
             }
           }
           
@@ -634,18 +662,14 @@ export async function POST(request, { params }) {
           { method, tribe_id: tribeId, split_enabled: dealSplitEnabled }
         );
         
-        // Enhanced notifications for deal split
+        // Enhanced notifications for 80/20 split
         let notifications = [];
         if (user.settings?.snitch) {
-          if (dealSplitEnabled && method === 'pay' && splitResults.length > 0) {
-            // Send enhanced notifications for deal split
+          if (method === 'pay' && splitResults.length > 0) {
+            // Send notifications for 80/20 split
             
-            // To skipper
-            const powerUpNames = splitResults.map(r => r.member_name).join(', ');
-            const skipperMsg = i18n.t('skip_deal_skipper', {
-              names: powerUpNames,
-              amount: splitResults[0]?.amount_received || 0
-            }, user.locale || 'en');
+            // To skipper - let them know their payment powered up the tribe
+            const skipperMsg = `💰 ${feeTc} TC split! ${splitResults.length} tribe members got ${splitResults[0]?.amount_received || 0} TC each (snatched) 🎯`;
             
             notifications.push({
               type: 'skip_split_skipper',
@@ -653,12 +677,9 @@ export async function POST(request, { params }) {
               recipients: [user.id]
             });
             
-            // To each recipient
+            // To each recipient - let them know they got snatched TC
             for (const result of splitResults) {
-              const recipientMsg = i18n.t('skip_deal_recipient', {
-                skipper: user.name,
-                amount: result.amount_received
-              }, user.locale || 'en');
+              const recipientMsg = `🎁 ${user.name} skipped! You snatched ${result.amount_received} TC! 💪`;
               
               notifications.push({
                 type: 'skip_split_received',
@@ -667,9 +688,9 @@ export async function POST(request, { params }) {
               });
             }
           } else {
-            // Legacy snitch notification
+            // Snitch notification for ad skip
             const otherMembers = activeMembers.map(member => member.id);
-            if (otherMembers.length > 0) {
+            if (otherMembers.length > 0 && method === 'ad') {
               const notification = await sendSnitchNotification(
                 user.name,
                 otherMembers,
@@ -677,7 +698,7 @@ export async function POST(request, { params }) {
                 user.locale || 'en'
               );
               notifications.push({
-                type: 'legacy_snitch',
+                type: 'snitch',
                 message: notification?.message || notification?.body,
                 recipients: otherMembers
               });
@@ -685,19 +706,43 @@ export async function POST(request, { params }) {
           }
         }
         
+        // Broadcast skip event to all tribe members for real-time updates
+        if (method === 'pay' && splitResults.length > 0) {
+          broadcastToGroup({
+            groupId: tribeId,
+            originUserId: user.id,
+            payload: {
+              type: 'paid_skip',
+              skipper_id: user.id,
+              skipper_name: user.name,
+              fee_tc: feeTc,
+              split_results: splitResults,
+              vault_balance: pactWallet.balance_tc
+            }
+          });
+        }
+        
         return NextResponse.json({
           success: true,
           transaction,
           notifications,
           split_results: splitResults,
-          deal_split_enabled: dealSplitEnabled,
+          split_enabled: true, // Always enabled 80/20 split
+          fee_tc: feeTc, // Actual amount charged (1 TC for tribe, 2 TC for squad)
+          balances: {
+            wallet: updatedUser?.wallet_balance_tc || user.wallet_balance_tc,
+            pact: pactWallet.balance_tc, // Updated with 20% vault contribution
+            donation_pool: pactWallet.donation_pool_tc || 0
+          },
+          // Legacy support
           new_balance: updatedUser?.wallet_balance_tc || user.wallet_balance_tc,
-          pact_balance: pactWallet.balance_tc + (method === 'pay' && !dealSplitEnabled ? feeTc : 0),
+          pact_balance: pactWallet.balance_tc,
           donation_pool: pactWallet.donation_pool_tc || 0
         });
         
       case 'wallet/topup':
-        const { amountTc, currency = 'USD' } = body;
+        // amountTc = TribeCoins to credit; amount = fiat charged in `currency`
+        const { amountTc, amount: fiatAmount, currency = 'USD' } = body;
         const targetUser = await getCurrentUser();
         
         if (!targetUser) {
@@ -709,8 +754,10 @@ export async function POST(request, { params }) {
         }
         
         if (stripe) {
-          // Real Stripe integration
-          const amountCents = Math.round(Number(amountTc) * 100);
+          // Real Stripe integration - charge the fiat amount, credit the TC amount
+          const chargeAmount = Number(fiatAmount ?? amountTc);
+          const zeroDecimal = ['jpy', 'krw', 'vnd'].includes(currency.toLowerCase());
+          const amountCents = zeroDecimal ? Math.round(chargeAmount) : Math.round(chargeAmount * 100);
           
           try {
             const paymentIntent = await stripe.paymentIntents.create({
@@ -738,12 +785,20 @@ export async function POST(request, { params }) {
             }, { status: 500 });
           }
         } else {
-          // Mock mode - simulate successful payment
-          const updatedUser = await adjustWalletTc(targetUser.id, parseFloat(amountTc), 'add');
-          
+          // Mock mode - simulate successful payment.
+          // Credit the dev-store user the UI actually reads (body.userId), else fall back to current user.
+          let newBalance;
+          if (body.userId) {
+            const su = getStoreUser(body.userId);
+            su.wallet_balance_tc = (su.wallet_balance_tc || 0) + parseFloat(amountTc);
+            newBalance = su.wallet_balance_tc;
+          } else {
+            const updatedUser = await adjustWalletTc(targetUser.id, parseFloat(amountTc), 'add');
+            newBalance = updatedUser?.wallet_balance_tc ?? (targetUser.wallet_balance_tc + parseFloat(amountTc));
+          }
           return NextResponse.json({
             success: true,
-            new_balance: updatedUser?.wallet_balance_tc || (targetUser.wallet_balance_tc + parseFloat(amountTc)),
+            new_balance: newBalance,
             charged_amount: amountTc,
             payment_method: 'demo_mode',
             mock_mode: true
@@ -1214,11 +1269,16 @@ export async function POST(request, { params }) {
               })
               .eq('id', requestId);
               
-            // Deduct from wallet
+            // Deduct from wallet (read-modify-write; supabase-js v2 has no .raw())
+            const { data: spendWallet } = await (supabaseAdmin || supabase)
+              .from('pact_wallets')
+              .select('balance_tc')
+              .eq('id', spendRequest.wallet_id)
+              .single();
             await (supabaseAdmin || supabase)
               .from('pact_wallets')
               .update({
-                balance_tc: supabase.raw(`balance_tc - ${spendRequest.amount_tc}`)
+                balance_tc: Math.max(0, (spendWallet?.balance_tc || 0) - spendRequest.amount_tc)
               })
               .eq('id', spendRequest.wallet_id);
               

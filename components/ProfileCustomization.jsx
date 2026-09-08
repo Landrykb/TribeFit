@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { useAuth } from './auth/AuthProvider';
 import { 

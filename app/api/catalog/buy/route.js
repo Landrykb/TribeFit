@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { user_id, catalog_item_id, specs = {}, price_tc, tribe_id } = await request.json();
 
-    console.log('Direct catalog purchase:', { user_id, catalog_item_id, specs, price_tc, tribe_id });
-
     // Validate required fields
     if (!user_id || !catalog_item_id || !price_tc) {
       return NextResponse.json(
@@ -53,7 +51,6 @@ export async function POST(request) {
           finalPrice = price_tc - discount;
         }
       } catch (tribeError) {
-        console.log('Tribe discount check failed:', tribeError);
         // Continue without discount
       }
     }
@@ -101,7 +98,7 @@ export async function POST(request) {
     try {
       if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
         // Mock payment insertion for development
-        console.log('Mock payment recorded:', paymentData);
+        // Mock payment for development
       } else {
         await client.from('payments').insert(paymentData);
       }
@@ -159,7 +156,7 @@ export async function POST(request) {
           };
 
           if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-            console.log('Mock transaction recorded:', transactionData);
+            // Mock transaction for development
           } else {
             await client.from('pact_transactions').insert(transactionData);
           }
@@ -186,8 +183,6 @@ export async function POST(request) {
       purchased_at: new Date().toISOString(),
       status: 'completed'
     };
-
-    console.log('Catalog purchase successful:', purchase);
 
     return NextResponse.json({
       success: true,

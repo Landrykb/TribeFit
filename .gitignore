@@ -168,3 +168,7 @@ node_modules/@next/swc-linux-arm64-gnu/next-swc.linux-arm64-gnu.node
 # Environment files
 *.env
 *.env.*
+
+# Local dev data store (mock DB)
+.data/
+node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node

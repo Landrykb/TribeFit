@@ -1,0 +1,431 @@
+'use client';
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Modal } from './ui/Modal';
+import { 
+  Plus, Edit, Trash2, Copy, Star, Play, Clock, 
+  Zap, TrendingUp, Check, X, Search, Filter,
+  ChevronDown, ChevronUp, Dumbbell, Upload
+} from 'lucide-react';
+import { WORKOUT_TEMPLATES, BODY_PARTS, getWorkoutsByBodyPart } from '../lib/workout-library';
+import { AdvancedWorkoutEditor } from './AdvancedWorkoutEditor';
+import { CalendarImportModal } from './CalendarImportModal';
+import { useToast } from './ui/Toast';
+
+export function MyWorkoutsManager({ 
+  userId, 
+  onSelectWorkout,
+  onClose,
+  isOpen 
+}) {
+  const toast = useToast();
+  const [myWorkouts, setMyWorkouts] = useState([]);
+  const [templateWorkouts, setTemplateWorkouts] = useState(Object.values(WORKOUT_TEMPLATES));
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterBodyPart, setFilterBodyPart] = useState('all');
+  const [filterDifficulty, setFilterDifficulty] = useState('all');
+  
+  // Load user's custom workouts
+  useEffect(() => {
+    if (userId) {
+      loadMyWorkouts();
+    }
+  }, [userId]);
+
+  const loadMyWorkouts = async () => {
+    try {
+      const res = await fetch(`/api/workouts/my?userId=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyWorkouts(Array.isArray(data.workouts) ? data.workouts : []);
+      }
+    } catch (err) {
+      console.error('Failed to load workouts:', err);
+    }
+  };
+
+  const handleSaveWorkout = async (workout) => {
+    try {
+      if (!userId) {
+        toast.error('No user ID found. Please refresh the page.');
+        return;
+      }
+      
+      const res = await fetch('/api/workouts/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, workout })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        await loadMyWorkouts();
+        setShowEditor(false);
+        setSelectedWorkout(null);
+        toast.success(data.message || '💪 Workout saved successfully!');
+      } else {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to save');
+      }
+    } catch (err) {
+      console.error('Failed to save workout:', err);
+      toast.error(`Failed to save workout: ${err.message}`);
+    }
+  };
+
+  const handleDeleteWorkout = async (workoutId) => {
+    if (!confirm('Delete this workout?')) return;
+    
+    try {
+      const res = await fetch('/api/workouts/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, workoutId })
+      });
+      
+      if (res.ok) {
+        await loadMyWorkouts();
+        toast.success('🗑️ Workout deleted');
+      } else {
+        throw new Error('Failed to delete');
+      }
+    } catch (err) {
+      console.error('Failed to delete workout:', err);
+      toast.error('Failed to delete workout');
+    }
+  };
+
+  const handleDuplicateWorkout = (workout) => {
+    const duplicated = {
+      ...workout,
+      id: `custom_${Date.now()}`,
+      name: `${workout.name} (Copy)`,
+      isCustom: true
+    };
+    setSelectedWorkout(duplicated);
+    setShowEditor(true);
+  };
+
+  const handleUseTemplate = (template) => {
+    const customWorkout = {
+      ...template,
+      id: `custom_${Date.now()}`,
+      isCustom: true,
+      originalTemplate: template.id
+    };
+    setSelectedWorkout(customWorkout);
+    setShowEditor(true);
+  };
+
+  const handleImportWorkouts = async (importedWorkouts) => {
+    try {
+      // Convert imported workouts to app format
+      const converted = importedWorkouts.map(w => ({
+        id: `imported_${Date.now()}_${Math.random()}`,
+        name: w.name,
+        description: w.description || '',
+        exercises: w.exercises || [],
+        duration: w.duration || 30,
+        difficulty: 'beginner',
+        bodyParts: [],
+        isCustom: true,
+        imported: true,
+        importDate: new Date().toISOString()
+      }));
+
+      // Save each workout
+      for (const workout of converted) {
+        await handleSaveWorkout(workout);
+      }
+      
+      setShowImportModal(false);
+    } catch (err) {
+      console.error('Failed to import workouts:', err);
+    }
+  };
+
+  // Filter workouts
+  const filteredWorkouts = myWorkouts.filter(workout => {
+    const matchesSearch = workout.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         workout.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesBodyPart = filterBodyPart === 'all' || workout.bodyParts?.includes(filterBodyPart);
+    const matchesDifficulty = filterDifficulty === 'all' || workout.difficulty === filterDifficulty;
+    
+    return matchesSearch && matchesBodyPart && matchesDifficulty;
+  });
+
+  const filteredTemplates = templateWorkouts.filter(workout => {
+    const matchesSearch = workout.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesBodyPart = filterBodyPart === 'all' || workout.bodyParts?.includes(filterBodyPart);
+    const matchesDifficulty = filterDifficulty === 'all' || workout.difficulty === filterDifficulty;
+    
+    return matchesSearch && matchesBodyPart && matchesDifficulty;
+  });
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="My Workouts" size="2xl">
+      <div className="space-y-4">
+        {/* Search and Filters */}
+        <div className="space-y-3">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search workouts..."
+              className="w-full pl-10 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <select
+              value={filterBodyPart}
+              onChange={(e) => setFilterBodyPart(e.target.value)}
+              className="flex-1 px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
+            >
+              <option value="all">All Body Parts</option>
+              {BODY_PARTS.map(part => (
+                <option key={part.id} value={part.id}>
+                  {part.emoji} {part.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filterDifficulty}
+              onChange={(e) => setFilterDifficulty(e.target.value)}
+              className="flex-1 px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
+            >
+              <option value="all">All Levels</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            onClick={() => {
+              setSelectedWorkout({
+                id: `custom_${Date.now()}`,
+                name: 'New Workout',
+                description: '',
+                exercises: [],
+                duration: 30,
+                difficulty: 'beginner',
+                bodyParts: [],
+                isCustom: true
+              });
+              setShowEditor(true);
+            }}
+            variant="primary"
+          >
+            <Plus size={16} />
+            Create
+          </Button>
+
+          <Button
+            onClick={() => setShowImportModal(true)}
+            variant="ghost"
+          >
+            <Upload size={16} />
+            Import
+          </Button>
+
+          <Button
+            onClick={() => setShowTemplates(!showTemplates)}
+            variant="ghost"
+          >
+            <Dumbbell size={16} />
+            {showTemplates ? 'Mine' : 'Templates'}
+          </Button>
+        </div>
+
+        {/* Workouts List */}
+        <div className="max-h-[50vh] overflow-y-auto space-y-2">
+          {!showTemplates ? (
+            // My Custom Workouts
+            filteredWorkouts.length > 0 ? (
+              filteredWorkouts.map(workout => (
+                <WorkoutCard
+                  key={workout.id}
+                  workout={workout}
+                  onSelect={() => {
+                    onSelectWorkout(workout);
+                    onClose();
+                  }}
+                  onEdit={() => {
+                    setSelectedWorkout(workout);
+                    setShowEditor(true);
+                  }}
+                  onDelete={() => handleDeleteWorkout(workout.id)}
+                  onDuplicate={() => handleDuplicateWorkout(workout)}
+                  isCustom={true}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-surface-400">
+                <Dumbbell size={40} className="mx-auto mb-3 opacity-50" />
+                <p>No custom workouts yet.</p>
+                <p className="text-sm mt-1">Create one or start from a template!</p>
+              </div>
+            )
+          ) : (
+            // Templates
+            filteredTemplates.map(workout => (
+              <WorkoutCard
+                key={workout.id}
+                workout={workout}
+                onSelect={() => {
+                  onSelectWorkout(workout);
+                  onClose();
+                }}
+                onEdit={() => handleUseTemplate(workout)}
+                isTemplate={true}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Workout Editor Modal */}
+      {showEditor && selectedWorkout && (
+        <AdvancedWorkoutEditor
+          workout={selectedWorkout}
+          userId={userId}
+          onSave={handleSaveWorkout}
+          onCancel={() => {
+            setShowEditor(false);
+            setSelectedWorkout(null);
+          }}
+        />
+      )}
+
+      {/* Calendar Import Modal */}
+      {showImportModal && (
+        <CalendarImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImportWorkouts}
+          userId={userId}
+        />
+      )}
+    </Modal>
+  );
+}
+
+// Workout Card Component
+function WorkoutCard({ workout, onSelect, onEdit, onDelete, onDuplicate, isCustom, isTemplate }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="bg-surface-800 border border-surface-700 rounded-lg p-4 hover:border-primary/50 transition-all">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-semibold text-surface-50 light:text-gray-900">{workout.name}</h4>
+            {isTemplate && (
+              <span className="text-xs px-2 py-0.5 bg-accent/20 text-accent rounded">Template</span>
+            )}
+            {isCustom && !isTemplate && (
+              <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded flex items-center gap-1">
+                <Star size={10} fill="currentColor" />
+                Custom
+              </span>
+            )}
+            <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded capitalize">
+              {workout.difficulty}
+            </span>
+          </div>
+          
+          <p className="text-sm text-surface-400 mb-2">{workout.description}</p>
+          
+          <div className="flex items-center gap-3 text-xs text-surface-500">
+            <span className="flex items-center gap-1">
+              <Clock size={12} />
+              {workout.duration} min
+            </span>
+            <span className="flex items-center gap-1">
+              <Dumbbell size={12} />
+              {workout.exercises?.length || 0} exercises
+            </span>
+            {workout.bodyParts && workout.bodyParts.length > 0 && (
+              <span>
+                {workout.bodyParts.map(bp => {
+                  const part = BODY_PARTS.find(p => p.id === bp);
+                  return part?.emoji || '';
+                }).join(' ')}
+              </span>
+            )}
+          </div>
+
+          {expanded && workout.exercises && (
+            <div className="mt-3 space-y-1 pl-3 border-l-2 border-surface-700">
+              {workout.exercises.map((ex, idx) => (
+                <div key={idx} className="text-xs text-surface-400">
+                  <span className="text-surface-300">{ex.name}</span>
+                  {' • '}
+                  {ex.sets}×{ex.reps}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1 ml-3">
+          <Button
+            onClick={onSelect}
+            variant="success"
+            className="h-8 px-3 text-xs"
+          >
+            <Play size={14} />
+            Start
+          </Button>
+
+          <Button
+            onClick={onEdit}
+            variant="ghost"
+            className="h-8 px-3 text-xs"
+          >
+            <Edit size={14} />
+            {isTemplate ? 'Use' : 'Edit'}
+          </Button>
+
+          {isCustom && onDuplicate && (
+            <Button
+              onClick={onDuplicate}
+              variant="ghost"
+              className="h-8 px-3 text-xs"
+            >
+              <Copy size={14} />
+            </Button>
+          )}
+
+          {isCustom && onDelete && (
+            <Button
+              onClick={onDelete}
+              variant="ghost"
+              className="h-8 px-3 text-xs text-red-400 hover:text-red-300"
+            >
+              <Trash2 size={14} />
+            </Button>
+          )}
+
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="h-8 px-3 text-xs text-surface-400 hover:text-surface-200"
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,6 +1,7 @@
+"use client";
 import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { Zap, Clock, Target, Dumbbell } from 'lucide-react';
 
@@ -66,33 +67,33 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="AI Workout Generator" size="lg">
       <div className="max-h-96 overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Fitness Goals */}
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-3">
-            <Target size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 mb-4">
+            <Target size={16} className="inline mr-2 text-primary" />
             Primary Fitness Goal
           </label>
           <div className="grid grid-cols-1 gap-2">
             {[
-              { value: 'weight_loss', label: '🔥 Weight Loss & Fat Burning' },
-              { value: 'muscle_building', label: '💪 Muscle Building & Hypertrophy' },
-              { value: 'strength', label: '🏋️ Strength & Power Training' },
-              { value: 'endurance', label: '🏃 Cardiovascular Endurance' },
-              { value: 'general_fitness', label: '⚡ General Fitness & Health' },
-              { value: 'athletic_performance', label: '🏆 Athletic Performance' }
+              { value: 'weight_loss', label: 'Weight Loss & Fat Burning' },
+              { value: 'muscle_building', label: 'Muscle Building & Hypertrophy' },
+              { value: 'strength', label: 'Strength & Power Training' },
+              { value: 'endurance', label: 'Cardiovascular Endurance' },
+              { value: 'general_fitness', label: 'General Fitness & Health' },
+              { value: 'athletic_performance', label: 'Athletic Performance' }
             ].map((goal) => (
               <button
                 key={goal.value}
                 type="button"
                 onClick={() => handleInputChange('fitnessGoals', goal.value)}
-                className={`p-3 text-left rounded-lg border transition-all ${
+                className={`p-4 text-left rounded-xl border transition-all duration-200 hover-elevate ${
                   formData.fitnessGoals === goal.value
-                    ? 'bg-primary/20 border-primary text-primary'
-                    : 'bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-500'
+                    ? 'bg-gradient-to-br from-primary/20 to-primary/10 border-primary text-primary shadow-lg'
+                    : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
                 }`}
               >
-                <span className="text-sm font-medium">{goal.label}</span>
+                <span className="text-sm font-bold">{goal.label}</span>
               </button>
             ))}
           </div>
@@ -100,30 +101,32 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
 
         {/* Available Time */}
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-3">
-            <Clock size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 mb-4">
+            <Clock size={16} className="inline mr-2 text-accent" />
             Available Time Per Session
           </label>
-          <div className="flex items-center space-x-4">
-            <input
-              type="range"
-              min="15"
-              max="120"
-              step="15"
-              value={formData.availableTime}
-              onChange={(e) => handleInputChange('availableTime', parseInt(e.target.value))}
-              className="flex-1 h-2 bg-surface-700 rounded-lg appearance-none cursor-pointer slider"
-            />
-            <span className="text-lg font-bold text-primary min-w-[4rem] text-center">
-              {formData.availableTime} min
-            </span>
+          <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-orange-50 border border-accent/20 light:border-orange-200 rounded-xl">
+            <div className="flex items-center space-x-4">
+              <input
+                type="range"
+                min="15"
+                max="120"
+                step="15"
+                value={formData.availableTime}
+                onChange={(e) => handleInputChange('availableTime', parseInt(e.target.value))}
+                className="flex-1 h-3 bg-surface-700 light:bg-gray-200 rounded-full appearance-none cursor-pointer slider"
+              />
+              <span className="text-xl font-bold text-accent min-w-[5rem] text-center bg-accent/20 light:bg-orange-100 light:text-orange-800 px-3 py-1 rounded-lg">
+                {formData.availableTime} min
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Equipment Access */}
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-3">
-            <Dumbbell size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 light:text-gray-800 mb-4">
+            <Dumbbell size={16} className="inline mr-2 text-success" />
             Equipment Available
           </label>
           <div className="grid grid-cols-1 gap-2">
@@ -137,13 +140,13 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
                 key={eq.value}
                 type="button"
                 onClick={() => handleInputChange('equipment', eq.value)}
-                className={`p-3 text-left rounded-lg border transition-all ${
+                className={`p-4 text-left rounded-xl border transition-all duration-200 hover-elevate ${
                   formData.equipment === eq.value
-                    ? 'bg-accent/20 border-accent text-accent'
-                    : 'bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-500'
+                    ? 'bg-gradient-to-br from-success/20 to-success/10 border-success text-success shadow-lg'
+                    : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
                 }`}
               >
-                <span className="text-sm font-medium">{eq.label}</span>
+                <span className="text-sm font-bold">{eq.label}</span>
               </button>
             ))}
           </div>
@@ -151,11 +154,11 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
 
         {/* Experience Level */}
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-3">
-            <Zap size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 light:text-gray-800 mb-4">
+            <Zap size={16} className="inline mr-2 text-warning" />
             Experience Level
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {[
               { value: 'beginner', label: '🌱 Beginner', desc: '0-6 months' },
               { value: 'intermediate', label: '🌿 Intermediate', desc: '6 months - 2 years' },
@@ -165,13 +168,13 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
                 key={level.value}
                 type="button"
                 onClick={() => handleInputChange('experienceLevel', level.value)}
-                className={`p-4 text-center rounded-lg border transition-all ${
+                className={`p-4 text-center rounded-xl border transition-all duration-200 hover-elevate ${
                   formData.experienceLevel === level.value
-                    ? 'bg-success/20 border-success text-success'
-                    : 'bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-500'
+                    ? 'bg-gradient-to-br from-warning/20 to-warning/10 border-warning text-warning shadow-lg'
+                    : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
                 }`}
               >
-                <div className="text-sm font-medium">{level.label}</div>
+                <div className="text-sm font-bold">{level.label}</div>
                 <div className="text-xs opacity-70 mt-1">{level.desc}</div>
               </button>
             ))}
@@ -179,7 +182,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
         </div>
 
         {/* Submit Button */}
-        <div className="flex space-x-3 pt-4">
+        <div className="flex space-x-4 pt-6">
           <Button
             type="button"
             variant="ghost"
@@ -192,9 +195,19 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             type="submit"
             variant="primary"
             loading={isGenerating}
-            className="flex-1 text-sm"
+            className="flex-1 h-12 text-base font-bold"
           >
-            {isGenerating ? 'Creating...' : 'Generate'}
+            {isGenerating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Zap size={18} className="mr-2" />
+                Generate Plan
+              </>
+            )}
           </Button>
         </div>
         </form>
@@ -203,7 +216,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
   );
 }
 
-export function WorkoutPlanModal({ isOpen, onClose, plan }) {
+export function WorkoutPlanModal({ isOpen, onClose, plan, onSaveToCalendar }) {
   if (!plan) return null;
 
   // Convert the plan content to HTML-friendly format
@@ -243,12 +256,15 @@ export function WorkoutPlanModal({ isOpen, onClose, plan }) {
           variant="accent"
           className="flex-1 text-sm"
           onClick={() => {
-            // Save plan functionality
-            localStorage.setItem('currentWorkoutPlan', JSON.stringify(plan));
-            alert('Workout plan saved! 💾');
+            if (typeof onSaveToCalendar === 'function') {
+              onSaveToCalendar(plan);
+            } else {
+              localStorage.setItem('currentWorkoutPlan', JSON.stringify(plan));
+              toast.success('Workout plan saved!');
+            }
           }}
         >
-          Save
+          Save to Calendar
         </Button>
         <Button
           variant="primary"  

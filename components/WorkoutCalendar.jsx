@@ -1,38 +1,32 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { WorkoutScheduler } from './WorkoutScheduler';
 import { 
   Calendar, ChevronLeft, ChevronRight, Plus, 
-  Users, Clock, Eye, EyeOff, ArrowLeft, Save
+  Users, Clock, Eye, EyeOff, ArrowLeft, Save, Trash2, Pencil
 } from 'lucide-react';
 
-export function WorkoutCalendar({ isOpen, onClose, user }) {
+export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, customWorkouts = [] }) {
   const toast = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showTribeWorkouts, setShowTribeWorkouts] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [showScheduler, setShowScheduler] = useState(false);
   
-  // Enhanced mock workout data - multiple entries per day
-  const [workoutSchedule, setWorkoutSchedule] = useState({
-    '2024-01-15': [
-      { id: 1, user: 'Alex Chen', time: '07:00', workout: 'Push/Pull/Legs', shared: true, duration: '45 min' },
-      { id: 2, user: 'Alex Chen', time: '12:00', workout: 'Cardio Walk', shared: false, duration: '20 min' },
-      { id: 3, user: 'Jordan Kim', time: '18:30', workout: 'Cardio HIIT', shared: true, duration: '30 min' }
-    ],
-    '2024-01-16': [
-      { id: 4, user: 'Sarah Wilson', time: '06:30', workout: 'Yoga Flow', shared: true, duration: '60 min' },
-      { id: 5, user: 'Alex Chen', time: '19:00', workout: 'Upper Body', shared: false, duration: '40 min' },
-      { id: 6, user: 'Alex Chen', time: '20:30', workout: 'Stretching', shared: true, duration: '15 min' }
-    ],
-    '2024-01-17': [
-      { id: 7, user: 'Mike Torres', time: '12:00', workout: 'Full Body', shared: true, duration: '50 min' },
-      { id: 8, user: 'Jordan Kim', time: '17:00', workout: 'Lower Body', shared: true, duration: '35 min' },
-      { id: 9, user: 'Mike Torres', time: '17:30', workout: 'Core Blast', shared: false, duration: '15 min' }
-    ]
-  });
+  // Server-backed calendar schedule: { [YYYY-MM-DD]: [ { id, user_id, user_name, time, workout, type, shared, duration, ai_plan } ] }
+  const [workoutSchedule, setWorkoutSchedule] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDate, setEditDate] = useState('');
+  const [editItem, setEditItem] = useState(null); // full item from calendar
+  const [editTime, setEditTime] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDuration, setEditDuration] = useState('45 min');
+  const [editShared, setEditShared] = useState(false);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -54,8 +48,34 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
   };
 
   const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
+    // Use local time to avoid UTC off-by-one issues
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
+
+  const uid = userId || user?.id || 'dev_user';
+
+  const refreshFromServer = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'failed');
+      const schedule = data?.schedule && typeof data.schedule === 'object' ? data.schedule : {};
+      setWorkoutSchedule(schedule);
+    } catch (e) {
+      // keep last known
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) refreshFromServer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
@@ -70,6 +90,16 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
 
   const handleScheduleWorkout = async (scheduleData) => {
     try {
+      // Ensure required user_id
+      if (!scheduleData.user_id) scheduleData.user_id = uid;
+      // Conflict check: same date/time
+      const dateKey = scheduleData.date;
+      const timeKey = scheduleData.time;
+      const conflicts = Array.isArray(workoutSchedule[dateKey]) && workoutSchedule[dateKey].some(w => w.time === timeKey);
+      if (conflicts) {
+        toast.error('Time conflict: there is already a workout at that time');
+        return false; // keep scheduler open
+      }
       const response = await fetch('/api/calendar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,32 +107,73 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        
-        // Update local schedule
-        const dateStr = scheduleData.date;
-        if (!workoutSchedule[dateStr]) {
-          workoutSchedule[dateStr] = [];
-        }
-        workoutSchedule[dateStr].push({
-          id: Date.now(),
-          user: scheduleData.user_name,
-          time: scheduleData.time,
-          workout: scheduleData.workout_name,
-          shared: scheduleData.shared,
-          duration: scheduleData.duration || '45 min'
-        });
-        
-        setWorkoutSchedule({...workoutSchedule});
+        await refreshFromServer();
         toast.success(`Workout scheduled for ${scheduleData.date}! 📅`);
         setShowScheduler(false);
+        try { onChanged && onChanged(); } catch {}
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to schedule workout');
+        return false;
       }
     } catch (error) {
       console.error('Schedule workout failed:', error);
       toast.error('Failed to schedule workout');
+      return false;
+    }
+  };
+
+  const openEdit = (dateStr, item) => {
+    setEditDate(dateStr);
+    setEditItem(item);
+    setEditTime(item.time || '00:00');
+    setEditTitle(item.workout || 'Workout');
+    setEditDuration(item.duration || '45 min');
+    setEditShared(!!item.shared);
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editItem) return;
+    try {
+      const res = await fetch('/api/calendar', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: uid,
+          id: editItem.id,
+          date: editDate,
+          time: editTime,
+          workout_name: editTitle,
+          duration: editDuration,
+          shared: editShared,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'update failed');
+      toast.success('Workout updated');
+      setEditOpen(false);
+      await refreshFromServer();
+      try { onChanged && onChanged(); } catch {}
+    } catch (e) {
+      toast.error(e.message || 'Failed to update');
+    }
+  };
+
+  const deleteItem = async () => {
+    if (!editItem) return;
+    try {
+      const res = await fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&id=${encodeURIComponent(editItem.id)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'delete failed');
+      toast.success('Workout deleted');
+      setEditOpen(false);
+      await refreshFromServer();
+      try { onChanged && onChanged(); } catch {}
+    } catch (e) {
+      toast.error(e.message || 'Failed to delete');
     }
   };
 
@@ -117,10 +188,10 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Tribe Workout Calendar" size="2xl">
       <div className="space-y-4 max-h-[80vh] overflow-y-auto">
         {/* Calendar Header - Fixed at top */}
-        <div className="sticky top-0 bg-surface-900 z-10 pb-4">
+        <div className="sticky top-0 bg-surface-900 light:bg-gray-50 z-10 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h3 className="text-xl font-bold text-surface-50">
+              <h3 className="text-xl font-bold text-surface-50 light:text-gray-900">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
               <div className="flex space-x-1">
@@ -155,11 +226,11 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
         </div>
 
         {/* Calendar Grid - Scrollable */}
-        <div className="border border-surface-700 rounded-lg overflow-hidden">
+        <div className="border border-surface-700 light:border-gray-200 rounded-lg overflow-hidden">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 bg-surface-800">
+          <div className="grid grid-cols-7 bg-surface-800 light:bg-gray-100">
             {dayNames.map(day => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-surface-300 border-r border-surface-700 last:border-r-0">
+              <div key={day} className="p-2 text-center text-sm font-medium text-surface-300 light:text-gray-700 border-r border-surface-700 light:border-gray-200 last:border-r-0">
                 {day}
               </div>
             ))}
@@ -176,14 +247,14 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
               return (
                 <div
                   key={index}
-                  className={`relative h-24 border-r border-b border-surface-700 last:border-r-0 ${
-                    isCurrentMonth ? 'bg-surface-900' : 'bg-surface-800/50'
-                  } ${isToday ? 'ring-2 ring-primary ring-inset' : ''}`}
+                  className={`relative h-24 border-r border-b border-surface-700 light:border-gray-200 last:border-r-0 ${
+                    isCurrentMonth ? 'bg-surface-900 light:bg-white' : 'bg-surface-800/50 light:bg-gray-50'
+                  } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${selectedDate === formatDate(date) ? 'outline outline-2 outline-primary/60' : ''}`}
                 >
                   <div className="p-1 h-full flex flex-col">
                     <div className="flex justify-between items-start">
                       <span className={`text-xs ${
-                        isCurrentMonth ? 'text-surface-200' : 'text-surface-500'
+                        isCurrentMonth ? 'text-surface-200 light:text-gray-800' : 'text-surface-500 light:text-gray-500'
                       } ${isToday ? 'font-bold text-primary' : ''}`}>
                         {date.getDate()}
                       </span>
@@ -193,7 +264,7 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
                             setSelectedDate(formatDate(date));
                             setShowScheduler(true);
                           }}
-                          className="p-1 hover:bg-surface-700 rounded text-primary hover:text-primary-400 transition-colors"
+                          className="p-1 hover:bg-surface-700 light:hover:bg-gray-200 rounded text-primary hover:text-primary-400 transition-colors"
                           title="Schedule workout"
                         >
                           <Plus size={10} />
@@ -209,9 +280,10 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
                           className={`text-xs p-1 mb-1 rounded truncate ${
                             workout.shared 
                               ? 'bg-primary/20 text-primary border border-primary/30' 
-                              : 'bg-surface-700 text-surface-300'
+                              : 'bg-surface-700 text-surface-300 light:bg-gray-200 light:text-gray-700'
                           }`}
-                          title={`${workout.user} - ${workout.workout} at ${workout.time} (${workout.duration})`}
+                          title={`${workout.user_name || workout.user || 'User'} - ${workout.workout} at ${workout.time} (${workout.duration})`}
+                          onClick={() => openEdit(formatDate(date), workout)}
                         >
                           <div className="flex items-center space-x-1">
                             {workout.shared && <Users size={6} />}
@@ -223,7 +295,7 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
                         </div>
                       ))}
                       {workouts.length > 3 && (
-                        <div className="text-xs text-surface-400 text-center">
+                        <div className="text-xs text-surface-400 light:text-gray-600 text-center">
                           +{workouts.length - 3} more
                         </div>
                       )}
@@ -235,27 +307,57 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
           </div>
         </div>
 
+        {/* Day Details + Legend */}
+        {selectedDate && (
+          <div className="mt-2 rounded-lg border border-surface-700 light:border-gray-200 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-bold text-surface-50 light:text-gray-900">{selectedDate} • Workouts</div>
+              <Button size="sm" variant="ghost" onClick={() => { setSelectedDate(null); }}>
+                Close
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(workoutSchedule[selectedDate] || []).map((w) => (
+                <div key={w.id} className="flex items-center justify-between p-2 rounded bg-surface-800 light:bg-gray-100 border border-surface-700 light:border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium">{w.time}</span>
+                    <span className="text-sm text-surface-300 light:text-gray-700">{w.workout}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="xs" variant="ghost" onClick={() => openEdit(selectedDate, w)}><Pencil size={14} /> Edit</Button>
+                  </div>
+                </div>
+              ))}
+              <div className="pt-2">
+                <Button size="sm" variant="primary" onClick={() => setShowScheduler(true)}>
+                  <Plus size={14} /> Add another
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Legend */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-primary/20 border border-primary/30 rounded"></div>
-              <span className="text-surface-400">Shared with tribe</span>
+              <span className="text-surface-400 light:text-gray-600">Shared with tribe</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-surface-700 rounded"></div>
-              <span className="text-surface-400">Private workout</span>
+              <div className="w-3 h-3 bg-surface-700 light:bg-gray-300 rounded"></div>
+              <span className="text-surface-400 light:text-gray-600">Private workout</span>
             </div>
           </div>
           
-          <div className="text-surface-500">
+          <div className="text-surface-500 light:text-gray-500">
             Click + to schedule a workout
           </div>
         </div>
       </div>
 
       {/* Fixed Action Buttons at Bottom */}
-      <div className="sticky bottom-0 bg-surface-900 pt-4 border-t border-surface-700">
+      <div className="sticky bottom-0 bg-surface-900 light:bg-gray-50 pt-4 border-t border-surface-700 light:border-gray-200">
         <div className="flex space-x-3">
           <Button
             variant="ghost"
@@ -288,7 +390,43 @@ export function WorkoutCalendar({ isOpen, onClose, user }) {
           selectedDate={selectedDate}
           onSchedule={handleScheduleWorkout}
           user={user}
+          userId={uid}
+          customWorkouts={customWorkouts}
         />
+      )}
+
+      {/* Edit Workout Modal */}
+      {editOpen && (
+        <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Workout">
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-surface-400">Date</label>
+              <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="w-full px-3 py-2 rounded border border-surface-700 bg-surface-800 text-surface-100" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-surface-400">Time</label>
+                <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="w-full px-3 py-2 rounded border border-surface-700 bg-surface-800 text-surface-100" />
+              </div>
+              <div>
+                <label className="text-xs text-surface-400">Duration</label>
+                <input type="text" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} placeholder="e.g. 45 min" className="w-full px-3 py-2 rounded border border-surface-700 bg-surface-800 text-surface-100" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-surface-400">Workout</label>
+              <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full px-3 py-2 rounded border border-surface-700 bg-surface-800 text-surface-100" />
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={editShared} onChange={(e) => setEditShared(e.target.checked)} />
+              Shared with tribe
+            </label>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={saveEdit} variant="primary" className="flex-1"><Save size={16} /> Save</Button>
+              <Button onClick={deleteItem} variant="danger" className="flex-1"><Trash2 size={16} /> Delete</Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </Modal>
   );

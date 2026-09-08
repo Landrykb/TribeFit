@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { useAuth } from './AuthProvider';
 import { Mail, Lock, User, Zap } from 'lucide-react';
 
@@ -52,18 +52,18 @@ export function LoginModal({ isOpen, onClose }) {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {!isLogin && (
           <div>
-            <label className="block text-sm font-medium text-surface-200 mb-2">
-              <User size={16} className="inline mr-2" />
+            <label className="block text-sm font-bold text-surface-100 mb-3">
+              <User size={16} className="inline mr-2 text-accent" />
               Full Name
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="input"
+              className="w-full p-4 bg-surface-700 border border-surface-600 rounded-xl text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
               placeholder="Enter your full name"
               required={!isLogin}
             />
@@ -71,30 +71,30 @@ export function LoginModal({ isOpen, onClose }) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-2">
-            <Mail size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 mb-3">
+            <Mail size={16} className="inline mr-2 text-primary" />
             Email Address
           </label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className="input"
+            className="w-full p-4 bg-surface-700 border border-surface-600 rounded-xl text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
             placeholder="Enter your email"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-surface-200 mb-2">
-            <Lock size={16} className="inline mr-2" />
+          <label className="block text-sm font-bold text-surface-100 mb-3">
+            <Lock size={16} className="inline mr-2 text-success" />
             Password
           </label>
           <input
             type="password"
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
-            className="input"
+            className="w-full p-4 bg-surface-700 border border-surface-600 rounded-xl text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
             placeholder="Enter your password"
             required
           />
@@ -104,19 +104,19 @@ export function LoginModal({ isOpen, onClose }) {
           type="submit"
           variant="primary"
           loading={loading}
-          className="w-full"
+          className="w-full h-12 text-base font-bold"
         >
           {isLogin ? 'Sign In' : 'Create Account'}
         </Button>
 
-        <div className="text-center pt-4 border-t border-surface-700">
-          <p className="text-sm text-surface-400">
+        <div className="text-center pt-6 border-t border-surface-700">
+          <p className="text-sm text-surface-300">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
           </p>
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:text-primary-400 font-medium text-sm mt-1"
+            className="text-primary hover:text-primary-400 font-bold text-sm mt-2 transition-colors duration-200"
           >
             {isLogin ? 'Sign Up' : 'Sign In'}
           </button>
@@ -124,10 +124,10 @@ export function LoginModal({ isOpen, onClose }) {
       </form>
 
       {/* Demo credentials */}
-      <div className="mt-4 p-3 bg-surface-800 rounded-lg border border-surface-600">
-        <p className="text-xs text-surface-400 mb-2">Demo credentials:</p>
-        <p className="text-xs text-surface-300">Email: demo@tribefit.app</p>
-        <p className="text-xs text-surface-300">Password: demo123</p>
+      <div className="mt-6 p-4 bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-xl">
+        <p className="text-sm font-bold text-accent mb-2">Demo credentials:</p>
+        <p className="text-sm text-surface-200">Email: demo@tribefit.app</p>
+        <p className="text-sm text-surface-200">Password: demo123</p>
       </div>
     </Modal>
   );

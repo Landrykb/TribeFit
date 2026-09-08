@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { Button } from './Button';
+import { Button } from './button';
 import { Vote, CheckCircle, XCircle, Users, Clock } from 'lucide-react';
 
 export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
@@ -40,10 +40,11 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
     >
       <div className="space-y-6 max-h-96 overflow-y-auto">
         {pendingRequests.length === 0 ? (
-          <div className="text-center py-8">
-            <Vote size={48} className="text-surface-600 mx-auto mb-4" />
-            <p className="text-surface-400 mb-2">No pending votes</p>
-            <p className="text-sm text-surface-500">
+          <div className="text-center py-12">
+            <Vote size={64} className="text-primary mx-auto mb-6" />
+            <h3 className="text-xl font-bold text-surface-100 mb-3">No pending votes</h3>
+            <p className="text-surface-300 mb-2">Your tribe is all caught up!</p>
+            <p className="text-sm text-surface-400">
               When tribe members request equipment or donations, you'll see them here
             </p>
           </div>
@@ -54,7 +55,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
             const isCompleted = status !== 'PENDING';
             
             return (
-              <div key={request.id} className="bg-surface-800 rounded-xl p-5 border border-surface-700">
+              <div key={request.id} className="bg-gradient-to-br from-surface-700/50 to-surface-800/50 border border-surface-600/50 rounded-2xl p-6 hover-elevate transition-all duration-200">
                 {/* Request Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -65,7 +66,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                           ? 'bg-primary/20 text-primary border border-primary/30' 
                           : 'bg-accent/20 text-accent border border-accent/30'
                       }`}>
-                        {request.type === 'gear' ? '🏋️ Equipment' : '❤️ Donation'}
+                        {request.type === 'gear' ? 'Equipment' : 'Donation'}
                       </span>
                     </div>
                     <p className="text-surface-300 text-sm mb-3">
@@ -106,9 +107,9 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                           <span className="text-success">Approve</span>
                           <span className="text-surface-400">{request.votes.approve}</span>
                         </div>
-                        <div className="w-full bg-surface-700 rounded-full h-2">
+                        <div className="w-full bg-surface-700 rounded-full h-3">
                           <div 
-                            className="bg-success h-2 rounded-full transition-all duration-300" 
+                            className="bg-gradient-to-r from-success to-green-500 h-3 rounded-full transition-all duration-300 shadow-sm" 
                             style={{ width: `${Math.min(100, (request.votes.approve / needed) * 100)}%` }}
                           />
                         </div>
@@ -123,9 +124,9 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                           <span className="text-danger">Reject</span>
                           <span className="text-surface-400">{request.votes.reject}</span>
                         </div>
-                        <div className="w-full bg-surface-700 rounded-full h-2">
+                        <div className="w-full bg-surface-700 rounded-full h-3">
                           <div 
-                            className="bg-danger h-2 rounded-full transition-all duration-300" 
+                            className="bg-gradient-to-r from-danger to-red-500 h-3 rounded-full transition-all duration-300 shadow-sm" 
                             style={{ width: `${Math.min(100, (request.votes.reject / needed) * 100)}%` }}
                           />
                         </div>
@@ -180,18 +181,18 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                 )}
 
                 {isCompleted && (
-                  <div className={`text-center py-2 px-4 rounded-lg ${
+                  <div className={`text-center py-3 px-4 rounded-xl ${
                     status === 'APPROVED' 
-                      ? 'bg-success/20 text-success border border-success/30' 
-                      : 'bg-danger/20 text-danger border border-danger/30'
+                      ? 'bg-gradient-to-br from-success/20 to-success/10 text-success border border-success/30' 
+                      : 'bg-gradient-to-br from-danger/20 to-danger/10 text-danger border border-danger/30'
                   }`}>
                     <div className="flex items-center justify-center space-x-2">
                       {status === 'APPROVED' ? (
-                        <CheckCircle size={16} />
+                        <CheckCircle size={18} />
                       ) : (
-                        <XCircle size={16} />
+                        <XCircle size={18} />
                       )}
-                      <span className="font-medium">
+                      <span className="font-bold">
                         {status === 'APPROVED' ? 'Request Approved!' : 'Request Rejected'}
                       </span>
                     </div>
@@ -203,10 +204,11 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
         )}
       </div>
       
-      <div className="flex justify-center pt-6 border-t border-surface-700">
+      <div className="flex justify-center pt-6 border-t border-surface-700/50">
         <Button 
           onClick={onClose}
           variant="ghost"
+          className="px-8"
         >
           Close
         </Button>

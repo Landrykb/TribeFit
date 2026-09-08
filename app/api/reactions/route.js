@@ -5,8 +5,6 @@ export async function POST(request) {
   try {
     const { tribe_id, from_user, to_user, type, meta = {} } = await request.json();
 
-    console.log('Send reaction request:', { tribe_id, from_user, to_user, type, meta });
-
     // Validate required fields
     if (!tribe_id || !from_user || !to_user || !type) {
       return NextResponse.json(
@@ -49,7 +47,6 @@ export async function POST(request) {
         );
       }
     } catch (memberError) {
-      console.log('Member check error (using mock):', memberError);
       // Continue with mock data in development
     }
 
@@ -70,7 +67,7 @@ export async function POST(request) {
     try {
       if (process.env.NODE_ENV === 'development') {
         // Mock reaction storage for development
-        console.log('Mock reaction created:', reactionData);
+        // Mock reaction storage for development
       } else {
         const { data: reaction, error: reactionError } = await client
           .from('reactions')
@@ -126,7 +123,7 @@ export async function POST(request) {
 
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Mock notification created:', notification);
+        // Mock notification for development
       } else {
         await client.from('notifications').insert(notification);
       }
@@ -134,8 +131,6 @@ export async function POST(request) {
       console.error('Notification creation error:', notifError);
       // Non-fatal, continue
     }
-
-    console.log('Reaction sent successfully:', { reactionId, type, emoji });
 
     return NextResponse.json({
       success: true,
