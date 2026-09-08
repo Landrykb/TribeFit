@@ -3125,7 +3125,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               <Users size={18} className="text-primary flex-shrink-0" />
               <div className="text-center w-full">
                 <div className="font-bold text-primary text-sm">Tribe</div>
-                <div className="text-xs text-surface-300 leading-tight break-words">{Features.SQUADS ? 'Squads & Tribes' : 'Community'}</div>
+                <div className="text-xs text-surface-300 leading-tight break-words">{Features.SQUADS ? t('squads_and_tribes') : 'Community'}</div>
               </div>
             </div>
           </button>
@@ -3162,7 +3162,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               onClick={() => setShowMyWorkouts(true)}
             >
               <Dumbbell size={14} className="flex-shrink-0" />
-              <span className="text-xs text-primary light:text-blue-600 font-semibold leading-none">{t('my_workouts')}</span>
+              <span className="text-xs text-primary light:text-primary-700 font-semibold leading-none">{t('my_workouts')}</span>
             </Button>
             <Button 
               variant="ghost" 
@@ -3242,7 +3242,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       <div className="card">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">{t('tribe_feed')}</h2>
+            <h2 className="text-2xl font-bold text-surface-50">{t('tribe_feed')}</h2>
             <p className="text-surface-300 mt-1">Share your fitness journey with your tribe</p>
           </div>
           <Button
@@ -3352,7 +3352,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-surface-50">
-              {Features.SQUADS ? 'Squads & Tribes' : t('founders_tribe')}
+              {Features.SQUADS ? t('squads_and_tribes') : t('founders_tribe')}
             </h2>
             <p className="text-surface-300">
               {Features.SQUADS 
@@ -3432,7 +3432,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {squads.find(s => s.id === selectedTribe)?.group_type === 'tribe' && (
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent flex items-center space-x-2">
+          <h3 className="text-xl font-bold text-surface-50 flex items-center space-x-2">
             <TrendingUp size={24} className="text-accent" />
             <span>Tribe Vault</span>
           </h3>
@@ -4050,10 +4050,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         </div>
 
         <div className="card">
-          <h4 className="text-lg font-bold text-surface-100 mb-3">Recent Sessions</h4>
+          <h4 className="text-lg font-bold text-surface-100 mb-3">{t('recent_sessions')}</h4>
           <div className="space-y-2">
             {progressHistory.length === 0 && (
-              <div className="text-surface-400 text-sm">No sessions yet. Start a workout to track progress.</div>
+              <div className="text-surface-400 text-sm">{t('no_sessions')}</div>
             )}
             {progressHistory.map((p) => {
               const ACT_ICONS = {
@@ -4136,9 +4136,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               {[
                 { id: 'home', icon: Home, label: t('home') },
                 { id: 'feed', icon: Rss, label: t('feed') },
-                { id: 'tribe', icon: Users, label: Features.SQUADS ? 'Groups' : t('tribe') },
+                { id: 'tribe', icon: Users, label: Features.SQUADS ? t('groups') : t('tribe') },
                 { id: 'coach', icon: Dumbbell, label: t('coach') },
-                { id: 'progress', icon: TrendingUp, label: 'Progress' },
+                { id: 'progress', icon: TrendingUp, label: t('progress') },
                 { id: 'profile', icon: User, label: t('profile') }
               ].map(({ id, icon: Icon, label }) => (
                 <button

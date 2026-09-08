@@ -271,11 +271,11 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
       <div className="max-h-[70vh] overflow-y-auto">
         <div className="space-y-6 p-1">
           {/* Workout Header */}
-          <div className="text-center p-6 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 light:bg-gradient-to-br light:from-blue-50 light:via-purple-50 light:to-blue-50 border border-primary/20 light:border-blue-200 rounded-2xl">
+          <div className="text-center p-6 bg-surface-800/60 border border-primary/25 rounded-2xl">
             <h2 className="text-2xl font-bold text-primary mb-3">
               {workoutStarted ? 'Workout In Progress' : 'Ready to Start?'}
             </h2>
-            <div className="text-primary text-xl font-bold bg-primary/20 light:bg-blue-100 light:text-blue-800 px-4 py-2 rounded-xl inline-block">
+            <div className="text-primary text-xl font-bold bg-primary/20 light:bg-primary-100 light:text-primary-800 px-4 py-2 rounded-xl inline-block">
               Total Time: {formatTotalTime(totalWorkoutTime)}
             </div>
           </div>
@@ -369,7 +369,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
             {/* Timer Display */}
             {isResting && (
               <div className="text-center">
-                <div className="bg-accent/20 light:bg-orange-50 border border-accent light:border-orange-200 rounded-xl p-6 mb-4">
+                <div className="bg-accent/20 light:bg-accent-50 border border-accent light:border-accent-200 rounded-xl p-6 mb-4">
                   <Timer size={32} className="text-accent mx-auto mb-2" />
                   <div className="text-3xl font-bold text-accent mb-2">
                     {formatTime(timeLeft)}

@@ -105,7 +105,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             <Clock size={16} className="inline mr-2 text-accent" />
             Available Time Per Session
           </label>
-          <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-orange-50 border border-accent/20 light:border-orange-200 rounded-xl">
+          <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-accent-50 border border-accent/20 light:border-accent-200 rounded-xl">
             <div className="flex items-center space-x-4">
               <input
                 type="range"

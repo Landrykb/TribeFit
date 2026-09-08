@@ -155,7 +155,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
       <div className="flex items-center justify-between p-6 bg-gradient-to-br from-accent/10 via-accent/5 to-accent/10 border border-accent/20 rounded-2xl">
         <div className="flex items-center space-x-3">
           <Gift size={24} className="text-accent" />
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">{t('wishlist')}</h3>
+          <h3 className="text-2xl font-bold text-surface-50">{t('wishlist')}</h3>
           <span className="bg-accent/20 text-accent px-3 py-1 rounded-xl text-sm font-medium">
             {wishlistItems.length} items
           </span>
@@ -270,7 +270,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Package size={24} className="text-accent" />
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Equipment Catalog</h3>
+                  <h3 className="text-2xl font-bold text-surface-50">Equipment Catalog</h3>
                 </div>
                 <Button
                   onClick={() => setShowAddModal(false)}
@@ -353,7 +353,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Target size={24} className="text-accent" />
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Next Gear</h3>
+                  <h3 className="text-2xl font-bold text-surface-50">Next Gear</h3>
                 </div>
                 <Button
                   onClick={() => setShowSpendModal(false)}

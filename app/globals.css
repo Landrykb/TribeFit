@@ -43,6 +43,9 @@
   .light .text-surface-300 { color: #585870; }
   .light .text-surface-400 { color: #6E6E85; }
   .light .text-surface-500 { color: #8E8EA3; }
+  .light .text-primary { color: #54870F; }
+  .light .text-primary-300 { color: #6CAF14; }
+  .light .text-primary-200 { color: #3F650D; }
   
   /* Light mode background colors */
   .light .bg-surface-700\/50 { background-color: rgba(248, 250, 252, 0.8) !important; }

@@ -76,9 +76,9 @@ export function GroupSettingsModal({
 
           {/* Read-only warning for non-editable settings */}
           {!canEdit && (
-            <div className="p-4 bg-primary/10 light:bg-blue-50 border border-primary/30 light:border-blue-300 rounded-xl">
+            <div className="p-4 bg-primary/10 light:bg-primary-50 border border-primary/30 light:border-primary-300 rounded-xl">
               <div className="flex items-start gap-3">
-                <Shield size={20} className="text-primary light:text-blue-600 mt-0.5" />
+                <Shield size={20} className="text-primary light:text-primary-700 mt-0.5" />
                 <div className="text-sm text-surface-300 light:text-gray-600">
                   Settings are read-only. Only tribe/squad admins can modify settings.
                 </div>
@@ -220,11 +220,11 @@ export function GroupSettingsModal({
           {/* Squad-specific settings */}
           {!isTribe && (
             <>
-              <div className="p-4 bg-primary/10 light:bg-blue-50 border border-primary/30 light:border-blue-300 rounded-xl">
+              <div className="p-4 bg-primary/10 light:bg-primary-50 border border-primary/30 light:border-primary-300 rounded-xl">
                 <div className="flex items-start gap-3">
-                  <Users size={20} className="text-primary light:text-blue-600 mt-0.5" />
+                  <Users size={20} className="text-primary light:text-primary-700 mt-0.5" />
                   <div>
-                    <div className="font-bold text-primary light:text-blue-700">Squad Settings</div>
+                    <div className="font-bold text-primary light:text-primary-700">Squad Settings</div>
                     <div className="text-sm text-surface-300 light:text-gray-600 mt-1">
                       Squads have simplified settings. Evolve to a Tribe to unlock advanced features like skip mode and voting.
                     </div>

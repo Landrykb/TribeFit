@@ -36,7 +36,7 @@ export function DonationModal({ isOpen, onClose, onSubmitRequest }) {
       <div className="bg-surface-900 light:bg-white light:border-gray-200 border border-surface-700 rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
         <div className="p-6 border-b border-surface-700 light:border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Donate to Gym</h2>
+            <h2 className="text-2xl font-bold text-surface-50">Donate to Gym</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-surface-700 light:hover:bg-gray-100 rounded-xl transition-all duration-200"
@@ -75,7 +75,7 @@ export function DonationModal({ isOpen, onClose, onSubmitRequest }) {
             />
           </div>
 
-          <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-blue-50 border border-accent/20 light:border-blue-200 rounded-xl">
+          <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-primary-50 border border-accent/20 light:border-primary-200 rounded-xl">
             <p className="text-sm text-surface-200 light:text-gray-700">
               💡 <strong className="text-accent">How it works:</strong> Your tribe will vote on this donation request. Once approved, the funds will be sent to support the gym.
             </p>

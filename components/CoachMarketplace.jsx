@@ -243,7 +243,7 @@ function CoachCard({ coach, onHire, onViewDetails, userTribeId, walletBalance })
     <div className="card bg-surface-800 light:bg-white hover-elevate p-4">
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-success to-primary flex items-center justify-center flex-shrink-0">
+        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
           <span className="text-xl font-bold text-white">
             {coach.name?.charAt(0) || 'C'}
           </span>
@@ -494,7 +494,7 @@ function CoachDetailsModal({ coach, onClose, onHire, walletBalance }) {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-success to-primary flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-2xl font-bold text-white">
                   {coach.name?.charAt(0) || 'C'}
                 </span>

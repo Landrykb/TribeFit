@@ -189,10 +189,10 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
             {/* AI Generate Option */}
             <button
               onClick={() => setShowWorkoutGenerator(true)}
-              className="w-full p-4 bg-gradient-to-r from-primary/20 to-accent/20 light:bg-gradient-to-r light:from-blue-50 light:to-purple-50 border border-primary/30 light:border-blue-200 rounded-lg hover:from-primary/30 hover:to-accent/30 light:hover:from-blue-100 light:hover:to-purple-100 transition-all group"
+              className="w-full p-4 bg-gradient-to-r from-primary/20 to-accent/20 light:bg-gradient-to-r light:from-primary-50 light:to-surface-50 border border-primary/30 light:border-primary-200 rounded-lg hover:from-primary/30 hover:to-accent/30 light:hover:from-primary-100 light:hover:to-surface-100 transition-all group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 light:bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-primary/30 light:group-hover:bg-blue-200 transition-colors">
+                <div className="w-10 h-10 bg-primary/20 light:bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary/30 light:group-hover:bg-primary-200 transition-colors">
                   <Zap size={20} className="text-primary" />
                 </div>
                 <div className="text-left flex-1">

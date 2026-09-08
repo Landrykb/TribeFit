@@ -85,7 +85,7 @@ export function DevControls({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-surface-800 light:bg-white border border-purple-500/30 light:border-purple-300 rounded-lg shadow-2xl w-96 max-h-[80vh] overflow-y-auto">
+    <div className="fixed bottom-4 right-4 z-50 bg-surface-800 light:bg-white border border-purple-500/30 light:border-primary-300 rounded-lg shadow-2xl w-96 max-h-[80vh] overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export function DevControls({
 
       <div className="p-4 space-y-4">
         {/* Current User Info */}
-        <div className="p-3 bg-purple-500/10 light:bg-purple-50 rounded-lg border border-purple-500/30 light:border-purple-200">
+        <div className="p-3 bg-purple-500/10 light:bg-primary-50 rounded-lg border border-purple-500/30 light:border-primary-200">
           <div className="flex items-center justify-between mb-1">
             <div className="text-xs text-surface-400 light:text-gray-600">Current User</div>
             <div className="flex gap-1">
@@ -332,7 +332,7 @@ export function DevControls({
                     key={u.id}
                     className={`p-2 rounded text-xs flex items-center justify-between cursor-pointer transition-all ${
                       u.id === user?.id
-                        ? 'bg-purple-500/30 light:bg-purple-100 border-2 border-purple-500 light:border-purple-400 shadow-lg shadow-purple-500/20'
+                        ? 'bg-purple-500/30 light:bg-primary-100 border-2 border-purple-500 light:border-primary-400 shadow-lg shadow-purple-500/20'
                         : 'bg-surface-700 light:bg-gray-100 hover:bg-surface-600 light:hover:bg-gray-200 border border-transparent'
                     }`}
                     onClick={() => onSwitchUser(u.id)}
