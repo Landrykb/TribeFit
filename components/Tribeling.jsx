@@ -15,10 +15,10 @@ export const SKIN_PALETTES = {
 };
 
 const MOOD_META = {
-  pumped:   { label: 'Fired up!',          Icon: Flame,      iconClass: 'text-accent' },
-  steady:   { label: 'Warming up',         Icon: Meh,        iconClass: 'text-primary-300' },
-  deflated: { label: 'Needs a workout...', Icon: BatteryLow, iconClass: 'text-surface-400' },
-  couch:    { label: 'Couch mode',         Icon: Tv,         iconClass: 'text-danger' },
+  pumped:   { label: 'Fired up!',          Icon: Flame,      iconClass: 'text-accent',   pill: 'bg-accent/15 border-accent/40 text-accent' },
+  steady:   { label: 'Warming up',         Icon: Meh,        iconClass: 'text-primary',  pill: 'bg-primary/15 border-primary/40 text-primary' },
+  deflated: { label: 'Needs a workout...', Icon: BatteryLow, iconClass: 'text-surface-300', pill: 'bg-surface-700/80 border-surface-600 text-surface-300' },
+  couch:    { label: 'Couch mode',         Icon: Tv,         iconClass: 'text-danger',   pill: 'bg-danger/15 border-danger/40 text-danger' },
 };
 
 // Accessories drawn on/around the head (viewBox 120x140)
@@ -133,8 +133,8 @@ export function Tribeling({
           <path d="M96 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" fill={skin.accent} opacity="0.9" />
         </svg>
         {showLabel && (
-          <span className="text-xs font-medium text-surface-300 flex items-center gap-1">
-            <Sparkles size={11} className="text-primary-300" /> Do a workout to grow!
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-primary text-xs font-semibold shadow-sm">
+            <Sparkles size={12} /> Do a workout to grow!
           </span>
         )}
       </div>
@@ -224,11 +224,9 @@ export function Tribeling({
         <Accessory type={accessory} skin={skin} />
       </svg>
       {showLabel && (
-        <div className="flex items-center gap-1">
-          <m.Icon size={12} className={m.iconClass} />
-          <span className={`text-xs font-medium ${mood === 'deflated' || couch ? 'text-surface-400' : 'text-surface-200'}`}>
-            {m.label}{streak > 0 ? ` · ${streak}d` : ''}
-          </span>
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+          <m.Icon size={12} />
+          <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
         </div>
       )}
     </div>
