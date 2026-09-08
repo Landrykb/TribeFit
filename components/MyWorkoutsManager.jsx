@@ -5,8 +5,21 @@ import { Modal } from './ui/Modal';
 import { 
   Plus, Edit, Trash2, Copy, Star, Play, Clock, 
   Zap, TrendingUp, Check, X, Search, Filter,
-  ChevronDown, ChevronUp, Dumbbell, Upload
+  ChevronDown, ChevronUp, Dumbbell, Upload,
+  LayoutGrid, Shield, Layers, Footprints, Target, HeartPulse, Flame, Sprout, Activity
 } from 'lucide-react';
+
+const BODY_PART_ICONS = {
+  all: LayoutGrid, chest: Dumbbell, back: Shield, shoulders: Layers,
+  arms: Zap, legs: Footprints, core: Target, cardio: HeartPulse, fullbody: Flame,
+};
+
+const LEVEL_CHIPS = [
+  { id: 'all', label: 'All', Icon: LayoutGrid },
+  { id: 'beginner', label: 'Beginner', Icon: Sprout },
+  { id: 'intermediate', label: 'Intermediate', Icon: TrendingUp },
+  { id: 'advanced', label: 'Advanced', Icon: Flame },
+];
 import { WORKOUT_TEMPLATES, BODY_PARTS, getWorkoutsByBodyPart } from '../lib/workout-library';
 import { AdvancedWorkoutEditor } from './AdvancedWorkoutEditor';
 import { CalendarImportModal } from './CalendarImportModal';
@@ -169,44 +182,69 @@ export function MyWorkoutsManager({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="My Workouts" size="2xl">
       <div className="space-y-4">
-        {/* Search and Filters */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search workouts..."
-              className="w-full pl-10 pr-4 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-          </div>
+        {/* Search */}
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search workouts..."
+            className="w-full pl-10 pr-4 py-2.5 bg-surface-800 border-2 border-surface-700 rounded-xl text-surface-50 placeholder-surface-400 focus:border-primary focus:outline-none"
+          />
+        </div>
 
-          <div className="flex gap-2">
-            <select
-              value={filterBodyPart}
-              onChange={(e) => setFilterBodyPart(e.target.value)}
-              className="flex-1 px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
+        {/* Body part icon grid — tap to filter */}
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-surface-400 mb-1.5">Body Part</div>
+          <div className="grid grid-cols-5 gap-1.5">
+            <button
+              onClick={() => setFilterBodyPart('all')}
+              className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition-all ${
+                filterBodyPart === 'all'
+                  ? 'bg-primary/15 border-primary/50 text-primary'
+                  : 'bg-surface-800/60 border-surface-700/60 text-surface-300 hover:border-surface-500'
+              }`}
             >
-              <option value="all">All Body Parts</option>
-              {BODY_PARTS.map(part => (
-                <option key={part.id} value={part.id}>
-                  {part.emoji} {part.label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={filterDifficulty}
-              onChange={(e) => setFilterDifficulty(e.target.value)}
-              className="flex-1 px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-50"
-            >
-              <option value="all">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
+              <LayoutGrid size={17} />
+              <span className="text-[10px] font-medium">All</span>
+            </button>
+            {BODY_PARTS.map(part => {
+              const Icon = BODY_PART_ICONS[part.id] || Dumbbell;
+              return (
+                <button
+                  key={part.id}
+                  onClick={() => setFilterBodyPart(part.id)}
+                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition-all ${
+                    filterBodyPart === part.id
+                      ? 'bg-primary/15 border-primary/50 text-primary scale-105'
+                      : 'bg-surface-800/60 border-surface-700/60 text-surface-300 hover:border-surface-500'
+                  }`}
+                >
+                  <Icon size={17} />
+                  <span className="text-[10px] font-medium leading-none">{part.label.split('/')[0].split(' ')[0]}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Level chips */}
+        <div className="flex gap-1.5">
+          {LEVEL_CHIPS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setFilterDifficulty(id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border-2 text-xs font-semibold transition-all ${
+                filterDifficulty === id
+                  ? 'bg-primary/15 border-primary/50 text-primary'
+                  : 'bg-surface-800/60 border-surface-700/60 text-surface-300 hover:border-surface-500'
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Action Buttons */}
@@ -226,6 +264,7 @@ export function MyWorkoutsManager({
               setShowEditor(true);
             }}
             variant="primary"
+            className="h-10"
           >
             <Plus size={16} />
             Create
@@ -234,6 +273,7 @@ export function MyWorkoutsManager({
           <Button
             onClick={() => setShowImportModal(true)}
             variant="ghost"
+            className="h-10"
           >
             <Upload size={16} />
             Import
@@ -242,6 +282,7 @@ export function MyWorkoutsManager({
           <Button
             onClick={() => setShowTemplates(!showTemplates)}
             variant="ghost"
+            className="h-10"
           >
             <Dumbbell size={16} />
             {showTemplates ? 'Mine' : 'Templates'}

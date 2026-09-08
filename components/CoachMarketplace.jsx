@@ -91,7 +91,7 @@ export function CoachMarketplace({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-surface-900 light:bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col my-4">
+      <div className="bg-surface-900 light:bg-white rounded-[22px] border-2 border-surface-700 light:border-gray-200 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col my-4">
         {/* Header */}
         <div className="p-6 border-b border-surface-700 light:border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ export function CoachMarketplace({
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => setActiveTab('marketplace')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all ${
                 activeTab === 'marketplace'
                   ? 'bg-success text-white'
                   : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 light:hover:bg-gray-200'
@@ -125,7 +125,7 @@ export function CoachMarketplace({
             </button>
             <button
               onClick={() => setActiveTab('eligibility')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all ${
                 activeTab === 'eligibility'
                   ? 'bg-success text-white'
                   : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 light:hover:bg-gray-200'
@@ -145,7 +145,7 @@ export function CoachMarketplace({
               <div className="flex gap-2">
                 <button
                   onClick={() => setFilterTribe('all')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     filterTribe === 'all'
                       ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
@@ -155,7 +155,7 @@ export function CoachMarketplace({
                 </button>
                 <button
                   onClick={() => setFilterTribe('tribe')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     filterTribe === 'tribe'
                       ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
@@ -165,7 +165,7 @@ export function CoachMarketplace({
                 </button>
                 <button
                   onClick={() => setFilterTribe('external')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     filterTribe === 'external'
                       ? 'bg-primary text-surface-950'
                       : 'bg-surface-800 light:bg-gray-100 text-surface-300 light:text-gray-600'
@@ -182,7 +182,7 @@ export function CoachMarketplace({
                   <p className="text-surface-400 light:text-gray-600 mt-4">Loading coaches...</p>
                 </div>
               ) : getFilteredCoaches().length === 0 ? (
-                <div className="text-center py-12 card bg-surface-800 light:bg-gray-50">
+                <div className="text-center py-12 card relative overflow-hidden">
                   <Award size={48} className="text-surface-600 light:text-gray-400 mx-auto mb-4" />
                   <p className="text-surface-400 light:text-gray-600 text-lg">No coaches available yet</p>
                   <p className="text-surface-500 light:text-gray-500 mt-2">Be the first to offer coaching!</p>

@@ -3256,7 +3256,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             />
             <div className="flex items-center justify-between">
               <div className="flex gap-2">
-                <button className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Photo (demo)">
+                <button onClick={() => setShowPostModal(true)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Add photo">
                   <Camera size={16} />
                 </button>
                 <button onClick={() => setDraftCaption((d) => `${d} 🔥`)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Fire">
@@ -3794,7 +3794,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           { name: 'Strength Pro', icon: Dumbbell, color: 'accent', desc: t('strength_coach_desc'), price: `150 ${t('per_session')}` },
           { name: 'Run Coach', icon: Footprints, color: 'success', desc: t('run_coach_desc'), price: `120 ${t('per_session')}` },
         ].map((c) => (
-          <div key={c.name} className="card hover-elevate p-4 flex gap-3 items-start">
+          <div key={c.name} onClick={() => setShowCoachMarketplace(true)} className="card hover-elevate p-4 flex gap-3 items-start cursor-pointer">
             <div className={`w-11 h-11 rounded-xl bg-${c.color}/15 border border-${c.color}/30 flex items-center justify-center flex-shrink-0`}>
               <c.icon size={20} className={`text-${c.color}`} />
             </div>
@@ -4049,19 +4049,19 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="card">
-          <h3 className="text-xl font-bold text-surface-50">Progress</h3>
+          <h3 className="text-xl font-bold text-surface-50">{t('progress')}</h3>
           <div className="grid grid-cols-3 gap-3 mt-4">
             <div className="text-center p-3 bg-surface-700 rounded-xl border border-surface-600">
               <div className="text-2xl font-bold text-primary number-display">{workouts}</div>
-              <div className="text-xs text-surface-300 font-medium">Workouts</div>
+              <div className="text-xs text-surface-300 font-medium">{t('workouts_label')}</div>
             </div>
             <div className="text-center p-3 bg-surface-700 rounded-xl border border-surface-600">
               <div className="text-2xl font-bold text-success number-display">{totalMins}</div>
-              <div className="text-xs text-surface-300 font-medium">Total minutes</div>
+              <div className="text-xs text-surface-300 font-medium">{t('total_minutes')}</div>
             </div>
             <div className="text-center p-3 bg-surface-700 rounded-xl border border-surface-600">
               <div className="text-2xl font-bold text-accent number-display">{weekCount}</div>
-              <div className="text-xs text-surface-300 font-medium">This week</div>
+              <div className="text-xs text-surface-300 font-medium">{t('this_week')}</div>
             </div>
           </div>
         </div>
@@ -4091,7 +4091,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-surface-200">{Math.round((Number(p.duration_sec)||0)/60)} min</div>
-                  <div className="text-xs text-surface-500">{p.completed_sets} sets</div>
+                  <div className="text-xs text-surface-500">{p.completed_sets} {t('sets_label')}</div>
                 </div>
               </div>
             );})}
