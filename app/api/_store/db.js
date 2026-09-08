@@ -1209,11 +1209,11 @@ export function setEffect(userId, key, value) {
 
 // ---- Tribeling avatar: skins, evolution stages, accessories ----
 export const AVATAR_SKINS = {
-  ember:    { id: 'ember',    name: 'Ember',    price_tc: 0,   body: '#7C5CFF', belly: '#B9A5FF', accent: '#FF5436' },
+  ember:    { id: 'ember',    name: 'Ember',    price_tc: 0,   body: '#A3E635', belly: '#D4F28F', accent: '#FF5436' },
   solar:    { id: 'solar',    name: 'Solar',    price_tc: 40,  body: '#FF9F1C', belly: '#FFD166', accent: '#EF476F' },
   venom:    { id: 'venom',    name: 'Venom',    price_tc: 40,  body: '#2EC4B6', belly: '#8CE99A', accent: '#FF6B6B' },
   frost:    { id: 'frost',    name: 'Frost',    price_tc: 60,  body: '#4CC9F0', belly: '#BDE0FE', accent: '#F72585' },
-  midnight: { id: 'midnight', name: 'Midnight', price_tc: 80,  body: '#3B3B4F', belly: '#6E6E85', accent: '#7C5CFF' },
+  midnight: { id: 'midnight', name: 'Midnight', price_tc: 80,  body: '#3B3B4F', belly: '#6E6E85', accent: '#A3E635' },
   magma:    { id: 'magma',    name: 'Magma',    price_tc: 120, body: '#FF5436', belly: '#FFB4A2', accent: '#FFD166' },
 };
 
@@ -1287,6 +1287,7 @@ export function getAvatarState(userId) {
     has_workout_today: hasToday,
     missed_today: missedToday,
     ads_this_week: adsThisWeek,
+    avatar_icon: user.avatar_icon || null,
     skin: user.avatar_skin || 'ember',
     accessory: user.avatar_accessory || 'none',
     owned_skins: user.owned_skins || ['ember'],

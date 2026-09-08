@@ -88,6 +88,15 @@ export async function POST(request) {
         return respond({ ads_this_week: count });
       }
 
+      case 'update_profile': {
+        const updates = {};
+        if (typeof body.name === 'string' && body.name.trim()) updates.name = body.name.trim().slice(0, 40);
+        if (typeof body.avatar_icon === 'string') updates.avatar_icon = body.avatar_icon;
+        if (!Object.keys(updates).length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+        updateUserStats(userId, updates);
+        return respond({ profile: { name: getUser(userId).name, avatar_icon: getUser(userId).avatar_icon } });
+      }
+
       // Dev/testing: set stats to preview avatar states (mock store only)
       case 'debug_set': {
         const updates = {};

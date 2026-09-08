@@ -9,19 +9,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary palette - electric violet
+        // Primary palette - volt lime (energetic fitness green)
         primary: {
-          DEFAULT: '#7C5CFF',
-          50: '#F4F1FF',
-          100: '#E9E3FF',
-          200: '#D4C8FF',
-          300: '#B9A5FF',
-          400: '#9D82FF',
-          500: '#7C5CFF',
-          600: '#6A45F0',
-          700: '#5533C9',
-          800: '#43289E',
-          900: '#331E78',
+          DEFAULT: '#A3E635',
+          50: '#F6FCE8',
+          100: '#E9F9C5',
+          200: '#D4F28F',
+          300: '#BEEA5E',
+          400: '#A3E635',
+          500: '#8AD423',
+          600: '#6CAF14',
+          700: '#54870F',
+          800: '#3F650D',
+          900: '#334A0D',
         },
         // Accent palette - punchy coral
         accent: {

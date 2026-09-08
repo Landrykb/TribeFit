@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-const COLORS = ['#7C5CFF', '#FF5436', '#FFD166', '#2EC4B6', '#F72585', '#8CE99A'];
+const COLORS = ['#A3E635', '#FF5436', '#FFD166', '#2EC4B6', '#F72585', '#8CE99A'];
 
 // Lightweight CSS confetti burst - no dependencies.
 export function Confetti({ count = 40 }) {

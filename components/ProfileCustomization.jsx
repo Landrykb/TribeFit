@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // Tribal-inspired profile icons
-const ProfileIcons = {
+export const ProfileIcons = {
   zap: { icon: Zap, name: 'Lightning', color: 'text-yellow-400' },
   trophy: { icon: Trophy, name: 'Champion', color: 'text-yellow-500' },
   shield: { icon: Shield, name: 'Guardian', color: 'text-blue-400' },
@@ -24,25 +24,38 @@ const ProfileIcons = {
   mountain: { icon: Mountain, name: 'Peak Seeker', color: 'text-indigo-400' },
 };
 
-export function ProfileCustomization({ isOpen, onClose }) {
+export function ProfileCustomization({ isOpen, onClose, userId, currentName, currentIcon, onSaved }) {
   const { user, updateUser } = useAuth();
   const toast = useToast();
-  const [selectedIcon, setSelectedIcon] = useState(user?.avatar_icon || 'zap');
-  const [displayName, setDisplayName] = useState(user?.name || '');
+  const [selectedIcon, setSelectedIcon] = useState(currentIcon || user?.avatar_icon || 'zap');
+  const [displayName, setDisplayName] = useState(currentName || user?.name || '');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    if (!displayName.trim()) {
+  const handleSave = async () => {
+    const name = displayName.trim();
+    if (!name) {
       toast.error('Display name is required');
       return;
     }
-
-    updateUser({
-      name: displayName.trim(),
-      avatar_icon: selectedIcon
-    });
-    
-    toast.success('Profile updated successfully! ✨');
-    onClose();
+    setSaving(true);
+    try {
+      if (userId) {
+        const res = await fetch('/api/avatar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update_profile', userId, name, avatar_icon: selectedIcon }),
+        });
+        if (!res.ok) throw new Error('Save failed');
+      }
+      updateUser({ name, avatar_icon: selectedIcon });
+      onSaved?.({ name, avatar_icon: selectedIcon });
+      toast.success('Profile updated!');
+      onClose();
+    } catch (e) {
+      toast.error('Could not save: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -116,6 +129,7 @@ export function ProfileCustomization({ isOpen, onClose }) {
           <Button
             variant="primary"
             onClick={handleSave}
+            loading={saving}
             className="flex-1"
           >
             Save Changes

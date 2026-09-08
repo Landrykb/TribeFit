@@ -40,10 +40,12 @@ import { SquadLeaderboards } from '../components/ui/SquadLeaderboards';
 import { SquadCreationModal } from '../components/ui/SquadCreationModal';
 import { SquadDetailsModal } from '../components/ui/SquadDetailsModal';
 import { ReactionsPanel } from '../components/ui/ReactionsPanel';
-import { ProfileCustomization } from '../components/ProfileCustomization';
+import { ProfileCustomization, ProfileIcons } from '../components/ProfileCustomization';
 import { AvatarStudio } from '../components/AvatarStudio';
 import { DailyVersus } from '../components/DailyVersus';
 import { ReactionGlyph } from '../components/ReactionIcons';
+import { BlobBackground } from '../components/BlobBackground';
+import { StreakRing } from '../components/StreakRing';
 import { CoachMarketplace } from '../components/CoachMarketplace';
 import { DevControls } from '../components/DevControls';
 import { StatusBadgeWithProgress } from '../components/StatusBadge';
@@ -3047,20 +3049,23 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const renderHome = () => (
     <div className="space-y-4 animate-fade-in">
       {/* Hero Section */}
-      <div className="card aurora">
-        <div className="flex items-center justify-between">
+      <div className="card relative overflow-hidden">
+        <BlobBackground />
+        <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
             {tribeling && (
-              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="hover:scale-105 transition-transform" title="Open Avatar Studio">
-                <Tribeling
-                  mood={tribeling.mood}
-                  energy={tribeling.energy}
-                  streak={tribeling.streak}
-                  stage={tribeling.stage?.id}
-                  skin={tribeling.skin}
-                  accessory={tribeling.accessory}
-                  size={88}
-                />
+              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} title="Open Avatar Studio">
+                <StreakRing streak={tribeling.streak} goal={7} size={104} active={tribeling.mood === 'pumped'}>
+                  <Tribeling
+                    mood={tribeling.mood}
+                    energy={tribeling.energy}
+                    streak={tribeling.streak}
+                    stage={tribeling.stage?.id}
+                    skin={tribeling.skin}
+                    accessory={tribeling.accessory}
+                    size={84}
+                  />
+                </StreakRing>
               </motion.button>
             )}
             <div>
@@ -3795,16 +3800,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="flex items-center space-x-4 mb-6">
           <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform" title="Open Avatar Studio">
             {tribeling ? (
-              <Tribeling
-                mood={tribeling.mood}
-                energy={tribeling.energy}
-                streak={tribeling.streak}
-                stage={tribeling.stage?.id}
-                skin={tribeling.skin}
-                accessory={tribeling.accessory}
-                size={100}
-                showLabel={false}
-              />
+              <StreakRing streak={tribeling.streak} goal={7} size={116} active={tribeling.mood === 'pumped'}>
+                <Tribeling
+                  mood={tribeling.mood}
+                  energy={tribeling.energy}
+                  streak={tribeling.streak}
+                  stage={tribeling.stage?.id}
+                  skin={tribeling.skin}
+                  accessory={tribeling.accessory}
+                  size={92}
+                  showLabel={false}
+                />
+              </StreakRing>
             ) : (
               <div className="w-20 h-20 bg-gradient-tribal rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-2xl">{effectiveUserName?.charAt(0) || 'A'}</span>
@@ -3817,7 +3824,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             )}
           </motion.button>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-surface-50">{effectiveUserName}</h2>
+            <h2 className="text-2xl font-bold text-surface-50 flex items-center gap-2">
+              {effectiveUserName}
+              {tribeling?.avatar_icon && ProfileIcons[tribeling.avatar_icon] && (() => {
+                const PIcon = ProfileIcons[tribeling.avatar_icon];
+                return <PIcon.icon size={18} className={PIcon.color} />;
+              })()}
+            </h2>
             <p className="text-surface-300">{user?.email || `${effectiveUserId}@tribefit.app`}</p>
             {devUserId && devUserId !== user?.id && (
               <div className="text-xs text-warning light:text-yellow-600 mt-1">
@@ -4385,6 +4398,14 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       <ProfileCustomization
         isOpen={showProfileCustomization}
         onClose={() => setShowProfileCustomization(false)}
+        userId={effectiveUserId}
+        currentName={effectiveUserName}
+        currentIcon={tribeling?.avatar_icon}
+        onSaved={({ name, avatar_icon }) => {
+          setDevUserName(name);
+          localStorage.setItem('dev_user_name', name);
+          setTribeling(prev => prev ? { ...prev, avatar_icon } : prev);
+        }}
       />
 
       <EquipmentCatalog

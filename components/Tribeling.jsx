@@ -6,11 +6,11 @@ import { Flame, Meh, BatteryLow, Tv, Sparkles } from 'lucide-react';
 // 'couch' appears when the user leans on ad-skips too much.
 
 export const SKIN_PALETTES = {
-  ember:    { body: '#7C5CFF', belly: '#B9A5FF', accent: '#FF5436', cheek: '#FF8A75' },
+  ember:    { body: '#A3E635', belly: '#D4F28F', accent: '#FF5436', cheek: '#FF8A75' },
   solar:    { body: '#FF9F1C', belly: '#FFD166', accent: '#EF476F', cheek: '#FF8FA3' },
   venom:    { body: '#2EC4B6', belly: '#8CE99A', accent: '#FF6B6B', cheek: '#FFA8A8' },
   frost:    { body: '#4CC9F0', belly: '#BDE0FE', accent: '#F72585', cheek: '#F9A8D4' },
-  midnight: { body: '#3B3B4F', belly: '#6E6E85', accent: '#7C5CFF', cheek: '#9D97FF' },
+  midnight: { body: '#3B3B4F', belly: '#6E6E85', accent: '#A3E635', cheek: '#BEEA5E' },
   magma:    { body: '#FF5436', belly: '#FFB4A2', accent: '#FFD166', cheek: '#FF8A80' },
 };
 

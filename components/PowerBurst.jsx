@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 
 // PowerBurst: spring-physics celebration — expanding rings, radial beams,
 // orbiting sparks and a center flash, all with real spring motion.
-const SPARK_COLORS = ['#7C5CFF', '#FF5436', '#FFD166', '#2EC4B6'];
+const SPARK_COLORS = ['#A3E635', '#FF5436', '#FFD166', '#2EC4B6'];
 
 export function PowerBurst() {
   const sparks = useMemo(() =>
