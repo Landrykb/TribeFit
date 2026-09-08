@@ -412,8 +412,8 @@ function WorkoutCard({ workout, onSelect, onEdit, onDelete, onDuplicate, isCusto
         <Button onClick={onSelect} variant="primary" className="flex-1 h-9 text-xs whitespace-nowrap">
           <Play size={14} /> Start
         </Button>
-        <Button onClick={onEdit} variant="ghost" className="h-9 px-2.5 text-xs whitespace-nowrap">
-          <Edit size={14} /> {isTemplate ? 'Use' : 'Edit'}
+        <Button onClick={onEdit} variant="ghost" className="h-9 px-3 text-xs whitespace-nowrap flex-shrink-0">
+          <Edit size={14} />
         </Button>
         {isCustom && onDuplicate && (
           <Button onClick={onDuplicate} variant="ghost" className="h-9 px-2.5"><Copy size={14} /></Button>

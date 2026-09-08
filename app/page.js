@@ -17,7 +17,7 @@ import { AuthProvider, useAuth } from '../components/auth/AuthProvider';
 import { LoginModal } from '../components/auth/LoginModal';
 import { Button } from '../components/ui/button';
 import { Skeleton, SkeletonCard, SkeletonList, SkeletonStats } from '../components/ui/skeleton';
-import { Tribeling } from '../components/Tribeling';
+import { Tribeling, MoodPill } from '../components/Tribeling';
 import { PowerUps } from '../components/PowerUps';
 import { Modal } from '../components/ui/Modal';
 // Removed Link/Router; using in-page modal for Catch-Up Credits
@@ -3065,8 +3065,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     skin={tribeling.skin}
                     accessory={tribeling.accessory}
                     size={84}
+                    showLabel={false}
                   />
                 </StreakRing>
+                <div className="mt-1.5"><MoodPill mood={tribeling.mood} streak={tribeling.streak} /></div>
               </motion.button>
             )}
             <div>
@@ -3105,7 +3107,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="mt-6 grid grid-cols-3 gap-4">
           <button 
             onClick={() => toast.success(`🔥 ${user?.streak || 0} ${t('day_streak')}! ${t('keep_it_up')}!`)}
-            className="bg-gradient-to-br from-accent/20 to-accent/10 hover:from-accent/30 hover:to-accent/20 rounded-xl p-3 transition-all duration-200 border border-accent/30 hover:border-accent/50 hover-elevate min-h-[90px] flex items-center justify-center"
+            className="bg-accent/10 hover:bg-accent/15 rounded-2xl p-3 transition-all duration-200 border-2 border-accent/25 hover:border-accent/50 hover-elevate min-h-[90px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center space-y-1 w-full">
               <Trophy size={18} className="text-accent flex-shrink-0" />
@@ -3120,7 +3122,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               setActiveTab('tribe');
               toast.info(t('viewing_tribe'));
             }}
-            className="bg-gradient-to-br from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 rounded-xl p-3 transition-all duration-200 border border-primary/30 hover:border-primary/50 hover-elevate min-h-[90px] flex items-center justify-center"
+            className="bg-primary/10 hover:bg-primary/15 rounded-2xl p-3 transition-all duration-200 border-2 border-primary/25 hover:border-primary/50 hover-elevate min-h-[90px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center space-y-1 w-full">
               <Users size={18} className="text-primary flex-shrink-0" />
@@ -3132,13 +3134,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           </button>
           <button 
             onClick={() => setShowWorkoutCalendar(true)}
-            className="bg-gradient-to-br from-success/20 to-success/10 hover:from-success/30 hover:to-success/20 rounded-xl p-3 transition-all duration-200 border border-success/30 hover:border-success/50 hover-elevate min-h-[90px] flex items-center justify-center"
+            className="bg-success/10 hover:bg-success/15 rounded-2xl p-3 transition-all duration-200 border-2 border-success/25 hover:border-success/50 hover-elevate min-h-[90px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center space-y-1 w-full">
-              <Calendar size={18} className="text-gray-300 flex-shrink-0" />
+              <Calendar size={18} className="text-success light:text-green-600 flex-shrink-0" />
               <div className="text-center w-full">
-                <div className="font-bold text-gray-200 text-sm">Schedule</div>
-                <div className="text-xs text-gray-300 leading-tight break-words">{t('schedule')}</div>
+                <div className="font-bold text-success light:text-green-700 text-sm">Schedule</div>
+                <div className="text-xs text-surface-300 leading-tight break-words">{t('schedule')}</div>
               </div>
             </div>
           </button>
@@ -3831,9 +3833,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </StreakRing>
             ) : (
               <div className="w-20 h-20 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">{effectiveUserName?.charAt(0) || 'A'}</span>
+                <span className="font-bold text-2xl text-primary">{effectiveUserName?.charAt(0) || 'A'}</span>
               </div>
             )}
+            <div className="mt-2"><MoodPill mood={tribeling?.mood || 'steady'} streak={tribeling?.streak || 0} /></div>
             {tribeling?.stage && (
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 border border-primary/40 text-primary-300 whitespace-nowrap">
                 {tribeling.stage.name}

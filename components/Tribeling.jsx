@@ -85,6 +85,17 @@ function StageDecor({ stage, skin }) {
   }
 }
 
+// Mood pill badge — render outside any ring/frame
+export function MoodPill({ mood = 'steady', streak = 0 }) {
+  const m = MOOD_META[mood] || MOOD_META.steady;
+  return (
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+      <m.Icon size={12} />
+      <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+    </div>
+  );
+}
+
 export function Tribeling({
   mood = 'steady',
   energy = 0.8,
