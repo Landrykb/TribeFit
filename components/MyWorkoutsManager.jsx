@@ -264,27 +264,27 @@ export function MyWorkoutsManager({
               setShowEditor(true);
             }}
             variant="primary"
-            className="h-10"
+            className="h-10 px-2 text-xs whitespace-nowrap"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Create
           </Button>
 
           <Button
             onClick={() => setShowImportModal(true)}
             variant="ghost"
-            className="h-10"
+            className="h-10 px-2 text-xs whitespace-nowrap"
           >
-            <Upload size={16} />
+            <Upload size={15} />
             Import
           </Button>
 
           <Button
             onClick={() => setShowTemplates(!showTemplates)}
             variant="ghost"
-            className="h-10"
+            className="h-10 px-2 text-xs whitespace-nowrap"
           >
-            <Dumbbell size={16} />
+            <Dumbbell size={15} />
             {showTemplates ? 'Mine' : 'Templates'}
           </Button>
         </div>
@@ -367,105 +367,66 @@ function WorkoutCard({ workout, onSelect, onEdit, onDelete, onDuplicate, isCusto
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-surface-800 border border-surface-700 rounded-lg p-4 hover:border-primary/50 transition-all">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-semibold text-surface-50 light:text-gray-900">{workout.name}</h4>
-            {isTemplate && (
-              <span className="text-xs px-2 py-0.5 bg-accent/20 text-accent rounded">Template</span>
-            )}
-            {isCustom && !isTemplate && (
-              <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded flex items-center gap-1">
-                <Star size={10} fill="currentColor" />
-                Custom
-              </span>
-            )}
-            <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded capitalize">
-              {workout.difficulty}
-            </span>
-          </div>
-          
-          <p className="text-sm text-surface-400 mb-2">{workout.description}</p>
-          
-          <div className="flex items-center gap-3 text-xs text-surface-500">
-            <span className="flex items-center gap-1">
-              <Clock size={12} />
-              {workout.duration} min
-            </span>
-            <span className="flex items-center gap-1">
-              <Dumbbell size={12} />
-              {workout.exercises?.length || 0} exercises
-            </span>
-            {workout.bodyParts && workout.bodyParts.length > 0 && (
-              <span>
-                {workout.bodyParts.map(bp => {
-                  const part = BODY_PARTS.find(p => p.id === bp);
-                  return part?.emoji || '';
-                }).join(' ')}
-              </span>
-            )}
-          </div>
+    <div className="bg-surface-800 border-2 border-surface-700 rounded-2xl p-3 hover:border-primary/50 transition-all">
+      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+        <h4 className="font-bold text-surface-50 light:text-gray-900 text-sm">{workout.name}</h4>
+        {isTemplate && (
+          <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-lg font-medium">Template</span>
+        )}
+        {isCustom && !isTemplate && (
+          <span className="text-[10px] px-1.5 py-0.5 bg-success/20 text-success rounded-lg font-medium flex items-center gap-0.5">
+            <Star size={9} fill="currentColor" /> Custom
+          </span>
+        )}
+        <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-lg font-medium capitalize">
+          {workout.difficulty}
+        </span>
+      </div>
 
-          {expanded && workout.exercises && (
-            <div className="mt-3 space-y-1 pl-3 border-l-2 border-surface-700">
-              {workout.exercises.map((ex, idx) => (
-                <div key={idx} className="text-xs text-surface-400">
-                  <span className="text-surface-300">{ex.name}</span>
-                  {' • '}
-                  {ex.sets}×{ex.reps}
-                </div>
-              ))}
+      <p className="text-xs text-surface-400 mb-2 line-clamp-2">{workout.description}</p>
+
+      <div className="flex items-center gap-3 text-xs text-surface-500 mb-3">
+        <span className="flex items-center gap-1"><Clock size={12} /> {workout.duration} min</span>
+        <span className="flex items-center gap-1"><Dumbbell size={12} /> {workout.exercises?.length || 0}</span>
+        {workout.bodyParts?.length > 0 && (
+          <span className="flex items-center gap-1">
+            {workout.bodyParts.slice(0, 3).map(bp => {
+              const Icon = BODY_PART_ICONS[bp] || Dumbbell;
+              return <Icon key={bp} size={12} className="text-primary" />;
+            })}
+          </span>
+        )}
+      </div>
+
+      {expanded && workout.exercises && (
+        <div className="mb-3 space-y-1 pl-3 border-l-2 border-surface-700">
+          {workout.exercises.map((ex, idx) => (
+            <div key={idx} className="text-xs text-surface-400">
+              <span className="text-surface-300">{ex.name}</span> • {ex.sets}×{ex.reps}
             </div>
-          )}
+          ))}
         </div>
+      )}
 
-        <div className="flex flex-col gap-1 ml-3">
-          <Button
-            onClick={onSelect}
-            variant="success"
-            className="h-8 px-3 text-xs"
-          >
-            <Play size={14} />
-            Start
-          </Button>
-
-          <Button
-            onClick={onEdit}
-            variant="ghost"
-            className="h-8 px-3 text-xs"
-          >
-            <Edit size={14} />
-            {isTemplate ? 'Use' : 'Edit'}
-          </Button>
-
-          {isCustom && onDuplicate && (
-            <Button
-              onClick={onDuplicate}
-              variant="ghost"
-              className="h-8 px-3 text-xs"
-            >
-              <Copy size={14} />
-            </Button>
-          )}
-
-          {isCustom && onDelete && (
-            <Button
-              onClick={onDelete}
-              variant="ghost"
-              className="h-8 px-3 text-xs text-red-400 hover:text-red-300"
-            >
-              <Trash2 size={14} />
-            </Button>
-          )}
-
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="h-8 px-3 text-xs text-surface-400 hover:text-surface-200"
-          >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        </div>
+      <div className="flex items-center gap-1.5">
+        <Button onClick={onSelect} variant="primary" className="flex-1 h-9 text-xs whitespace-nowrap">
+          <Play size={14} /> Start
+        </Button>
+        <Button onClick={onEdit} variant="ghost" className="h-9 px-2.5 text-xs whitespace-nowrap">
+          <Edit size={14} /> {isTemplate ? 'Use' : 'Edit'}
+        </Button>
+        {isCustom && onDuplicate && (
+          <Button onClick={onDuplicate} variant="ghost" className="h-9 px-2.5"><Copy size={14} /></Button>
+        )}
+        {isCustom && onDelete && (
+          <Button onClick={onDelete} variant="ghost" className="h-9 px-2.5 text-red-400 hover:text-red-300"><Trash2 size={14} /></Button>
+        )}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="h-9 w-9 flex items-center justify-center rounded-xl text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
+        >
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
       </div>
     </div>
   );
