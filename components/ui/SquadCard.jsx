@@ -37,25 +37,25 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
   };
 
   return (
-    <Card className="hover:border-primary/40 transition-all duration-200 bg-gradient-to-br from-surface-800/50 to-surface-700/30 border-surface-600/50 light:bg-gradient-to-br light:from-white light:to-gray-50 light:border-gray-200 light:hover:border-primary/50">
+    <Card className="card hover-elevate">
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-4 flex-1">
-            <div className="w-14 h-14 bg-gradient-tribal rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+            <div className="w-14 h-14 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
               {getGroupIcon(squad.group_type, squad.streak_days)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                <h3 className="text-lg font-bold text-primary truncate">{squad.name}</h3>
+                <h3 className="text-lg font-bold text-surface-50 truncate">{squad.name}</h3>
                 {getGroupBadge(squad.group_type)}
                 {squad.group_type === 'tribe' && (
-                  <div className="flex items-center space-x-1 bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full text-xs border border-yellow-500/30">
+                  <div className="flex items-center space-x-1 bg-primary/15 text-primary px-2 py-1 rounded-full text-xs border border-primary/30">
                     <span className="font-medium flex items-center gap-1"><Feather size={11} /> Verified</span>
                   </div>
                 )}
                 {squad.isPrivate && (
-                  <div className="flex items-center space-x-1 bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full text-xs border border-orange-500/30">
+                  <div className="flex items-center space-x-1 bg-accent/15 text-accent px-2 py-1 rounded-full text-xs border border-accent/30">
                     <Lock size={10} />
                     <span className="font-medium">Invite Only</span>
                   </div>
@@ -88,21 +88,21 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-primary/10 rounded-xl border border-primary/20">
+          <div className="text-center p-3 bg-surface-800/60 rounded-2xl border border-surface-700/60">
             <div className="flex items-center justify-center space-x-1">
               <Users size={16} className="text-primary" />
               <span className="font-bold text-primary">{squad.member_count || 0}</span>
             </div>
             <div className="text-xs text-surface-300 font-medium mt-1">members</div>
           </div>
-          <div className="text-center p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
+          <div className="text-center p-3 bg-surface-800/60 rounded-2xl border border-surface-700/60">
             <div className="flex items-center justify-center space-x-1">
               <Flame size={16} className="text-orange-500" />
               <span className="font-bold text-orange-500">{squad.streak_days || 0}</span>
             </div>
             <div className="text-xs text-surface-300 font-medium mt-1">streak</div>
           </div>
-          <div className="text-center p-3 bg-accent/10 rounded-xl border border-accent/20">
+          <div className="text-center p-3 bg-surface-800/60 rounded-2xl border border-surface-700/60">
             <div className="flex items-center justify-center space-x-1">
               <Trophy size={16} className="text-accent" />
               <span className="font-bold text-accent">{Math.round(squad.participation_rate || 0)}%</span>
@@ -113,7 +113,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
 
         {/* Progression Status (for squads only) */}
         {isSquad && progressionStatus && (
-          <div className="bg-gradient-to-br from-success/10 to-success/5 border border-success/20 rounded-xl p-4">
+          <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-bold text-success">Tribe Upgrade Progress</span>
               <span className="text-xs text-success bg-success/20 px-2 py-1 rounded-lg">
@@ -130,7 +130,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
                 </div>
                 <div className="w-full bg-surface-700 rounded-full h-2">
                   <div 
-                    className="bg-gradient-to-r from-orange-500 to-orange-400 h-2 rounded-full transition-all duration-300 shadow-sm" 
+                    className="bg-accent h-2 rounded-full transition-all duration-300" 
                     style={{ width: `${progressionStatus.streakProgress}%` }}
                   />
                 </div>
@@ -143,7 +143,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
                 </div>
                 <div className="w-full bg-surface-700 rounded-full h-2">
                   <div 
-                    className="bg-gradient-to-r from-primary to-primary-400 h-2 rounded-full transition-all duration-300 shadow-sm" 
+                    className="bg-primary h-2 rounded-full transition-all duration-300" 
                     style={{ width: `${progressionStatus.participationProgress}%` }}
                   />
                 </div>
@@ -161,7 +161,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
 
         {/* Tribe Vault Balance (tribes only) */}
         {squad.group_type === 'tribe' && (
-          <div className="flex items-center justify-between bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-xl p-4">
+          <div className="flex items-center justify-between bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-accent/20 rounded-xl flex items-center justify-center">
                 <TrendingUp size={18} className="text-accent" />

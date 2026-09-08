@@ -7,7 +7,7 @@ import {
   Globe, Moon, Sun, LogOut, Plus, Heart, Share, Camera, 
   Vote, CheckCircle, XCircle, Clock, Play, Pause, SkipForward, FastForward,
   UserPlus, Award, Star, Crown, Flame, ArrowUp, Coins, Gift,
-  MapPin, Target, Dumbbell, Timer, Check, X, Tv, Home, Rss, User, CalendarClock, Shield, Bot, Sparkles,
+  MapPin, Target, Dumbbell, Timer, Check, X, Tv, Home, Rss, User, CalendarClock, Shield, Bot, Sparkles, Send,
   Feather as FeatherIcon, Crosshair, Footprints, Bike, MonitorPlay, Waves
 } from 'lucide-react';
 
@@ -76,6 +76,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [workoutPlan, setWorkoutPlan] = useState(null);
   const [coaches, setCoaches] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [draftCaption, setDraftCaption] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [tribes, setTribes] = useState([]);
   const [squads, setSquads] = useState([]);
@@ -3158,7 +3159,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <Button 
               variant="ghost" 
               size="sm"
-              className="h-8 px-2.5 flex items-center gap-1 bg-primary/10 border-primary/30 hover:bg-primary/20 whitespace-nowrap min-w-0"
+              className="h-9 px-3 flex items-center gap-1.5 bg-primary/10 border border-primary/30 hover:bg-primary/20 rounded-xl"
               onClick={() => setShowMyWorkouts(true)}
             >
               <Dumbbell size={14} className="flex-shrink-0" />
@@ -3167,7 +3168,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <Button 
               variant="ghost" 
               size="sm"
-              className="h-8 px-2.5 flex items-center gap-1 bg-success/10 border-success/30 hover:bg-success/20 whitespace-nowrap min-w-0"
+              className="h-9 px-3 flex items-center gap-1.5 bg-success/10 border border-success/30 hover:bg-success/20 rounded-xl"
               onClick={() => setShowEnhancedGenerator(true)}
             >
               <Bot size={14} className="text-success light:text-green-600 flex-shrink-0" />
@@ -3239,95 +3240,100 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   );
   const renderFeed = () => (
     <div className="space-y-4 animate-fade-in">
-      <div className="card">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-surface-50">{t('tribe_feed')}</h2>
-            <p className="text-surface-300 mt-1">Share your fitness journey with your tribe</p>
+      {/* Composer */}
+      <div className="card relative overflow-hidden">
+        <div className="flex gap-3 items-start relative z-10">
+          <div className="w-12 h-12 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+            {effectiveUserName?.charAt(0) || 'Y'}
           </div>
-          <Button
-            onClick={() => setShowPostModal(true)}
-            variant="primary"
-            size="default"
-            className="min-w-[100px] h-11 px-4 text-base font-semibold flex items-center gap-2 whitespace-nowrap"
-          >
-            <Plus size={18} />
-            {t('post')}
-          </Button>
+          <div className="flex-1 space-y-3">
+            <input
+              type="text"
+              value={draftCaption}
+              onChange={(e) => setDraftCaption(e.target.value)}
+              placeholder={t('share_placeholder') || 'Share a win, photo or cheer...'}
+              className="w-full bg-surface-900/60 light:bg-gray-100 border border-surface-700 light:border-gray-200 rounded-xl px-4 py-3 text-sm text-surface-100 light:text-gray-900 placeholder:text-surface-500 focus:outline-none focus:border-primary"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <button className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Photo (demo)">
+                  <Camera size={16} />
+                </button>
+                <button onClick={() => setDraftCaption((d) => `${d} 🔥`)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Fire">
+                  <Flame size={16} />
+                </button>
+              </div>
+              <Button
+                onClick={() => { if (draftCaption.trim()) { handleSharePost(draftCaption); setDraftCaption(''); }}}
+                variant="primary"
+                size="sm"
+                className="h-9 px-4"
+              >
+                <Send size={16} className="mr-1.5" />
+                {t('post')}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-      
+
       {posts.length === 0 ? (
-        <div className="text-center py-12 card">
-          <Camera size={72} className="text-primary mx-auto mb-6" />
-          <h3 className="text-2xl font-bold text-surface-100 mb-3">{t('no_posts')}</h3>
-          <p className="text-surface-300 mb-8 text-lg">Be the first to share your workout progress!</p>
-          <Button
-            onClick={() => setShowPostModal(true)}
-            variant="primary"
-            size="lg"
-            className="min-w-[200px] h-12 px-6 text-base font-semibold flex items-center gap-3 whitespace-nowrap"
-          >
-            <Camera size={20} />
-            {t('share_first_workout')}
-          </Button>
+        <div className="text-center py-12 card relative overflow-hidden">
+          <BlobBackground opacity={0.25} />
+          <div className="relative z-10">
+            <Camera size={64} className="text-primary mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-surface-100 mb-2">{t('no_posts')}</h3>
+            <p className="text-surface-400 mb-6">Be the first to share your workout progress!</p>
+            <Button onClick={() => document.querySelector('input[placeholder]')?.focus()} variant="primary" size="lg" className="h-12 px-6">
+              <Camera size={18} className="mr-2" />
+              {t('share_first_workout')}
+            </Button>
+          </div>
         </div>
       ) : (
         posts.map((post, index) => (
-          <div key={index} className="card hover-elevate animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
-            <div className="flex items-center space-x-4 mb-5">
-              <div className="w-14 h-14 bg-gradient-tribal rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">{post.user?.name?.charAt(0) || 'U'}</span>
+          <div key={index} className="card hover-elevate animate-slide-up relative overflow-hidden" style={{animationDelay: `${index * 0.08}s`}}>
+            <div className="flex items-start gap-3 mb-4 relative z-10">
+              <div className="w-12 h-12 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg">
+                {post.user?.name?.charAt(0) || 'U'}
               </div>
-              <div>
-                <div className="text-surface-100 font-bold text-lg">{post.user?.name || 'User'}</div>
-                <div className="text-surface-300 text-sm font-medium">{t('time_ago')}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-surface-100 truncate">{post.user?.name || 'User'}</span>
+                  <span className="text-[10px] text-surface-400">{t('time_ago')}</span>
+                </div>
+                <p className="text-surface-300 text-sm mt-1 leading-relaxed">{post.caption || t('default_workout_caption')}</p>
               </div>
             </div>
-            
+
             {post.media_url && (
-              <div className="bg-gradient-to-br from-surface-700/50 to-surface-800/50 border border-surface-600/50 rounded-2xl h-56 mb-5 flex items-center justify-center">
-                <span className="text-surface-300 text-lg font-medium"><Camera size={16} className="inline -mt-0.5" /> {t('workout_photo')}</span>
+              <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl h-52 mb-4 flex items-center justify-center relative overflow-hidden">
+                <BlobBackground opacity={0.2} />
+                <div className="relative z-10 flex flex-col items-center text-surface-400">
+                  <Camera size={28} className="text-primary mb-2" />
+                  <span className="text-sm font-medium">{t('workout_photo')}</span>
+                </div>
               </div>
             )}
-            
-            <p className="text-surface-200 mb-5 text-base leading-relaxed">{post.caption || t('default_workout_caption')}</p>
-            
-            <div className="flex items-center justify-between pt-2 border-t border-surface-700/50">
-              <div className="flex items-center space-x-6">
-                <button 
-                  onClick={() => handleLikePost(post.id)}
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-xl transition-all duration-200 hover-elevate min-w-[60px] whitespace-nowrap ${
-                    post.liked 
-                      ? 'text-red-400 bg-red-400/10 border border-red-400/30' 
-                      : 'text-surface-300 hover:text-red-400 hover:bg-red-400/10 hover:border-red-400/30 border border-surface-600'
-                  }`}
-                >
-                  <Heart size={18} className={post.liked ? 'fill-current' : ''} />
-                  <span className="font-medium">{post.likes_count || 0}</span>
-                </button>
-                <button 
-                  onClick={() => handleSharePost(t('sharing_awesome_workout'))}
-                  className="flex items-center space-x-2 py-2 px-3 rounded-xl border border-surface-600 text-surface-300 hover:text-primary hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 hover-elevate min-w-[80px] whitespace-nowrap"
-                >
-                  <Share size={18} />
-                  <span className="font-medium">{t('share')}</span>
-                </button>
-              </div>
-              {Features.TIPS && (
-                <Button
-                  onClick={() => {
-                    setSelectedPost({ ...post, post_id: post.id });
-                    setShowTipModal(true);
-                  }}
-                  variant="accent"
-                  size="sm"
-                  className="h-9 px-3 flex items-center gap-2 min-w-[80px] whitespace-nowrap"
-                >
-                  <Coins size={14} />
-                  <span className="font-medium text-sm">{t('tip_tc')}</span>
-                </Button>
-              )}
+
+            <div className="flex items-center gap-3 pt-3 border-t border-surface-700/50">
+              <button
+                onClick={() => handleLikePost(post.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  post.liked ? 'bg-red-500/15 text-red-400 border border-red-400/30' : 'bg-surface-700 light:bg-gray-100 text-surface-300 light:text-gray-600 border border-surface-600 light:border-gray-200 hover:text-red-400'
+                }`}
+              >
+                <Heart size={16} className={post.liked ? 'fill-current' : ''} />
+                {post.likes_count || 0}
+              </button>
+              <button onClick={() => handleSharePost(t('sharing_awesome_workout'))} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-surface-700 light:bg-gray-100 text-surface-300 light:text-gray-600 border border-surface-600 light:border-gray-200 hover:text-primary">
+                <Share2 size={16} />
+                {t('share')}
+              </button>
+              <button onClick={() => { setSelectedPost({ ...post, post_id: post.id }); setShowTipModal(true); }} className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-accent/15 text-accent border border-accent/30">
+                <Coins size={14} />
+                {t('tip_tc')}
+              </button>
             </div>
           </div>
         ))
@@ -3443,25 +3449,21 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         </div>
         
         {/* Vault Info */}
-        <div className="mb-4 p-3 bg-surface-700 border border-surface-600 rounded-lg">
-          <div className="text-sm text-surface-300 light:text-gray-600 space-y-1">
-            <div className="flex items-center justify-between">
-              <span>💰 Skip Mode:</span>
-              <span className="font-semibold text-surface-100 light:text-gray-900">
-                {skipMode === 'tribe_fund' ? 'Tribe Fund (100%)' : 'Teammate Boost (80/20)'}
+        <div className="mb-4 p-3 bg-surface-800/60 border border-surface-700/60 rounded-2xl">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-surface-300"><Coins size={14} className="text-primary" /> Skip Mode</span>
+              <span className="font-semibold text-surface-100">
+                {skipMode === 'tribe_fund' ? 'Tribe Fund' : 'Teammate Boost'}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span>👥 Active Members:</span>
-              <span className="font-semibold text-surface-100 light:text-gray-900">
-                {testUsers?.length || 0}
-              </span>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-surface-300"><Users size={14} className="text-primary" /> Active Members</span>
+              <span className="font-semibold text-surface-100">{testUsers?.length || 0}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span>🏛️ Vault Usage:</span>
-              <span className="font-semibold text-surface-100 light:text-gray-900">
-                Community gear & donations
-              </span>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-surface-300"><TrendingUp size={14} className="text-primary" /> Vault Usage</span>
+              <span className="font-semibold text-surface-100">Gear & Donations</span>
             </div>
           </div>
         </div>
@@ -3498,7 +3500,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               {wishlistProgress.nextNeeded > 0 ? (
                 <div className="text-xs text-surface-300 font-medium">Remaining: <span className="text-accent font-bold">+{wishlistProgress.nextNeeded} TC</span></div>
               ) : (
-                <div className="text-xs text-success font-semibold">🎉 Ready to purchase!</div>
+                <div className="text-xs text-success font-semibold flex items-center gap-1"><CheckCircle size={12} className="text-success" /> Ready to purchase!</div>
               )}
 
               {/* Simplified: hide donors list and dev/test controls to keep card focused */}
@@ -3509,10 +3511,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   onClick={() => setShowEquipmentCatalog(true)}
                   variant="primary"
                   size="sm"
-                  className="w-full h-9 px-3 text-xs font-semibold"
+                  className="w-full h-9"
                 >
-                  <Dumbbell size={14} />
-                  Spend on Next Gear
+                  <Dumbbell size={16} />
+                  Next Gear
                 </Button>
               </div>
             </div>
@@ -3534,8 +3536,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 size="sm"
                 className="w-full h-9"
               >
-                <Heart size={14} />
-                Donate Now
+                <Heart size={16} />
+                Donate
               </Button>
             </div>
           </div>
@@ -3771,25 +3773,42 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const renderCoach = () => (
     <div className="space-y-4 animate-fade-in">
-      <div className="card">
-        <div className="text-center py-12">
-          <Award size={56} className="text-success mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-surface-50 mb-3">
-            {t('coaches')}
-          </h2>
-          <p className="text-surface-400 light:text-gray-600 mb-6 max-w-xl mx-auto">
-            Get personalized training from certified coaches or become one yourself!
+      <div className="card relative overflow-hidden">
+        <BlobBackground opacity={0.35} />
+        <div className="relative z-10 text-center py-10">
+          <div className="w-16 h-16 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Award size={32} className="text-primary" />
+          </div>
+          <h2 className="text-3xl font-bold text-surface-50 mb-2">{t('coaches')}</h2>
+          <p className="text-surface-400 light:text-gray-600 mb-6 max-w-md mx-auto">
+            Pick a certified coach to level up your training — or become one and earn TC.
           </p>
-          <Button
-            onClick={() => setShowCoachMarketplace(true)}
-            variant="success"
-            size="lg"
-            className="min-w-[240px] h-14"
-          >
-            <Award size={20} className="mr-2" />
-            Open Coach Marketplace
+          <Button onClick={() => setShowCoachMarketplace(true)} variant="primary" size="lg" className="min-w-[220px] h-12">
+            <Sparkles size={18} className="mr-2" />
+            Open Marketplace
           </Button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[
+          { name: 'AI Coach', icon: Bot, color: 'primary', desc: 'Free workouts & instant feedback', price: 'Free' },
+          { name: 'Strength Pro', icon: Dumbbell, color: 'accent', desc: 'Progressive overload plans', price: '150 TC/session' },
+          { name: 'Run Coach', icon: Footprints, color: 'success', desc: 'Outdoor & treadmill programs', price: '120 TC/session' },
+        ].map((c) => (
+          <div key={c.name} className="card hover-elevate p-4 flex gap-3 items-start">
+            <div className={`w-11 h-11 rounded-xl bg-${c.color}/15 border border-${c.color}/30 flex items-center justify-center flex-shrink-0`}>
+              <c.icon size={20} className={`text-${c.color}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-surface-100 truncate">{c.name}</h3>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full bg-${c.color}/15 text-${c.color}`}>{c.price}</span>
+              </div>
+              <p className="text-xs text-surface-400 mt-1">{c.desc}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -4130,7 +4149,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-surface-900 border-t border-surface-700 safe-area-pb">
+        <div className="bottom-nav fixed bottom-0 left-0 right-0 border-t safe-area-pb">
           <div className="max-w-md mx-auto">
             <div className="grid grid-cols-6 gap-0 p-2">
               {[
@@ -4151,11 +4170,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   }`}
                 >
                   {activeTab === id && (
-                    <div className="absolute inset-0 bg-surface-800 border border-primary/30 rounded-xl" />
+                    <div className="nav-pill absolute inset-1 rounded-xl" />
                   )}
                   <div className="relative z-10 flex flex-col items-center justify-center h-full w-full">
                     <Icon size={20} className={`${activeTab === id ? 'text-primary' : ''} flex-shrink-0 mb-1`} />
-                    <span className={`text-xs font-medium leading-tight text-center break-words max-w-full ${
+                    <span className={`text-[10px] font-semibold leading-tight text-center truncate w-11/12 ${
                       activeTab === id ? 'text-primary' : 'text-surface-400'
                     }`}>{label}</span>
                   </div>

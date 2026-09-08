@@ -5,7 +5,7 @@ import { Button } from './button';
 import { 
   Users, Flame, Crown, Star, Trophy, TrendingUp, 
   Calendar, Settings, UserPlus, LogOut, Copy,
-  ArrowUp, Gift, Target, Clock, Trash2, Link, QrCode, Share2, Coins, Sparkles, Swords, Feather, Heart, Zap
+  ArrowUp, Gift, Target, Clock, Trash2, Link, QrCode, Share2, Coins, Sparkles, Swords, Feather, Heart, Zap, MessageSquare
 } from 'lucide-react';
 import { SquadProgression } from '../../lib/squad-progression';
 
@@ -34,7 +34,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
   };
   
   const handleDeleteSquad = () => {
-    if (window.confirm(`⚠️ Delete ${squad.name}?\n\nThis will permanently delete the squad and cannot be undone.`)) {
+    if (window.confirm(`Delete ${squad.name}?\n\nThis will permanently delete the squad and cannot be undone.`)) {
       onDeleteSquad?.(squad);
       onClose();
     }
@@ -72,17 +72,17 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
     <div className="space-y-4">
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-surface-800 rounded-lg p-4 text-center border border-surface-700">
+        <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4 text-center">
           <Users size={20} className="text-surface-400 mx-auto mb-2" />
           <div className="font-bold text-surface-50">{squad.member_count}</div>
           <div className="text-xs text-surface-400">Members</div>
         </div>
-        <div className="bg-surface-800 rounded-lg p-4 text-center border border-surface-700">
+        <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4 text-center">
           <Flame size={20} className="text-orange-500 mx-auto mb-2" />
           <div className="font-bold text-orange-500">{squad.streak_days}</div>
           <div className="text-xs text-surface-400">Day Streak</div>
         </div>
-        <div className="bg-surface-800 rounded-lg p-4 text-center border border-surface-700">
+        <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4 text-center">
           <Trophy size={20} className="text-accent mx-auto mb-2" />
           <div className="font-bold text-accent">{Math.round(squad.participation_rate || 0)}%</div>
           <div className="text-xs text-surface-400">Active</div>
@@ -95,7 +95,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
         return (
           <div className="space-y-3">
             {/* Tribe Vault */}
-            <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg p-4 border border-accent/20">
+            <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <TrendingUp size={18} className="text-accent" />
@@ -109,22 +109,22 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
             </div>
 
             {/* Active Tribe Benefits */}
-            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 rounded-lg p-4 border border-yellow-500/20">
+            <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
               <div className="flex items-center space-x-2 mb-3">
                 <Crown size={16} className="text-yellow-400" />
                 <h4 className="font-medium text-yellow-400 text-sm flex items-center gap-1"><Feather size={13} /> Active Tribe Benefits</h4>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="text-xs">
-                  <div className="text-green-400 font-medium">💸 Skip: 1 TC</div>
+                  <div className="text-green-400 font-medium flex items-center gap-1"><Coins size={12} /> Skip: 1 TC</div>
                   <div className="text-surface-400">(vs 2 TC)</div>
                 </div>
                 <div className="text-xs">
-                  <div className="text-purple-400 font-medium">Coach: 10-20 TC</div>
+                  <div className="text-primary font-medium">Coach: 10-20 TC</div>
                   <div className="text-surface-400">(exclusive)</div>
                 </div>
                 <div className="text-xs">
-                  <div className="text-blue-400 font-medium flex items-center gap-1"><Coins size={12} /> Vault: +15%</div>
+                  <div className="text-primary font-medium flex items-center gap-1"><Coins size={12} /> Vault: +15%</div>
                   <div className="text-surface-400">Bonus TC</div>
                 </div>
                 <div className="text-xs">
@@ -154,7 +154,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
 
       {/* Description */}
       {squad.description && (
-        <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+        <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
           <h4 className="font-medium text-surface-50 mb-2">About</h4>
           <p className="text-surface-300 text-sm">{squad.description}</p>
         </div>
@@ -162,7 +162,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
 
       {/* Upgrade Status for Squads */}
       {squad.group_type === 'squad' && progressionStatus && (
-        <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+        <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-medium text-surface-50">Tribe Upgrade Progress</h4>
             <span className="text-xs text-surface-400">
@@ -241,7 +241,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
           return (
             <div key={memberId} className="flex items-center justify-between p-3 bg-surface-800 rounded-lg border border-surface-700">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-tribal rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary/15 border border-primary/30 rounded-2xl flex items-center justify-center">
                   <span className="text-white font-bold text-sm">{memberName.charAt(0)}</span>
                 </div>
                 <div>
@@ -266,7 +266,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
   const renderInvite = () => (
     <div className="space-y-4">
       {/* Invite Link */}
-      <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+      <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-medium text-surface-50 flex items-center gap-2">
             <Link size={18} />
@@ -299,7 +299,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
       </div>
 
       {/* QR Code */}
-      <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+      <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-medium text-surface-50 flex items-center gap-2">
             <QrCode size={18} />
@@ -323,7 +323,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
       </div>
 
       {/* Share Options */}
-      <div className="bg-surface-800 rounded-lg p-4 border border-surface-700">
+      <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl p-4">
         <h4 className="font-medium text-surface-50 mb-3">Quick Share</h4>
         <div className="grid grid-cols-2 gap-2">
           <Button
@@ -351,7 +351,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
             variant="outline"
             size="sm"
           >
-            💬 SMS
+            SMS
           </Button>
         </div>
       </div>
@@ -368,7 +368,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
       <div className="space-y-6 max-h-96 overflow-y-auto">
         {/* Header */}
         <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-tribal rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-surface-800 border-2 border-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
             {getGroupIcon()}
           </div>
           <h2 className="text-xl font-bold text-surface-50 mb-2">{squad.name}</h2>
@@ -388,7 +388,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 animate-pulse-soft">
             <div className="flex items-center space-x-2 mb-3">
               <AlertTriangle size={20} className="text-red-400" />
-              <span className="font-bold text-red-400">⚠️ Deletion Scheduled</span>
+              <span className="font-bold text-red-400">Deletion Scheduled</span>
             </div>
             <p className="text-sm text-red-300 mb-2">
               <strong>{squad.deletion_initiated_by_name || 'The owner'}</strong> has initiated deletion of this squad. 
@@ -403,13 +403,13 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
               </div>
             )}
             <div className="mt-3 text-xs text-red-200/80">
-              💡 Use this time to save important information and find a new squad to join.
+              Use this time to save important information and find a new squad to join.
             </div>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex bg-surface-800 rounded-lg p-1 border border-surface-700">
+        <div className="flex bg-surface-900 rounded-2xl p-1 border border-surface-700/60">
           {tabs.slice(0, isMember ? tabs.length : 2).map((tab) => {
             const Icon = tab.icon;
             return (
@@ -418,7 +418,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-surface-950'
                     : 'text-surface-400 hover:text-surface-200'
                 }`}
               >

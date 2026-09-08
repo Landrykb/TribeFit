@@ -79,7 +79,8 @@ module.exports = {
       },
       boxShadow: {
         'soft': '0 6px 24px rgba(0, 0, 0, 0.14)',
-        'glow': '0 0 20px rgba(124, 92, 255, 0.35)',
+        'toon': '0 8px 0 #23222E, 0 10px 24px rgba(0, 0, 0, 0.14)',
+        'glow': '0 0 20px rgba(163, 230, 53, 0.35)',
         'accent-glow': '0 0 20px rgba(255, 84, 54, 0.35)',
       },
       fontFamily: {

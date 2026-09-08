@@ -137,7 +137,7 @@
   }
   
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary-600 active:scale-[0.98] shadow-soft hover:shadow-glow;
+    @apply bg-primary text-surface-950 hover:bg-primary-600 active:scale-[0.98] shadow-soft hover:shadow-glow font-semibold;
   }
   
   .btn-accent {
@@ -156,20 +156,42 @@
     @apply bg-danger text-white hover:bg-red-600 active:scale-[0.98];
   }
   
-  /* Card styles */
+  /* Card styles - cartoon chunky card */
   .card {
-    @apply bg-surface-800 border border-surface-700 rounded-2xl p-5 shadow-soft;
+    @apply bg-surface-800 border-2 border-surface-700 rounded-[22px] p-5 shadow-toon;
   }
-  
+
   .dark .card {
     @apply bg-surface-800 border-surface-700;
   }
-  
+
   .light .card {
     background-color: #FFFFFF;
     border-color: #E5E7EB;
     color: #111827;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 0 #E5E7EB, 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Bottom navigation - solid surfaces + blur */
+  .bottom-nav {
+    background-color: rgba(12, 11, 16, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: #23222E;
+  }
+  .light .bottom-nav {
+    background-color: rgba(255, 255, 255, 0.96);
+    border-color: #E5E7EB;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .nav-pill {
+    background: rgba(163, 230, 53, 0.12);
+    border: 1.5px solid rgba(163, 230, 53, 0.35);
+  }
+  .light .nav-pill {
+    background: rgba(163, 230, 53, 0.12);
+    border-color: rgba(163, 230, 53, 0.45);
   }
   
   .card-interactive {
