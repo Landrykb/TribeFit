@@ -235,12 +235,12 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
         <div className="space-y-4 max-h-[80vh] overflow-y-auto">
         {/* Calendar Header - Fixed at top */}
         <div className="sticky top-0 bg-surface-900 light:bg-gray-50 z-10 pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h3 className="text-xl font-bold text-surface-50 light:text-gray-900">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-3 min-w-0">
+              <h3 className="text-lg sm:text-xl font-bold text-surface-50 light:text-gray-900 whitespace-nowrap truncate">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
-              <div className="flex space-x-1">
+              <div className="flex space-x-1 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -257,7 +257,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -265,7 +265,8 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                 onClick={() => setShowTribeWorkouts(!showTribeWorkouts)}
               >
                 {showTribeWorkouts ? <Eye size={16} /> : <EyeOff size={16} />}
-                Tribe Workouts
+                <span className="hidden sm:inline">Tribe Workouts</span>
+                <span className="sm:hidden">Tribe</span>
               </Button>
             </div>
           </div>

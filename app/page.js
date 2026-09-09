@@ -360,7 +360,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     try {
       // fun burst animation
       setReactionBurst({ id: notifId, type: reactionType, ts: Date.now() });
-      setTimeout(() => setReactionBurst(null), 700);
+      setTimeout(() => setReactionBurst(null), 900);
       await fetch('/api/events/broadcast', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId: selectedTribe || 'default', type: 'notif_reaction', originUserId: myId, data: { notificationId: notifId, reactionType, action } })
@@ -3207,8 +3207,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <div className="flex flex-col items-center space-y-1 w-full">
               <Calendar size={18} className="text-success light:text-green-600 flex-shrink-0" />
               <div className="text-center w-full">
-                <div className="font-bold text-success light:text-green-700 text-sm">Schedule</div>
-                <div className="text-xs text-surface-300 leading-tight break-words">{t('schedule')}</div>
+                <div className="font-bold text-success light:text-green-700 text-sm">{t('schedule')}</div>
+                <div className="text-xs text-surface-300 leading-tight break-words">{t('workout_calendar')}</div>
               </div>
             </div>
           </button>
@@ -4050,11 +4050,21 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             const rid = notification.id;
             return (
               <div key={notification.id} className={`card ${notification.type === 'snitch' ? 'border-l-4 border-l-warning' : ''} relative`}>
-                {reactionBurst && reactionBurst.id === rid && (
-                  <div className="absolute -top-2 right-2 pointer-events-none">
-                    <div className="animate-bounce drop-shadow"><ReactionGlyph type={reactionBurst.type} size={24} /></div>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {reactionBurst && reactionBurst.id === rid && (
+                    <motion.div
+                      key={reactionBurst.ts}
+                      initial={{ scale: 0.2, opacity: 0, y: 10, rotate: -20 }}
+                      animate={{ scale: 1.4, opacity: 1, y: -20, rotate: 0 }}
+                      exit={{ scale: 0.5, opacity: 0, y: -40 }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 14 }}
+                      className="absolute -top-3 right-3 pointer-events-none z-10"
+                      style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.35))' }}
+                    >
+                      <ReactionGlyph type={reactionBurst.type} size={36} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg text-surface-100 truncate">{notification.title}</h3>

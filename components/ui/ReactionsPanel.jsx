@@ -72,11 +72,10 @@ export function ReactionsPanel({
 
       setRecentReactions(prev => [newReaction, ...prev.slice(0, 4)]);
       onReactionSent?.(newReaction);
-      alert(`${meta.label} reaction sent to ${targetUser.name}!`);
-      setTimeout(() => onClose(), 1000);
+      setTimeout(() => onClose(), 600);
     } catch (error) {
       console.error('Failed to send reaction:', error);
-      alert('Failed to send reaction');
+      onClose?.();
     }
     setSending(false);
   };
