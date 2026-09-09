@@ -195,7 +195,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
                 <div className="w-10 h-10 bg-primary/20 light:bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary/30 light:group-hover:bg-primary-200 transition-colors">
                   <Zap size={20} className="text-primary" />
                 </div>
-                <div className="text-left flex-1">
+                <div className="text-left flex-1 min-w-0">
                   <div className="font-medium text-surface-50 light:text-gray-900">AI Generate Workout</div>
                   <div className="text-sm text-surface-400 light:text-gray-600">Create a personalized workout plan</div>
                 </div>
@@ -227,7 +227,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
                       }`}
                     >
                       <div className="flex justify-between items-center">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <div className="font-medium">{workout.name}</div>
                             <span className="text-xs px-1.5 py-0.5 bg-success/20 text-success rounded">
@@ -373,7 +373,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
         <Button
           onClick={onClose}
           variant="ghost"
-          className="flex-1"
+          className="flex-1 min-w-0"
         >
           <ArrowLeft size={16} />
           Cancel
@@ -382,7 +382,7 @@ export function WorkoutScheduler({ isOpen, onClose, selectedDate, onSchedule, us
         <Button
           onClick={handleSchedule}
           variant="primary"
-          className="flex-1"
+          className="flex-1 min-w-0"
           disabled={!workoutData.workout_name || !workoutData.date || !workoutData.time}
         >
           <Save size={16} />

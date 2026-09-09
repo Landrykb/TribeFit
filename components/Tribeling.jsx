@@ -107,9 +107,9 @@ function StageDecor({ stage, skin }) {
 export function MoodPill({ mood = 'steady', streak = 0 }) {
   const m = MOOD_META[mood] || MOOD_META.steady;
   return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
-      <m.Icon size={12} />
-      <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full truncate ${m.pill}`}>
+      <m.Icon size={12} className="flex-shrink-0" />
+      <span className="truncate">{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
     </div>
   );
 }
@@ -171,7 +171,7 @@ export function Tribeling({
   const filter = MOOD_FILTER[mood] || 'none';
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
-  const scale = Math.min(1.3, Math.max(0.6, energy));
+  const scale = Math.min(1.15, Math.max(0.6, energy));
 
   // User-built layered avatar from extracted sheet parts
   if (parts && Object.values(parts).some(v => v > 0)) {
@@ -284,7 +284,7 @@ function TribelingLegacy({
   const isSprout = stage === 'sprout';
   const droop = mood === 'deflated';
   const couch = mood === 'couch';
-  const scale = Math.min(1.3, Math.max(0.6, energy));
+  const scale = Math.min(1.15, Math.max(0.6, energy));
   const w = size * scale;
   const h = w * 1.16;
 

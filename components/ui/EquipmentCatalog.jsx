@@ -320,14 +320,14 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
               <div className="flex space-x-4">
                 <button
                   onClick={() => setSelectedItem(null)}
-                  className="flex-1 bg-surface-700 border border-surface-600 hover:bg-surface-600 hover:border-surface-500 text-surface-100 rounded-xl px-4 py-3 transition-all duration-200 font-medium"
+                  className="flex-1 min-w-0 bg-surface-700 border border-surface-600 hover:bg-surface-600 hover:border-surface-500 text-surface-100 rounded-xl px-4 py-3 transition-all duration-200 font-medium"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!customAmount || submitting}
-                  className="flex-1 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-surface-600 disabled:to-surface-700 disabled:cursor-not-allowed text-white rounded-xl px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-2 font-bold shadow-lg hover:shadow-accent/25"
+                  className="flex-1 min-w-0 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-surface-600 disabled:to-surface-700 disabled:cursor-not-allowed text-white rounded-xl px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-2 font-bold shadow-lg hover:shadow-accent/25"
                 >
                   {submitting && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>}
                   <span>{mode === 'purchase' ? 'Purchase Now' : 'Submit Request'}</span>

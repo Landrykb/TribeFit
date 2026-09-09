@@ -165,7 +165,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
               <Card key={item.id} className="p-4 space-y-3 hover-elevate bg-surface-800 border-surface-600">
                 {/* Compact Header */}
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
                       <h4 className="font-bold text-lg text-surface-50">{item.label}</h4>
                       <span className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 text-accent px-2 py-1 rounded-lg text-xs font-medium">
@@ -199,7 +199,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
                         setSelectedWishlistItem(item);
                         setShowSpendModal(true);
                       }}
-                      className="flex-1 p-2 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-lg hover:from-accent/20 hover:to-primary/20 hover:border-accent/30 transition-all duration-200 flex items-center justify-center gap-2"
+                      className="flex-1 min-w-0 p-2 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-lg hover:from-accent/20 hover:to-primary/20 hover:border-accent/30 transition-all duration-200 flex items-center justify-center gap-2"
                     >
                       <Target size={14} className="text-accent" />
                       <span className="text-sm font-semibold text-surface-100">Next Goal: +{item.target_tc - item.pledged_tc} TC</span>
@@ -271,7 +271,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
                 {catalogItems.map((item) => (
                   <div key={item.id} className="bg-surface-800 border border-surface-600 rounded-2xl p-5 space-y-4 hover-elevate transition-all duration-200 cursor-pointer group">
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-lg text-surface-50 group-hover:text-accent transition-colors">{item.name}</h4>
                         <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 text-accent px-3 py-1 rounded-xl text-sm font-medium inline-block mt-2">
                           {item.category}
@@ -394,7 +394,7 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
                   <input
                     type="number"
                     placeholder="Enter TC amount"
-                    className="flex-1 bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
+                    className="flex-1 min-w-0 bg-surface-700 border border-surface-600 rounded-xl px-4 py-3 text-surface-50 placeholder-surface-400 focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
                     value={pledgeAmount}
                     onChange={(e) => setPledgeAmount(e.target.value)}
                   />

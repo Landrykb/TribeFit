@@ -398,7 +398,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
                   onClick={completeSet}
                   variant="success"
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 >
                   <Check size={20} />
                   Complete Set
@@ -430,7 +430,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
           <Button 
             onClick={onClose}
             variant="ghost"
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Exit Workout
           </Button>
@@ -438,7 +438,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
             <Button 
               onClick={completeWorkout}
               variant="primary"
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               <Trophy size={16} />
               Finish Early

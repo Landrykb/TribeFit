@@ -128,7 +128,7 @@ export function ProfileCustomization({ isOpen, onClose, userId, currentName, cur
           <Button
             variant="ghost"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Cancel
           </Button>
@@ -136,7 +136,7 @@ export function ProfileCustomization({ isOpen, onClose, userId, currentName, cur
             variant="primary"
             onClick={handleSave}
             loading={saving}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Save Changes
           </Button>

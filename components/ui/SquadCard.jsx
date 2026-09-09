@@ -43,7 +43,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4 flex-1">
+          <div className="flex items-start space-x-4 flex-1 min-w-0">
             <div className="w-14 h-14 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
               {getGroupIcon(squad.group_type, squad.streak_days)}
             </div>
@@ -182,7 +182,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
             <Button
               onClick={() => onUpgrade?.(squad)}
               variant="success"
-              className="flex-1 animate-pulse-soft"
+              className="flex-1 min-w-0 animate-pulse-soft"
             >
               <ArrowUp size={16} />
               Upgrade to Tribe
@@ -191,7 +191,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
             <Button
               onClick={() => onView?.(squad)}
               variant="primary"
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               <ChevronRight size={16} />
               Details
@@ -199,7 +199,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
           ) : squad.isPrivate ? (
             <Button
               variant="ghost"
-              className="flex-1 cursor-not-allowed opacity-50"
+              className="flex-1 min-w-0 cursor-not-allowed opacity-50"
               disabled
               title="This is a private squad. You need an invitation to join."
             >
@@ -210,7 +210,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
             <Button
               onClick={() => onJoin?.(squad)}
               variant="primary"
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               <Users size={16} />
               {t('join_squad')} {isSquad ? 'Squad' : 'Tribe'}

@@ -107,7 +107,7 @@ const Toast = ({ toast, onRemove }) => {
       `}
     >
       <IconComponent size={20} className="flex-shrink-0 mr-3" />
-      <p className="flex-1 text-sm font-medium">{toast.message}</p>
+      <p className="flex-1 min-w-0 text-sm font-medium">{toast.message}</p>
       <button
         onClick={handleRemove}
         className="flex-shrink-0 ml-3 p-1 hover:bg-black/10 rounded transition-colors"

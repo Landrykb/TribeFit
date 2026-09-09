@@ -252,7 +252,7 @@ export function EnhancedWorkoutGenerator({
 
       if (res.ok) {
         const data = await res.json();
-        toast.success(`️ Workout scheduled for ${scheduleDate} at ${scheduleTime}!`);
+        toast.success(` Workout scheduled for ${scheduleDate} at ${scheduleTime}!`);
         onClose();
         // Reset state
         setTimeout(() => {
@@ -429,7 +429,7 @@ export function EnhancedWorkoutGenerator({
                   step="5"
                   value={duration}
                   onChange={(e) => setDuration(parseInt(e.target.value))}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
                 <span className="text-primary font-semibold w-16 text-right">{duration} min</span>
               </div>
@@ -460,13 +460,13 @@ export function EnhancedWorkoutGenerator({
 
             {/* Actions */}
             <div className="flex gap-2 pt-4">
-              <Button onClick={() => setStep(1)} variant="ghost" className="flex-1">
+              <Button onClick={() => setStep(1)} variant="ghost" className="flex-1 min-w-0">
                 Back
               </Button>
               <Button
                 onClick={handleGenerate}
                 variant="primary"
-                className="flex-1"
+                className="flex-1 min-w-0"
                 disabled={!selectedBodyPart || generating}
               >
                 {generating ? (
@@ -520,7 +520,7 @@ export function EnhancedWorkoutGenerator({
                       type="text"
                       value={ex.name}
                       onChange={(e) => handleEditExercise(idx, 'name', e.target.value)}
-                      className="flex-1 bg-transparent text-surface-50 light:text-gray-900 font-medium border-none outline-none"
+                      className="flex-1 min-w-0 bg-transparent text-surface-50 light:text-gray-900 font-medium border-none outline-none"
                     />
                     <div className="flex gap-1 ml-2">
                       {idx > 0 && (
@@ -627,10 +627,10 @@ export function EnhancedWorkoutGenerator({
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button onClick={() => setStep(2)} variant="ghost" className="flex-1">
+              <Button onClick={() => setStep(2)} variant="ghost" className="flex-1 min-w-0">
                 Regenerate
               </Button>
-              <Button onClick={handleStartWorkout} variant="success" className="flex-1">
+              <Button onClick={handleStartWorkout} variant="success" className="flex-1 min-w-0">
                 {scheduleOption === 'now' ? (
                   <><Zap size={16} /> Start Now</>
                 ) : (
@@ -691,10 +691,10 @@ export function EnhancedWorkoutGenerator({
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button onClick={() => setStep(3)} variant="ghost" className="flex-1">
+              <Button onClick={() => setStep(3)} variant="ghost" className="flex-1 min-w-0">
                 Back
               </Button>
-              <Button onClick={handleScheduleWorkout} variant="success" className="flex-1">
+              <Button onClick={handleScheduleWorkout} variant="success" className="flex-1 min-w-0">
                 <Save size={16} />
                 Add to Calendar
               </Button>

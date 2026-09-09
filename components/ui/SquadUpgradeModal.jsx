@@ -199,7 +199,7 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
         <Button
           onClick={onClose}
           variant="ghost"
-          className="flex-1"
+          className="flex-1 min-w-0"
           disabled={isUpgrading}
         >
           Maybe Later
@@ -208,7 +208,7 @@ export function SquadUpgradeModal({ isOpen, onClose, squad, onConfirmUpgrade }) 
         <Button
           onClick={handleUpgrade}
           variant="success"
-          className="flex-1"
+          className="flex-1 min-w-0"
           disabled={isUpgrading}
         >
           {isUpgrading ? (

@@ -121,14 +121,14 @@ export function ShrinkWorkoutModal({ isOpen, onClose, onShrink }) {
           <Button
             variant="ghost"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleShrink}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             <Clock size={16} />
             Shrink & Start

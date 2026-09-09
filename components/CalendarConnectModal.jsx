@@ -117,13 +117,13 @@ export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOp
             )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="primary" onClick={authGoogle} className="flex-1">
+            <Button variant="primary" onClick={authGoogle} className="flex-1 min-w-0">
               <Link size={16} /> {googleConnected ? 'Re-connect Google' : 'Connect Google'}
             </Button>
-            <Button variant="ghost" onClick={importGoogleToday} disabled={!googleConnected || importing} className="flex-1">
+            <Button variant="ghost" onClick={importGoogleToday} disabled={!googleConnected || importing} className="flex-1 min-w-0">
               <CloudDownload size={16} /> Import Today
             </Button>
-            <Button variant="ghost" onClick={onOpenSettings} className="flex-1">
+            <Button variant="ghost" onClick={onOpenSettings} className="flex-1 min-w-0">
               <Settings size={16} /> Calendar Settings
             </Button>
           </div>
@@ -144,10 +144,10 @@ export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOp
               className="w-full px-3 py-2 rounded border border-surface-700 bg-surface-900 text-surface-100 light:bg-white light:border-gray-300 light:text-gray-900"
             />
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="primary" onClick={saveAppleIcs} loading={savingApple} className="flex-1">
+              <Button variant="primary" onClick={saveAppleIcs} loading={savingApple} className="flex-1 min-w-0">
                 <Link size={16} /> Save ICS URL
               </Button>
-              <Button variant="ghost" onClick={importAppleIcs} disabled={!appleIcsUrl || importing} className="flex-1">
+              <Button variant="ghost" onClick={importAppleIcs} disabled={!appleIcsUrl || importing} className="flex-1 min-w-0">
                 <CloudDownload size={16} /> Import Today
               </Button>
             </div>
@@ -158,7 +158,7 @@ export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOp
         </div>
       </div>
       <div className="flex gap-2 pt-4 border-t border-surface-700 light:border-gray-200">
-        <Button variant="ghost" onClick={onClose} className="flex-1">
+        <Button variant="ghost" onClick={onClose} className="flex-1 min-w-0">
           Close
         </Button>
       </div>

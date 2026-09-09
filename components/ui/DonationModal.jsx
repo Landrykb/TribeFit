@@ -84,14 +84,14 @@ export function DonationModal({ isOpen, onClose, onSubmitRequest }) {
           <div className="flex space-x-4 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 bg-surface-700 border border-surface-600 hover:bg-surface-600 hover:border-surface-500 text-surface-100 rounded-xl px-4 py-3 transition-all duration-200 font-medium light:bg-white light:border-gray-300 light:text-gray-700 light:hover:bg-gray-50"
+              className="flex-1 min-w-0 bg-surface-700 border border-surface-600 hover:bg-surface-600 hover:border-surface-500 text-surface-100 rounded-xl px-4 py-3 transition-all duration-200 font-medium light:bg-white light:border-gray-300 light:text-gray-700 light:hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!gymName.trim() || !amount || loading}
-              className="flex-1 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-surface-600 disabled:to-surface-700 disabled:cursor-not-allowed text-white rounded-xl px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-2 font-bold shadow-lg hover:shadow-accent/25"
+              className="flex-1 min-w-0 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-surface-600 disabled:to-surface-700 disabled:cursor-not-allowed text-white rounded-xl px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-2 font-bold shadow-lg hover:shadow-accent/25"
             >
               {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>}
               <span>Submit Request</span>

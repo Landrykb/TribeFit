@@ -122,7 +122,7 @@ export function CoachMarketplace({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 min-w-0 overflow-y-auto p-6">
           {activeTab === 'marketplace' && (
             <div className="space-y-6">
               {/* Filter */}
@@ -373,7 +373,7 @@ function EligibilityChecker({ userStreak, userTotalWorkouts, isInTribe, requirem
                     <Icon size={20} className="text-surface-400 light:text-gray-500" />
                   )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="font-semibold text-surface-50 light:text-gray-900">{check.label}</div>
                   <div className="text-sm text-surface-400 light:text-gray-600">{check.requirement}</div>
                 </div>

@@ -52,7 +52,7 @@ export async function POST(request) {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      console.log('️ Google Calendar credentials not configured, using fallback');
+      console.log(' Google Calendar credentials not configured, using fallback');
       return fallbackCalendarData();
     }
 
@@ -108,7 +108,7 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Google Calendar API Error:', error);
-    console.log('️ Google Calendar API failed, using fallback data');
+    console.log(' Google Calendar API failed, using fallback data');
     return fallbackCalendarData();
   }
 }

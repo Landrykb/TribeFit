@@ -490,14 +490,14 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
             <Button
               onClick={onClose}
               variant="ghost"
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               Close
             </Button>
             <Button
               onClick={handleUpgrade}
               variant="success"
-              className="flex-1 animate-pulse-soft"
+              className="flex-1 min-w-0 animate-pulse-soft"
             >
               <ArrowUp size={16} />
               Upgrade to Tribe
@@ -508,14 +508,14 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
             <Button
               onClick={onClose}
               variant="ghost"
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               Close
             </Button>
             <Button
               onClick={handleJoin}
               variant="primary"
-              className="flex-1"
+              className="flex-1 min-w-0"
               disabled={isJoining}
             >
               {isJoining ? (
@@ -538,14 +538,14 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
                 <Button
                   onClick={onClose}
                   variant="ghost"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 >
                   Close
                 </Button>
                 <Button
                   onClick={handleDeleteSquad}
                   variant="ghost"
-                  className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  className="flex-1 min-w-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
                 >
                   <Trash2 size={16} />
                   Delete {squad.group_type === 'squad' ? 'Squad' : 'Tribe'}
@@ -556,7 +556,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
                 <Button
                   onClick={onClose}
                   variant="ghost"
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 >
                   Close
                 </Button>
@@ -568,7 +568,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
                     }
                   }}
                   variant="ghost"
-                  className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  className="flex-1 min-w-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
                 >
                   <LogOut size={16} />
                   Leave {squad.group_type === 'squad' ? 'Squad' : 'Tribe'}

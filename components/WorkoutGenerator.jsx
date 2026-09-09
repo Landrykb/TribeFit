@@ -114,7 +114,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
                 step="15"
                 value={formData.availableTime}
                 onChange={(e) => handleInputChange('availableTime', parseInt(e.target.value))}
-                className="flex-1 h-3 bg-surface-700 light:bg-gray-200 rounded-full appearance-none cursor-pointer slider"
+                className="flex-1 min-w-0 h-3 bg-surface-700 light:bg-gray-200 rounded-full appearance-none cursor-pointer slider"
               />
               <span className="text-xl font-bold text-accent min-w-[5rem] text-center bg-accent/20 light:bg-orange-100 light:text-orange-800 px-3 py-1 rounded-lg">
                 {formData.availableTime} min
@@ -195,7 +195,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             type="button"
             variant="ghost"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Cancel
           </Button>
@@ -203,7 +203,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
             type="submit"
             variant="primary"
             loading={isGenerating}
-            className="flex-1 h-12 text-base font-bold"
+            className="flex-1 min-w-0 h-12 text-base font-bold"
           >
             {isGenerating ? (
               <>
@@ -262,7 +262,7 @@ export function WorkoutPlanModal({ isOpen, onClose, plan, onSaveToCalendar }) {
       <div className="flex space-x-3 pt-6 border-t border-surface-700">
         <Button
           variant="accent"
-          className="flex-1 text-sm"
+          className="flex-1 min-w-0 text-sm"
           onClick={() => {
             if (typeof onSaveToCalendar === 'function') {
               onSaveToCalendar(plan);
@@ -276,7 +276,7 @@ export function WorkoutPlanModal({ isOpen, onClose, plan, onSaveToCalendar }) {
         </Button>
         <Button
           variant="primary"  
-          className="flex-1 text-sm"
+          className="flex-1 min-w-0 text-sm"
           onClick={onClose}
         >
           Start

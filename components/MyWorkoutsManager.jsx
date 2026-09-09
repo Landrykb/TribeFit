@@ -401,7 +401,7 @@ function WorkoutCard({ workout, onSelect, onEdit, onDelete, onDuplicate, isCusto
       )}
 
       <div className="flex items-center gap-1.5">
-        <Button onClick={onSelect} variant="primary" className="flex-1 h-9 text-xs whitespace-nowrap">
+        <Button onClick={onSelect} variant="primary" className="flex-1 min-w-0 h-9 text-xs whitespace-nowrap">
           <Play size={14} /> Start
         </Button>
         <Button onClick={onEdit} variant="ghost" className="h-9 px-3 text-xs whitespace-nowrap flex-shrink-0">

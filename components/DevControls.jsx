@@ -215,25 +215,25 @@ export function DevControls({
             <div>
               <div className="text-xs text-surface-400 light:text-gray-600 mb-1 flex items-center gap-1"><Flame size={12} /> Streak Days</div>
               <div className="flex gap-1">
-                <ActionButton onClick={() => adjustStreak(-1)} disabled={loading.stats} className="flex-1">-1</ActionButton>
-                <ActionButton onClick={() => adjustStreak(1)} disabled={loading.stats} className="flex-1">+1</ActionButton>
-                <ActionButton onClick={() => adjustStreak(14)} disabled={loading.stats} className="flex-1">+14</ActionButton>
+                <ActionButton onClick={() => adjustStreak(-1)} disabled={loading.stats} className="flex-1 min-w-0">-1</ActionButton>
+                <ActionButton onClick={() => adjustStreak(1)} disabled={loading.stats} className="flex-1 min-w-0">+1</ActionButton>
+                <ActionButton onClick={() => adjustStreak(14)} disabled={loading.stats} className="flex-1 min-w-0">+14</ActionButton>
               </div>
             </div>
             <div>
               <div className="text-xs text-surface-400 light:text-gray-600 mb-1 flex items-center gap-1"><Dumbbell size={12} /> Total Workouts</div>
               <div className="flex gap-1">
-                <ActionButton onClick={() => adjustWorkouts(-5)} disabled={loading.stats} className="flex-1">-5</ActionButton>
-                <ActionButton onClick={() => adjustWorkouts(5)} disabled={loading.stats} className="flex-1">+5</ActionButton>
-                <ActionButton onClick={() => adjustWorkouts(30)} disabled={loading.stats} className="flex-1">+30</ActionButton>
+                <ActionButton onClick={() => adjustWorkouts(-5)} disabled={loading.stats} className="flex-1 min-w-0">-5</ActionButton>
+                <ActionButton onClick={() => adjustWorkouts(5)} disabled={loading.stats} className="flex-1 min-w-0">+5</ActionButton>
+                <ActionButton onClick={() => adjustWorkouts(30)} disabled={loading.stats} className="flex-1 min-w-0">+30</ActionButton>
               </div>
             </div>
             <div>
               <div className="text-xs text-surface-400 light:text-gray-600 mb-1 flex items-center gap-1"><Wallet size={12} /> Wallet TC</div>
               <div className="flex gap-1">
-                <ActionButton onClick={() => onAddBalance(-100)} disabled={loading.balance} className="flex-1">-100</ActionButton>
-                <ActionButton onClick={() => onAddBalance(100)} disabled={loading.balance} className="flex-1">+100</ActionButton>
-                <ActionButton onClick={() => onAddBalance(500)} disabled={loading.balance} className="flex-1">+500</ActionButton>
+                <ActionButton onClick={() => onAddBalance(-100)} disabled={loading.balance} className="flex-1 min-w-0">-100</ActionButton>
+                <ActionButton onClick={() => onAddBalance(100)} disabled={loading.balance} className="flex-1 min-w-0">+100</ActionButton>
+                <ActionButton onClick={() => onAddBalance(500)} disabled={loading.balance} className="flex-1 min-w-0">+500</ActionButton>
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ export function DevControls({
                 value={newUserName}
                 onChange={(e) => setNewUserName(e.target.value)}
                 placeholder="New user name (or random)"
-                className="flex-1 px-3 py-2 text-sm bg-surface-700 light:bg-gray-50 border border-surface-600 light:border-gray-300 rounded text-surface-100 light:text-gray-900 placeholder:text-surface-500 light:placeholder:text-gray-400"
+                className="flex-1 min-w-0 px-3 py-2 text-sm bg-surface-700 light:bg-gray-50 border border-surface-600 light:border-gray-300 rounded text-surface-100 light:text-gray-900 placeholder:text-surface-500 light:placeholder:text-gray-400"
               />
               <ActionButton onClick={createTestUser} disabled={loading.createUser}>
                 <UserPlus size={14} />
@@ -328,7 +328,7 @@ export function DevControls({
                   className="w-full justify-start"
                 >
                   <Users size={14} className="mr-2" />
-                  <span className="flex-1 text-left">{g.name}</span>
+                  <span className="flex-1 min-w-0 text-left">{g.name}</span>
                   <span className="text-xs opacity-60">
                     {g.group_type === 'tribe' ? 'Tribe' : 'Squad'}
                   </span>

@@ -319,7 +319,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                     </div>
                     
                     {/* Enhanced workout indicators - Shows more workouts */}
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 min-w-0 overflow-hidden">
                       {showTribeWorkouts && workouts.slice(0, 3).map((workout, i) => (
                         <div
                           key={workout.id || i}
@@ -409,7 +409,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           <Button
             variant="ghost"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             <ArrowLeft size={16} />
             Close
@@ -421,7 +421,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
               setSelectedDate(formatDate(today));
               setShowScheduler(true);
             }}
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             <Calendar size={16} />
             Schedule Today
@@ -469,8 +469,8 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
               Shared with tribe
             </label>
             <div className="flex gap-2 pt-2">
-              <Button onClick={saveEdit} variant="primary" className="flex-1"><Save size={16} /> Save</Button>
-              <Button onClick={deleteItem} variant="danger" className="flex-1"><Trash2 size={16} /> Delete</Button>
+              <Button onClick={saveEdit} variant="primary" className="flex-1 min-w-0"><Save size={16} /> Save</Button>
+              <Button onClick={deleteItem} variant="danger" className="flex-1 min-w-0"><Trash2 size={16} /> Delete</Button>
             </div>
           </div>
         </Modal>

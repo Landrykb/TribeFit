@@ -181,7 +181,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   <div className="p-2 bg-blue-500/20 rounded-lg">
                     <Chrome size={24} className="text-blue-400" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-surface-50 light:text-gray-900 group-hover:text-primary">
                       Google Calendar
                     </h4>
@@ -204,7 +204,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   <div className="p-2 bg-gray-500/20 rounded-lg">
                     <Apple size={24} className="text-gray-400" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-surface-50 light:text-gray-900 group-hover:text-primary">
                       Apple Calendar
                     </h4>
@@ -227,7 +227,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   <div className="p-2 bg-accent/20 rounded-lg">
                     <FileText size={24} className="text-accent" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-surface-50 light:text-gray-900 group-hover:text-primary">
                       Calendar File
                     </h4>
@@ -250,7 +250,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   <div className="p-2 bg-success/20 rounded-lg">
                     <Image size={24} className="text-success" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-surface-50 light:text-gray-900 group-hover:text-primary">
                       Photo/Screenshot
                     </h4>
@@ -306,7 +306,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h5 className="font-semibold text-surface-50 light:text-gray-900">
                           {workout.name}
@@ -355,7 +355,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
                   setSelectedWorkouts(new Set());
                 }}
                 variant="ghost"
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 <X size={16} />
                 Cancel
@@ -363,7 +363,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport, userId }) {
               <Button
                 onClick={handleImportSelected}
                 variant="primary"
-                className="flex-1"
+                className="flex-1 min-w-0"
                 disabled={selectedWorkouts.size === 0}
               >
                 <Download size={16} />

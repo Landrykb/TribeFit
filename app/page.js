@@ -1901,7 +1901,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             const vaultAmount = Math.round(actualFee * 0.20 * 10) / 10;
             setTimeout(() => {
               toast.info(` Split: ${data.split_results.length} members got ${perMember.toFixed(1)} TC each`);
-              toast.info(`️ Vault: +${vaultAmount} TC`);
+              toast.info(` Vault: +${vaultAmount} TC`);
             }, 500);
           }
 
@@ -2243,9 +2243,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleEquipmentRequest = async (requestData) => {
     const equipmentMessages = [
-      `️ Equipment request submitted! Your tribe will decide soon!`,
+      ` Equipment request submitted! Your tribe will decide soon!`,
       ` Gear request sent! Let's see what the tribe thinks!`,
-      `️ Equipment proposal in the works! Democracy in action!`,
+      ` Equipment proposal in the works! Democracy in action!`,
       ` Request submitted! Your tribe has your back!`,
       ` Gear upgrade request launched! Tribe voting begins!`
     ];
@@ -2395,8 +2395,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         ' Vote recorded! Sometimes tough decisions are necessary!',
         ' Rejected! Your tribe appreciates thoughtful consideration!',
         '🤔 No vote cast! Critical thinking keeps the tribe strong!',
-        '️ Rejected! Protecting tribe resources wisely!',
-        '️ Careful vote cast! Tribe guardianship matters!'
+        ' Rejected! Protecting tribe resources wisely!',
+        ' Careful vote cast! Tribe guardianship matters!'
       ]
     };
 
@@ -2408,10 +2408,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         ' APPROVED! Tribe unity makes it happen!'
       ],
       rejected: [
-        '️ Request REJECTED! Tribe protection activated!',
+        ' Request REJECTED! Tribe protection activated!',
         ' REJECTED! Tribe wisdom prevails!',
         '🤔 REJECTED! Thoughtful tribe decision made!',
-        '️ REJECTED! Tribe resources protected!'
+        ' REJECTED! Tribe resources protected!'
       ]
     };
 
@@ -2709,7 +2709,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // Different flow if squad has other members
     if (hasOtherMembers) {
       const confirmed = window.confirm(
-        `️ Delete ${squad.name}?\n\n` +
+        ` Delete ${squad.name}?\n\n` +
         `This squad has ${memberCount} member${memberCount > 1 ? 's' : ''}.\n\n` +
         `All members will receive a notification and have 48 hours to:\n` +
         ` Download Squad Resume (proof of commitment)\n` +
@@ -2745,7 +2745,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               body: JSON.stringify({
                 type: 'squad_deletion_notice',
                 groupId: squad.id,
-                title: '️ Squad Deletion Notice',
+                title: ' Squad Deletion Notice',
                 message: `${effectiveUserName} has initiated deletion of ${squad.name}. You have 48 hours before permanent deletion.`,
                 data: {
                   squadName: squad.name,
@@ -2779,7 +2779,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     } else {
       // Only owner, can delete immediately
       const confirmed = window.confirm(
-        `️ Delete ${squad.name}?\n\n` +
+        ` Delete ${squad.name}?\n\n` +
         `You're the only member. This squad will be deleted immediately and cannot be recovered.\n\n` +
         `Continue?`
       );
@@ -2797,7 +2797,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         });
 
         if (res.ok) {
-          toast.success(`${squad.name} deleted successfully! ️`);
+          toast.success(`${squad.name} deleted successfully! `);
 
           // Reload data
           await loadDevData();
@@ -3047,7 +3047,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           {/* Hero card skeleton */}
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2 flex-1 min-w-0">
                 <Skeleton className="h-7 w-48" />
                 <Skeleton className="h-4 w-32" />
               </div>
@@ -3316,7 +3316,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           <div className="w-12 h-12 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center flex-shrink-0">
             {effectiveUserName?.charAt(0) || 'Y'}
           </div>
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 min-w-0 space-y-3">
             <input
               type="text"
               value={draftCaption}
@@ -3793,7 +3793,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                       <div className="text-xs text-surface-400 flex-shrink-0">
                         <span className="font-medium text-surface-300">{request.votes.approve}</span>/{Math.ceil(request.totalMembers / 2)}
                       </div>
-                      <div className="flex-1 bg-surface-600/50 rounded-full h-1.5 overflow-hidden">
+                      <div className="flex-1 min-w-0 bg-surface-600/50 rounded-full h-1.5 overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-success to-green-500 transition-all duration-300"
                           style={{ width: `${Math.min(100, (request.votes.approve / Math.ceil(request.totalMembers / 2)) * 100)}%` }}
@@ -3886,7 +3886,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       <div className="card">
         <div className="flex items-center space-x-4 mb-6">
           <div className="flex flex-col items-center flex-shrink-0">
-            <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform" title="Open Avatar Studio">
+            <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform max-w-full" title="Open Avatar Studio">
               {tribeling ? (
                 <StreakRing streak={tribeling.streak} goal={7} size={116} active={tribeling.mood === 'pumped'}>
                   <Tribeling
@@ -3907,30 +3907,30 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 </div>
               )}
             </motion.button>
-            <div className="flex flex-col items-center gap-1 mt-2">
+            <div className="flex flex-col items-center gap-1 mt-2 max-w-full">
               {tribeling?.stage && (
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/40 text-primary whitespace-nowrap">
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/40 text-primary truncate max-w-full">
                   {tribeling.stage.name}
                 </span>
               )}
               <MoodPill mood={tribeling?.mood || 'steady'} streak={tribeling?.streak || 0} />
             </div>
           </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-surface-50 flex items-center gap-2">
-              {effectiveUserName}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-bold text-surface-50 flex items-center gap-2 min-w-0 flex-wrap">
+              <span className="truncate">{effectiveUserName}</span>
               {tribeling?.avatar_icon && ProfileIcons[tribeling.avatar_icon] && (() => {
                 const PIcon = ProfileIcons[tribeling.avatar_icon];
                 return <PIcon.icon size={18} className={PIcon.color} />;
               })()}
             </h2>
-            <p className="text-surface-300">{user?.email || `${effectiveUserId}@tribefit.app`}</p>
+            <p className="text-surface-300 break-all">{user?.email || `${effectiveUserId}@tribefit.app`}</p>
             {devUserId && devUserId !== user?.id && (
-              <div className="text-xs text-warning light:text-yellow-600 mt-1">
+              <div className="text-xs text-warning light:text-yellow-600 mt-1 break-all">
                 Dev Mode: {effectiveUserId}
               </div>
             )}
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -4055,10 +4055,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     <div className="animate-bounce drop-shadow"><ReactionGlyph type={reactionBurst.type} size={24} /></div>
                   </div>
                 )}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-surface-100">{notification.title}</h3>
-                    <p className="text-surface-300 text-base mt-2 leading-relaxed">{notification.body}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg text-surface-100 truncate">{notification.title}</h3>
+                    <p className="text-surface-300 text-base mt-2 leading-relaxed break-words">{notification.body}</p>
                     <div className="bg-surface-700 text-surface-300 text-sm mt-3 px-3 py-1 rounded-lg inline-block">
                       {new Date(notification.created_at).toLocaleDateString()}
                     </div>
@@ -4286,7 +4286,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           {adSkipsThisWeek >= 2 && (
             <div className="bg-warning/20 border border-warning/30 rounded-lg p-3 mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-warning">️</span>
+                <span className="text-warning"></span>
                 <p className="text-warning text-sm">
                   {adSkipsThisWeek === 2 ?
                     "You've watched 2 ads this week. One more and your tribe gets notified!" :
@@ -4375,7 +4375,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   setPostCaption('');
                 }}
                 variant="ghost"
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 {t('cancel')}
               </Button>
@@ -4389,7 +4389,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 }}
                 disabled={!postCaption.trim()}
                 variant="primary"
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 {t('share_post')}
               </Button>
@@ -4663,8 +4663,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             A vote among active members will run for up to 72 hours or until a majority approves.
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setShowModeChangeModal(false)} variant="ghost" className="h-10 flex-1">Cancel</Button>
-            <Button onClick={confirmProposeMode} variant="primary" className="h-10 flex-1">Start Vote</Button>
+            <Button onClick={() => setShowModeChangeModal(false)} variant="ghost" className="h-10 flex-1 min-w-0">Cancel</Button>
+            <Button onClick={confirmProposeMode} variant="primary" className="h-10 flex-1 min-w-0">Start Vote</Button>
           </div>
         </div>
       </Modal>
@@ -4701,8 +4701,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             </>
           )}
           <div className="flex gap-2">
-            <Button onClick={() => setShowCreditsModal(false)} variant="ghost" className="h-9 flex-1">Close</Button>
-            <Button onClick={useCreditNow} disabled={(catchUpCredits || 0) <= 0} variant="success" className="h-9 flex-1">Start 15m Catch-Up</Button>
+            <Button onClick={() => setShowCreditsModal(false)} variant="ghost" className="h-9 flex-1 min-w-0">Close</Button>
+            <Button onClick={useCreditNow} disabled={(catchUpCredits || 0) <= 0} variant="success" className="h-9 flex-1 min-w-0">Start 15m Catch-Up</Button>
           </div>
         </div>
       </Modal>

@@ -257,14 +257,14 @@ export function GroupSettingsModal({
           <Button
             onClick={onClose}
             variant="ghost"
-            className="flex-1"
+            className="flex-1 min-w-0"
           >
             Cancel
           </Button>
           {canEdit && (
             <Button
               onClick={handleSave}
-              className="flex-1 bg-gradient-to-r from-primary to-accent"
+              className="flex-1 min-w-0 bg-gradient-to-r from-primary to-accent"
             >
               Save Settings
             </Button>

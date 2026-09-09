@@ -95,7 +95,7 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
                   <div className="flex-shrink-0 mt-1">
                     {option.icon}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       <h4 className="font-medium text-surface-50">{option.title}</h4>
                       <span className="text-surface-400 text-sm">• {option.subtitle}</span>
@@ -243,7 +243,7 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
         <Button
           onClick={onClose}
           variant="ghost"
-          className="flex-1"
+          className="flex-1 min-w-0"
           disabled={isCreating}
         >
           Cancel
@@ -252,7 +252,7 @@ export function SquadCreationModal({ isOpen, onClose, onCreateSquad }) {
         <Button
           onClick={handleCreate}
           variant="primary"
-          className="flex-1"
+          className="flex-1 min-w-0"
           disabled={isCreating || !formData.name.trim()}
         >
           {isCreating ? (

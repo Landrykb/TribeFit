@@ -58,7 +58,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
               <div key={request.id} className="bg-gradient-to-br from-surface-700/50 to-surface-800/50 border border-surface-600/50 rounded-2xl p-6 hover-elevate transition-all duration-200">
                 {/* Request Header */}
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-2">
                       <h3 className="font-bold text-surface-50">{request.label}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -102,7 +102,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                     {/* Approve Progress */}
                     <div className="flex items-center space-x-3">
                       <CheckCircle size={16} className="text-success flex-shrink-0" />
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-success">Approve</span>
                           <span className="text-surface-400">{request.votes.approve}</span>
@@ -119,7 +119,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                     {/* Reject Progress */}
                     <div className="flex items-center space-x-3">
                       <XCircle size={16} className="text-danger flex-shrink-0" />
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-danger">Reject</span>
                           <span className="text-surface-400">{request.votes.reject}</span>
@@ -142,7 +142,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                       onClick={() => handleVote(request.id, 'approve')}
                       variant="success"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                       disabled={loading[request.id]}
                     >
                       {loading[request.id] === 'approve' ? (
@@ -162,7 +162,7 @@ export function VotingModal({ isOpen, onClose, pendingRequests, onVote }) {
                       onClick={() => handleVote(request.id, 'reject')}
                       variant="danger"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                       disabled={loading[request.id]}
                     >
                       {loading[request.id] === 'reject' ? (

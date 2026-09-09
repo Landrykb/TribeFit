@@ -272,11 +272,11 @@ export function AdvancedWorkoutEditor({
 
       {/* Action Buttons */}
       <div className="flex gap-2 mt-6 pt-4 border-t border-surface-700 light:border-gray-200">
-        <Button onClick={onCancel} variant="ghost" className="flex-1">
+        <Button onClick={onCancel} variant="ghost" className="flex-1 min-w-0">
           <X size={16} />
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="primary" className="flex-1">
+        <Button onClick={handleSave} variant="primary" className="flex-1 min-w-0">
           <Save size={16} />
           Save Workout
         </Button>
@@ -322,7 +322,7 @@ function ExerciseEditor({
         </div>
 
         {/* Exercise Content */}
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 min-w-0 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-surface-500 light:text-gray-500 w-6">
               #{index + 1}
@@ -332,7 +332,7 @@ function ExerciseEditor({
               value={exercise.name}
               onChange={(e) => onUpdate('name', e.target.value)}
               placeholder="Exercise name"
-              className="flex-1 px-3 py-1.5 bg-surface-800 light:bg-white border border-surface-600 light:border-gray-300 rounded text-surface-50 light:text-gray-900 placeholder-surface-500 light:placeholder-gray-400 text-sm focus:ring-1 focus:ring-primary"
+              className="flex-1 min-w-0 px-3 py-1.5 bg-surface-800 light:bg-white border border-surface-600 light:border-gray-300 rounded text-surface-50 light:text-gray-900 placeholder-surface-500 light:placeholder-gray-400 text-sm focus:ring-1 focus:ring-primary"
             />
             <button
               onClick={() => setExpanded(!expanded)}
