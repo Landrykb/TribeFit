@@ -415,6 +415,16 @@ create table if not exists public.app_state (
 -- ROW LEVEL SECURITY POLICIES
 -- =====================================================================================
 
+-- Drop all existing policies in public so this script is safe to re-run
+DO $$
+DECLARE
+  pol RECORD;
+BEGIN
+  FOR pol IN SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public' LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+  END LOOP;
+END $$;
+
 -- Users: can read/update own profile
 alter table public.users enable row level security;
 
