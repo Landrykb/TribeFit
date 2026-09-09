@@ -16,7 +16,7 @@ export async function POST(request) {
     if (visionApiKey) {
       return await processWithCloudVision(file, visionApiKey);
     } else {
-      console.log('⚠️ Google Cloud Vision not configured, using fallback');
+      console.log('️ Google Cloud Vision not configured, using fallback');
       return fallbackPhotoData();
     }
 

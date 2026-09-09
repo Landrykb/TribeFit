@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase, supabaseAdmin, isUsingMockData } from '@/lib/supabase';
-import { 
+import {
   getCurrentUser, getUserById, adjustWalletTc, adjustSnatchedTc, getOrCreateTribeWallet,
   insertPactTx, getUserTribes, listTribeMembers, createTribe, joinByCode,
   getPactWallet, getPactTransactions
@@ -11,8 +11,8 @@ import Stripe from 'stripe';
 
 // Initialize Stripe (only if keys are provided)
 let stripe = null;
-if (process.env.STRIPE_SECRET_KEY && 
-    !process.env.STRIPE_SECRET_KEY.includes('placeholder') && 
+if (process.env.STRIPE_SECRET_KEY &&
+    !process.env.STRIPE_SECRET_KEY.includes('placeholder') &&
     !process.env.STRIPE_SECRET_KEY.includes('your_secret_key_here')) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2024-06-20'
@@ -24,7 +24,7 @@ let mockData = {
   users: [
     {
       id: '00000000-0000-0000-0000-000000000001',
-      email: 'demo1@tribefit.app', 
+      email: 'demo1@tribefit.app',
       name: 'Alex Chen',
       wallet_balance_tc: 400, // Updated from previous skip
       settings: { snitch: true, privacy: 'friends', active_tribe_id: '10000000-0000-0000-0000-000000000001' }
@@ -32,7 +32,7 @@ let mockData = {
     {
       id: '00000000-0000-0000-0000-000000000002',
       email: 'demo2@tribefit.app',
-      name: 'Jordan Kim', 
+      name: 'Jordan Kim',
       wallet_balance_tc: 250,
       settings: { snitch: true, privacy: 'friends', active_tribe_id: '10000000-0000-0000-0000-000000000001' }
     }
@@ -67,7 +67,7 @@ let mockData = {
       created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
-      id: '30000000-0000-0000-0000-000000000002', 
+      id: '30000000-0000-0000-0000-000000000002',
       wallet_id: '20000000-0000-0000-0000-000000000001',
       user_id: '00000000-0000-0000-0000-000000000001',
       type: 'skip',
@@ -82,7 +82,7 @@ let mockData = {
       user_id: '00000000-0000-0000-0000-000000000002',
       type: 'snitch',
       title: 'Tribe Update',
-      body: 'Alex Chen PAID to skip 💸. Your tribe is stronger than excuses.',
+      body: 'Alex Chen PAID to skip . Your tribe is stronger than excuses.',
       created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       read: false
     }
@@ -101,7 +101,7 @@ let mockData = {
       id: 'ex-2',
       name: 'Squat',
       category: 'bodyweight',
-      equipment: 'none', 
+      equipment: 'none',
       muscles: ['quads', 'glutes', 'hamstrings'],
       cues: ['Chest up', 'Knees track over toes'],
       difficulty_level: 2
@@ -180,7 +180,7 @@ let mockData = {
 const sendSnitchNotification = async (actorName, recipientIds, method, locale = 'en') => {
   const key = method === 'pay' ? 'snitch.paid' : 'snitch.watched_ad';
   const message = i18n.t(key, { name: actorName }, locale);
-  
+
   if (isUsingMockData) {
     // Mock mode - notify every recipient
     const notifications = recipientIds.map((userId, i) => ({
@@ -204,13 +204,13 @@ const sendSnitchNotification = async (actorName, recipientIds, method, locale = 
         body: message,
         payload: { actor_name: actorName, method }
       }));
-      
+
       const client = supabaseAdmin || supabase;
       const { data, error } = await client
         .from('notifications')
         .insert(notifications)
         .select();
-        
+
       if (error) throw error;
       return { message, count: data?.length || 0 };
     } catch (error) {
@@ -223,7 +223,7 @@ const sendSnitchNotification = async (actorName, recipientIds, method, locale = 
 // Helper to validate webhook events (idempotency)
 const processWebhookEvent = async (eventId, eventType, payload) => {
   if (isUsingMockData) return true;
-  
+
   try {
     const client = supabaseAdmin || supabase;
     const { data, error } = await client
@@ -231,12 +231,12 @@ const processWebhookEvent = async (eventId, eventType, payload) => {
       .select('id')
       .eq('id', eventId)
       .single();
-      
+
     if (data) {
       // Event already processed
       return false;
     }
-    
+
     // Record the event
     await client
       .from('webhook_events')
@@ -246,7 +246,7 @@ const processWebhookEvent = async (eventId, eventType, payload) => {
         payload,
         source: 'stripe'
       });
-      
+
     return true;
   } catch (error) {
     console.error('Error processing webhook event:', error);
@@ -265,7 +265,7 @@ export async function GET(request, { params }) {
           user,
           isDemo: isUsingMockData
         });
-        
+
       case 'wallet/balance':
         const currentUser = await getCurrentUser();
         if (!currentUser) {
@@ -275,35 +275,35 @@ export async function GET(request, { params }) {
           balance_tc: currentUser.wallet_balance_tc || 0,
           formatted: `${currentUser.wallet_balance_tc || 0} TC`
         });
-        
+
       case 'pact/wallet':
         const { searchParams } = new URL(request.url);
         const tribeId = searchParams.get('tribe_id');
         if (!tribeId) {
           return NextResponse.json({ error: 'tribe_id required' }, { status: 400 });
         }
-        
+
         const pactWallet = await getPactWallet(tribeId);
         return NextResponse.json(pactWallet || { balance_tc: 0, goal_label: 'Equipment Fund' });
-        
+
       case 'pact/transactions':
         const walletId = new URL(request.url).searchParams.get('wallet_id');
         if (!walletId) {
           return NextResponse.json({ error: 'wallet_id required' }, { status: 400 });
         }
-        
+
         const transactions = await getPactTransactions(walletId);
         return NextResponse.json(transactions);
-        
+
       case 'pact/ledger':
         const ledgerTribeId = new URL(request.url).searchParams.get('tribe_id');
         if (!ledgerTribeId) {
           return NextResponse.json({ error: 'tribe_id required' }, { status: 400 });
         }
-        
+
         const wallet = await getPactWallet(ledgerTribeId);
         const txHistory = wallet ? await getPactTransactions(wallet.id) : [];
-        
+
         // Get spend requests
         let spendRequests = [];
         if (isUsingMockData) {
@@ -316,54 +316,54 @@ export async function GET(request, { params }) {
             .order('created_at', { ascending: false });
           spendRequests = data || [];
         }
-        
+
         return NextResponse.json({
           wallet,
           transactions: txHistory,
           spend_requests: spendRequests
         });
-        
+
       case 'notifications':
         if (isUsingMockData) {
           return NextResponse.json(mockData.notifications.slice(-10));
         }
-        
+
         // Get notifications for current user
         const authUser = await getCurrentUser();
         if (!authUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         const { data: notifications } = await supabase
           .from('notifications')
           .select('*')
           .eq('user_id', authUser.id)
           .order('created_at', { ascending: false })
           .limit(10);
-          
+
         return NextResponse.json(notifications || []);
-        
+
       case 'tribes':
         const userForTribes = await getCurrentUser();
         if (!userForTribes) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         const userTribes = await getUserTribes(userForTribes.id);
         return NextResponse.json(userTribes);
-        
+
       case 'exercises':
         if (isUsingMockData) {
           return NextResponse.json(mockData.exercises);
         }
-        
+
         const { data: exercises } = await supabase
           .from('exercises')
           .select('*')
           .order('name');
-          
+
         return NextResponse.json(exercises || []);
-        
+
       case 'workout/today':
         // Return today's workout plan
         if (isUsingMockData) {
@@ -373,7 +373,7 @@ export async function GET(request, { params }) {
             day: 'monday' // Mock today as Monday
           });
         }
-        
+
         // For real implementation, get user's active program
         // This would typically look at user's current program and day of week
         const { data: defaultPrograms } = await supabase
@@ -381,24 +381,24 @@ export async function GET(request, { params }) {
           .select('*')
           .eq('public', true)
           .limit(1);
-          
+
         const { data: allExercises } = await supabase
           .from('exercises')
           .select('*');
-        
+
         return NextResponse.json({
           program: defaultPrograms?.[0] || null,
           exercises: allExercises || [],
           day: 'monday' // Could be computed from current day
         });
-        
+
       case 'posts/feed':
         const feedTribeId = new URL(request.url).searchParams.get('tribe_id');
-        
+
         if (isUsingMockData) {
           return NextResponse.json(mockData.posts);
         }
-        
+
         let postsQuery = supabase
           .from('posts')
           .select(`
@@ -407,18 +407,18 @@ export async function GET(request, { params }) {
           `)
           .order('created_at', { ascending: false })
           .limit(20);
-          
+
         if (feedTribeId) {
           postsQuery = postsQuery.eq('tribe_id', feedTribeId);
         }
-        
+
         const { data: posts } = await postsQuery;
         return NextResponse.json(posts || []);
-        
+
       case 'coach/list':
         const lang = new URL(request.url).searchParams.get('lang') || 'en';
         const goal = new URL(request.url).searchParams.get('goal');
-        
+
         if (isUsingMockData) {
           let coaches = mockData.coach_profiles.filter(c => c.tier !== 'candidate');
           if (goal) {
@@ -429,7 +429,7 @@ export async function GET(request, { params }) {
             user: mockData.users.find(u => u.id === coach.user_id)
           })));
         }
-        
+
         let coachQuery = supabase
           .from('coach_profiles')
           .select(`
@@ -438,46 +438,46 @@ export async function GET(request, { params }) {
           `)
           .in('tier', ['certified', 'pro'])
           .order('rating_avg', { ascending: false });
-          
+
         if (goal) {
           coachQuery = coachQuery.contains('specialties', [goal]);
         }
-        
+
         const { data: coaches } = await coachQuery;
         return NextResponse.json(coaches || []);
-        
+
       case 'coach/offerings':
         const coachId = new URL(request.url).searchParams.get('coach_id');
         if (!coachId) {
           return NextResponse.json({ error: 'coach_id required' }, { status: 400 });
         }
-        
+
         if (isUsingMockData) {
           const offerings = mockData.coach_offerings.filter(o => o.coach_id === coachId);
           return NextResponse.json(offerings);
         }
-        
+
         const { data: offerings } = await supabase
           .from('coach_offerings')
           .select('*')
           .eq('coach_id', coachId)
           .eq('active', true);
-          
+
         return NextResponse.json(offerings || []);
 
       case 'catalog/list':
         if (isUsingMockData) {
           return NextResponse.json({ items: mockData.catalog_items });
         }
-        
+
         const { data: catalogItems } = await supabase
           .from('catalog_items')
           .select('*')
           .eq('active', true)
           .order('category, title');
-          
+
         return NextResponse.json({ items: catalogItems || [] });
-        
+
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
@@ -496,20 +496,20 @@ export async function POST(request, { params }) {
 
   try {
     const body = await request.json();
-    
+
     switch (path) {
       case 'skip':
         const { userId, method, tribeId = '10000000-0000-0000-0000-000000000001' } = body;
         let baseFee = parseInt(process.env.DEAL_SKIP_FEE_TC || process.env.SKIP_FEE_TC || '2'); // Default: 2 TC for squads
         const donationPct = parseFloat(process.env.DEAL_DONATION_PCT || '0.10');
         const dealSplitEnabled = process.env.FEATURE_DEAL_SPLIT === 'true';
-        
+
         // Get user and validate
         const user = await getUserById(userId) || (isUsingMockData ? mockData.users[0] : null);
         if (!user) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
-        
+
         // Check if USER belongs to a tribe (not just if the group is a tribe)
         // Pricing is based on the user's membership status:
         // - User in a tribe: 1 TC (tribe member discount)
@@ -520,20 +520,20 @@ export async function POST(request, { params }) {
           || Boolean(user.settings?.active_tribe_id);
         // Beast-stage evolution perk: skip fees -1 TC
         const isBeast = Number(storeUser?.total_workouts || 0) >= 15;
-        
+
         // Apply tribe member discount: 1 TC for tribe members, 2 TC for others
         // Beast perk reduces it further (floor of 0 = free skip for legends of the tribe)
         const feeTc = Math.max(0, (userInTribe ? 1 : 2) - (isBeast ? 1 : 0));
-        
+
         // Check sufficient balance for pay method
         if (method === 'pay' && user.wallet_balance_tc < feeTc) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Insufficient TribeCoins',
             needed: feeTc,
-            current: user.wallet_balance_tc 
+            current: user.wallet_balance_tc
           }, { status: 402 });
         }
-        
+
         // Get or create pact wallet
         const pactWallet = await getOrCreateTribeWallet(tribeId);
         if (!pactWallet) {
@@ -543,22 +543,22 @@ export async function POST(request, { params }) {
         // Get tribe members for deal split
         const tribeMembers = await listTribeMembers(tribeId);
         const activeMembers = tribeMembers.filter(member => member.id !== user.id); // Exclude skipper
-        
+
         // Process the skip
         let updatedUser = user;
         let splitResults = [];
-        
+
         if (method === 'pay') {
           // Deduct from user wallet
           updatedUser = await adjustWalletTc(user.id, feeTc, 'subtract');
-          
+
           // 80/20 SPLIT: 80% to members' snatched balance, 20% to tribe vault
           if (activeMembers.length > 0) {
             // Calculate split amounts
             const vaultAmount = Math.round(feeTc * 0.20); // 20% to tribe vault
             const membersTotal = feeTc - vaultAmount; // 80% to members
             const splitPerMember = Math.floor(membersTotal / activeMembers.length);
-            
+
             // Add 20% to tribe vault (pact_balance_tc)
             if (!isUsingMockData) {
               const client = supabaseAdmin || supabase;
@@ -570,7 +570,7 @@ export async function POST(request, { params }) {
                 .single();
               await client
                 .from('pact_wallets')
-                .update({ 
+                .update({
                   balance_tc: (pw?.balance_tc || 0) + vaultAmount,
                   updated_at: new Date().toISOString()
                 })
@@ -578,26 +578,26 @@ export async function POST(request, { params }) {
             } else {
               pactWallet.balance_tc = (pactWallet.balance_tc || 0) + vaultAmount;
             }
-            
+
             // Split 80% among active members to their SNATCHED balance
             for (const member of activeMembers) {
               // Credit each member's SNATCHED wallet (not regular wallet)
               await adjustSnatchedTc(member.id, splitPerMember, 'add');
-              
+
               // Record the split transaction
               await insertPactTx(
                 pactWallet.id,
                 member.id,
                 'skip_split',
                 splitPerMember,
-                { 
+                {
                   from_user: user.id,
                   skipper_name: user.name,
                   method: 'snatched_split',
-                  tribe_id: tribeId 
+                  tribe_id: tribeId
                 }
               );
-              
+
               splitResults.push({
                 member_id: member.id,
                 member_name: member.name,
@@ -605,7 +605,7 @@ export async function POST(request, { params }) {
                 wallet_type: 'snatched'
               });
             }
-            
+
             // Record vault contribution
             await insertPactTx(
               pactWallet.id,
@@ -614,7 +614,7 @@ export async function POST(request, { params }) {
               vaultAmount,
               { method: 'skip_fee_vault', tribe_id: tribeId, split_ratio: '20%' }
             );
-            
+
           } else {
             // No active members - all goes to tribe vault
             if (!isUsingMockData) {
@@ -626,7 +626,7 @@ export async function POST(request, { params }) {
                 .single();
               await client
                 .from('pact_wallets')
-                .update({ 
+                .update({
                   balance_tc: (pw?.balance_tc || 0) + feeTc,
                   updated_at: new Date().toISOString()
                 })
@@ -635,7 +635,7 @@ export async function POST(request, { params }) {
               pactWallet.balance_tc = (pactWallet.balance_tc || 0) + feeTc;
             }
           }
-          
+
           // Record payment
           if (!isUsingMockData) {
             const client = supabaseAdmin || supabase;
@@ -651,7 +651,7 @@ export async function POST(request, { params }) {
               });
           }
         }
-        
+
         // Record main pact transaction
         const transaction = await insertPactTx(
           pactWallet.id,
@@ -660,26 +660,26 @@ export async function POST(request, { params }) {
           feeTc,
           { method, tribe_id: tribeId, split_enabled: dealSplitEnabled }
         );
-        
+
         // Enhanced notifications for 80/20 split
         let notifications = [];
         if (user.settings?.snitch) {
           if (method === 'pay' && splitResults.length > 0) {
             // Send notifications for 80/20 split
-            
+
             // To skipper - let them know their payment powered up the tribe
-            const skipperMsg = `💰 ${feeTc} TC split! ${splitResults.length} tribe members got ${splitResults[0]?.amount_received || 0} TC each (snatched) 🎯`;
-            
+            const skipperMsg = ` ${feeTc} TC split! ${splitResults.length} tribe members got ${splitResults[0]?.amount_received || 0} TC each (snatched) `;
+
             notifications.push({
               type: 'skip_split_skipper',
               message: skipperMsg,
               recipients: [user.id]
             });
-            
+
             // To each recipient - let them know they got snatched TC
             for (const result of splitResults) {
-              const recipientMsg = `🎁 ${user.name} skipped! You snatched ${result.amount_received} TC! 💪`;
-              
+              const recipientMsg = ` ${user.name} skipped! You snatched ${result.amount_received} TC! `;
+
               notifications.push({
                 type: 'skip_split_received',
                 message: recipientMsg,
@@ -704,7 +704,7 @@ export async function POST(request, { params }) {
             }
           }
         }
-        
+
         // Broadcast skip event to all tribe members for real-time updates
         if (method === 'pay' && splitResults.length > 0) {
           broadcastToGroup({
@@ -720,7 +720,7 @@ export async function POST(request, { params }) {
             }
           });
         }
-        
+
         return NextResponse.json({
           success: true,
           transaction,
@@ -738,38 +738,38 @@ export async function POST(request, { params }) {
           pact_balance: pactWallet.balance_tc,
           donation_pool: pactWallet.donation_pool_tc || 0
         });
-        
+
       case 'wallet/topup':
         // amountTc = TribeCoins to credit; amount = fiat charged in `currency`
         const { amountTc, amount: fiatAmount, currency = 'USD' } = body;
         const targetUser = await getCurrentUser();
-        
+
         if (!targetUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!amountTc || amountTc <= 0) {
           return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
         }
-        
+
         if (stripe) {
           // Real Stripe integration - charge the fiat amount, credit the TC amount
           const chargeAmount = Number(fiatAmount ?? amountTc);
           const zeroDecimal = ['jpy', 'krw', 'vnd'].includes(currency.toLowerCase());
           const amountCents = zeroDecimal ? Math.round(chargeAmount) : Math.round(chargeAmount * 100);
-          
+
           try {
             const paymentIntent = await stripe.paymentIntents.create({
               amount: amountCents,
               currency: currency.toLowerCase(),
               automatic_payment_methods: { enabled: true },
-              metadata: { 
+              metadata: {
                 user_id: targetUser.id,
                 amount_tc: String(amountTc),
                 type: 'topup'
               }
             });
-            
+
             return NextResponse.json({
               client_secret: paymentIntent.client_secret,
               payment_intent_id: paymentIntent.id,
@@ -778,7 +778,7 @@ export async function POST(request, { params }) {
             });
           } catch (stripeError) {
             console.error('Stripe error:', stripeError);
-            return NextResponse.json({ 
+            return NextResponse.json({
               error: 'Payment processing failed',
               message: stripeError.message
             }, { status: 500 });
@@ -803,37 +803,37 @@ export async function POST(request, { params }) {
             mock_mode: true
           });
         }
-        
+
       case 'stripe/webhook':
         if (!stripe) {
           return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 });
         }
-        
+
         const sig = request.headers.get('stripe-signature');
         const rawBody = await request.text();
-        
+
         try {
           const event = stripe.webhooks.constructEvent(
             rawBody,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
           );
-          
+
           // Check if we've already processed this event
           const shouldProcess = await processWebhookEvent(event.id, event.type, event.data);
           if (!shouldProcess) {
             return NextResponse.json({ received: true, processed: false });
           }
-          
+
           if (event.type === 'payment_intent.succeeded') {
             const paymentIntent = event.data.object;
             const userId = paymentIntent.metadata?.user_id;
             const amountTc = Number(paymentIntent.metadata?.amount_tc || 0);
-            
+
             if (userId && amountTc > 0) {
               // Credit user's wallet
               await adjustWalletTc(userId, amountTc, 'add');
-              
+
               // Record payment
               const client = supabaseAdmin || supabase;
               await client
@@ -849,81 +849,81 @@ export async function POST(request, { params }) {
                 });
             }
           }
-          
+
           return NextResponse.json({ received: true, processed: true });
         } catch (err) {
           console.error('Webhook signature verification failed:', err.message);
-          return NextResponse.json({ 
-            error: 'Webhook signature verification failed' 
+          return NextResponse.json({
+            error: 'Webhook signature verification failed'
           }, { status: 400 });
         }
-        
+
       case 'tribe/create':
         const { name, description = '' } = body;
         const owner = await getCurrentUser();
-        
+
         if (!owner) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!name || name.trim().length === 0) {
           return NextResponse.json({ error: 'Tribe name required' }, { status: 400 });
         }
-        
+
         try {
           const newTribe = await createTribe(owner.id, name.trim(), description.trim());
           return NextResponse.json({ tribe: newTribe, invite_code: newTribe.invite_code });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to create tribe',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'tribe/join':
         const { inviteCode } = body;
         const joiner = await getCurrentUser();
-        
+
         if (!joiner) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!inviteCode) {
           return NextResponse.json({ error: 'Invite code required' }, { status: 400 });
         }
-        
+
         try {
           const result = await joinByCode(joiner.id, inviteCode.trim());
           if (!result) {
             return NextResponse.json({ error: 'Invalid invite code' }, { status: 404 });
           }
-          
-          return NextResponse.json({ 
+
+          return NextResponse.json({
             tribe: result,
             already_member: result.alreadyMember || false
           });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to join tribe',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'tribe/switch':
         const { tribeId: switchTribeId } = body;
         const switchUser = await getCurrentUser();
-        
+
         if (!switchUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           // Update user's active tribe
-          const newSettings = { 
-            ...switchUser.settings, 
-            active_tribe_id: switchTribeId 
+          const newSettings = {
+            ...switchUser.settings,
+            active_tribe_id: switchTribeId
           };
-          
+
           if (isUsingMockData) {
             const mockUser = mockData.users.find(u => u.id === switchUser.id);
             if (mockUser) {
@@ -935,23 +935,23 @@ export async function POST(request, { params }) {
               .update({ settings: newSettings })
               .eq('id', switchUser.id);
           }
-          
+
           return NextResponse.json({ success: true, active_tribe_id: switchTribeId });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to switch tribe',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'workout/start':
         const { programId } = body;
         const workoutUser = await getCurrentUser();
-        
+
         if (!workoutUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           // Create new session
           const sessionData = {
@@ -960,7 +960,7 @@ export async function POST(request, { params }) {
             date: new Date().toISOString().split('T')[0],
             completed: false
           };
-          
+
           if (isUsingMockData) {
             const session = {
               id: `session-${Date.now()}`,
@@ -975,20 +975,20 @@ export async function POST(request, { params }) {
               .insert(sessionData)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ session });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to start workout',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'workout/set':
         const { sessionId, exerciseId, load_kg, reps_done, rpe, ai_rep_count } = body;
-        
+
         try {
           const setData = {
             session_id: sessionId,
@@ -999,7 +999,7 @@ export async function POST(request, { params }) {
             ai_rep_count: ai_rep_count || null,
             set_number: 1 // This should be incremented based on existing sets
           };
-          
+
           if (isUsingMockData) {
             const set = {
               id: `set-${Date.now()}`,
@@ -1013,31 +1013,31 @@ export async function POST(request, { params }) {
               .insert(setData)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ set });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to log set',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'workout/finish':
         const { sessionId: finishSessionId, duration_s, kcal } = body;
-        
+
         try {
           const updateData = {
             completed: true,
             duration_s: duration_s || null,
             kcal: kcal || null
           };
-          
+
           if (isUsingMockData) {
-            return NextResponse.json({ 
-              success: true, 
-              session: { id: finishSessionId, ...updateData } 
+            return NextResponse.json({
+              success: true,
+              session: { id: finishSessionId, ...updateData }
             });
           } else {
             const { data: session, error } = await (supabaseAdmin || supabase)
@@ -1046,27 +1046,27 @@ export async function POST(request, { params }) {
               .eq('id', finishSessionId)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ success: true, session });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to finish workout',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'workout/shrink':
         const { minutes } = body;
-        
+
         if (!minutes || minutes <= 0) {
           return NextResponse.json({ error: 'Invalid minutes' }, { status: 400 });
         }
-        
+
         // Simple shrinking algorithm: reduce sets and rest times
         const shrinkFactor = Math.max(0.5, minutes / 45); // Assume 45min default
-        
+
         if (isUsingMockData) {
           const originalPlan = mockData.programs[0].days.monday;
           const shrunkenPlan = {
@@ -1077,28 +1077,28 @@ export async function POST(request, { params }) {
               rest_s: Math.floor(ex.rest_s * 0.75) // Reduce rest time
             }))
           };
-          
-          return NextResponse.json({ 
+
+          return NextResponse.json({
             original_minutes: 45,
             target_minutes: minutes,
             shrunk_plan: shrunkenPlan
           });
         }
-        
+
         // For real implementation, this would fetch user's current plan and shrink it
-        return NextResponse.json({ 
+        return NextResponse.json({
           message: 'Workout shrinking not fully implemented yet',
           target_minutes: minutes
         });
-        
+
       case 'posts/create':
         const { tribeId: postTribeId, media_url, caption } = body;
         const postUser = await getCurrentUser();
-        
+
         if (!postUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           const postData = {
             user_id: postUser.id,
@@ -1106,7 +1106,7 @@ export async function POST(request, { params }) {
             media_url: media_url || null,
             caption: caption || ''
           };
-          
+
           if (isUsingMockData) {
             const post = {
               id: `post-${Date.now()}`,
@@ -1123,45 +1123,45 @@ export async function POST(request, { params }) {
               .insert(postData)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ post });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to create post',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'pact/spend/request':
         const { type, label, amount_tc, gym_name, item_id, specs } = body;
         const requester = await getCurrentUser();
-        
+
         if (!requester) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!type || !label || !amount_tc) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        
+
         // Only allow donation requests when FEATURE_DEAL_SPLIT is enabled
         if (process.env.FEATURE_DEAL_SPLIT === 'true' && type !== 'donation') {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Only donation requests are supported. Gear purchases are now direct buys.',
             redirect: '/api/catalog/buy'
           }, { status: 400 });
         }
-        
+
         // Get user's active tribe wallet
         const activeTribeId = requester.settings?.active_tribe_id || '10000000-0000-0000-0000-000000000001'; // Default to mock tribe
-        
+
         const requestWallet = await getPactWallet(activeTribeId);
         if (!requestWallet) {
           return NextResponse.json({ error: 'Tribe wallet not found' }, { status: 404 });
         }
-        
+
         try {
           const requestData = {
             wallet_id: requestWallet.id,
@@ -1174,7 +1174,7 @@ export async function POST(request, { params }) {
             created_by: requester.id,
             status: 'requested'
           };
-          
+
           if (isUsingMockData) {
             const request = {
               id: `req-${Date.now()}`,
@@ -1189,25 +1189,25 @@ export async function POST(request, { params }) {
               .insert(requestData)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ success: true, request });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to create spend request',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'pact/spend/approve':
         const { requestId } = body;
         const approver = await getCurrentUser();
-        
+
         if (!approver) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           // Find the request
           let spendRequest;
@@ -1221,27 +1221,27 @@ export async function POST(request, { params }) {
               .single();
             spendRequest = data;
           }
-          
+
           if (!spendRequest) {
             return NextResponse.json({ error: 'Request not found' }, { status: 404 });
           }
-          
+
           if (spendRequest.status !== 'requested') {
             return NextResponse.json({ error: 'Request already processed' }, { status: 400 });
           }
-          
+
           // Update request status
           if (isUsingMockData) {
             spendRequest.status = 'approved';
             spendRequest.approved_by = approver.id;
             spendRequest.approved_at = new Date().toISOString();
-            
+
             // Deduct from pact wallet
             const wallet = mockData.pact_wallets.find(w => w.id === spendRequest.wallet_id);
             if (wallet) {
               wallet.balance_tc -= spendRequest.amount_tc;
             }
-            
+
             // Add transaction record
             const transaction = {
               id: `tx-${Date.now()}`,
@@ -1249,7 +1249,7 @@ export async function POST(request, { params }) {
               user_id: spendRequest.created_by,
               type: spendRequest.type === 'gear' ? 'spend' : 'donate',
               amount_tc: -spendRequest.amount_tc, // Negative for outgoing
-              meta: { 
+              meta: {
                 request_id: requestId,
                 label: spendRequest.label,
                 gym_name: spendRequest.gym_name
@@ -1267,7 +1267,7 @@ export async function POST(request, { params }) {
                 approved_at: new Date().toISOString()
               })
               .eq('id', requestId);
-              
+
             // Deduct from wallet (read-modify-write; supabase-js v2 has no .raw())
             const { data: spendWallet } = await (supabaseAdmin || supabase)
               .from('pact_wallets')
@@ -1280,7 +1280,7 @@ export async function POST(request, { params }) {
                 balance_tc: Math.max(0, (spendWallet?.balance_tc || 0) - spendRequest.amount_tc)
               })
               .eq('id', spendRequest.wallet_id);
-              
+
             // Add transaction
             await (supabaseAdmin || supabase)
               .from('pact_tx')
@@ -1296,22 +1296,22 @@ export async function POST(request, { params }) {
                 }
               });
           }
-          
+
           return NextResponse.json({ success: true });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to approve request',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'coach/apply':
         const applicant = await getCurrentUser();
-        
+
         if (!applicant) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           // Check eligibility (mock: just check if user exists)
           const applicationData = {
@@ -1319,9 +1319,9 @@ export async function POST(request, { params }) {
             status: 'pending',
             eligibility_score: 75 // Mock score
           };
-          
+
           if (isUsingMockData) {
-            return NextResponse.json({ 
+            return NextResponse.json({
               success: true,
               message: 'Application submitted successfully'
             });
@@ -1331,25 +1331,25 @@ export async function POST(request, { params }) {
               .insert(applicationData)
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ application });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to submit application',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'coach/approve':
         const { userId: approveUserId } = body;
         const adminUser = await getCurrentUser();
-        
+
         if (!adminUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           if (isUsingMockData) {
             // Add to coach profiles
@@ -1369,13 +1369,13 @@ export async function POST(request, { params }) {
             // Update application
             await (supabaseAdmin || supabase)
               .from('coach_applications')
-              .update({ 
+              .update({
                 status: 'approved',
                 reviewer_id: adminUser.id,
                 reviewed_at: new Date().toISOString()
               })
               .eq('user_id', approveUserId);
-              
+
             // Create coach profile
             await (supabaseAdmin || supabase)
               .from('coach_profiles')
@@ -1383,16 +1383,16 @@ export async function POST(request, { params }) {
                 user_id: approveUserId,
                 tier: 'certified'
               });
-              
+
             return NextResponse.json({ success: true });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to approve coach',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'ad/reward':
         // Simulate successful ad watch
         return NextResponse.json({
@@ -1401,26 +1401,26 @@ export async function POST(request, { params }) {
           message: 'Ad watched successfully!',
           can_skip: true
         });
-        
+
       case 'tip':
         const { fromUserId, toUserId, postId, amount, message = '' } = body;
-        
+
         if (!fromUserId || !toUserId || !amount || amount <= 0) {
           return NextResponse.json({ error: 'Invalid tip parameters' }, { status: 400 });
         }
-        
+
         const fromUser = await getUserById(fromUserId);
         if (!fromUser || fromUser.wallet_balance_tc < amount) {
           return NextResponse.json({ error: 'Insufficient balance' }, { status: 402 });
         }
-        
+
         try {
           // Deduct from sender
           await adjustWalletTc(fromUserId, amount, 'subtract');
-          
+
           // Add to recipient
           await adjustWalletTc(toUserId, amount, 'add');
-          
+
           // Record tip
           const client = supabaseAdmin || supabase;
           if (!isUsingMockData) {
@@ -1434,43 +1434,43 @@ export async function POST(request, { params }) {
                 message
               });
           }
-          
+
           return NextResponse.json({ success: true });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to send tip',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'coach/hire':
         const { clientId, coachId: hireCoachId, offeringId, priceTc } = body;
         const hireClient = await getCurrentUser();
-        
+
         if (!hireClient) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!hireCoachId || !priceTc) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        
+
         // Check if client has enough TC
         if (hireClient.wallet_balance_tc < priceTc) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Insufficient TribeCoins',
             needed: priceTc,
-            current: hireClient.wallet_balance_tc 
+            current: hireClient.wallet_balance_tc
           }, { status: 402 });
         }
-        
+
         try {
           // Deduct from client wallet
           await adjustWalletTc(hireClient.id, priceTc, 'subtract');
-          
+
           // Credit coach wallet (in real implementation)
           await adjustWalletTc(hireCoachId, priceTc, 'add');
-          
+
           // Create hire record
           if (isUsingMockData) {
             const hire = {
@@ -1495,33 +1495,33 @@ export async function POST(request, { params }) {
               })
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ success: true, hire });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to hire coach',
             message: error.message
           }, { status: 500 });
         }
-        
+
       case 'coach/rate':
         const { hireId, coachId: rateCoachId, clientId: rateClientId, stars, text: ratingText } = body;
         const ratingUser = await getCurrentUser();
-        
+
         if (!ratingUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         if (!hireId || !rateCoachId || !stars) {
           return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        
+
         if (stars < 1 || stars > 5) {
           return NextResponse.json({ error: 'Stars must be between 1-5' }, { status: 400 });
         }
-        
+
         try {
           if (isUsingMockData) {
             const rating = {
@@ -1534,7 +1534,7 @@ export async function POST(request, { params }) {
               created_at: new Date().toISOString()
             };
             mockData.coach_ratings.push(rating);
-            
+
             // Update coach avg rating
             const coachProfile = mockData.coach_profiles.find(p => p.user_id === rateCoachId);
             if (coachProfile) {
@@ -1543,7 +1543,7 @@ export async function POST(request, { params }) {
               coachProfile.rating_avg = Math.round(avgRating * 10) / 10;
               coachProfile.rating_count = coachRatings.length;
             }
-            
+
             return NextResponse.json({ success: true, rating });
           } else {
             const { data: rating, error } = await (supabaseAdmin || supabase)
@@ -1557,17 +1557,17 @@ export async function POST(request, { params }) {
               })
               .select()
               .single();
-              
+
             if (error) throw error;
             return NextResponse.json({ success: true, rating });
           }
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to rate coach',
             message: error.message
           }, { status: 500 });
         }
-        
+
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
@@ -1583,20 +1583,20 @@ export async function POST(request, { params }) {
 
 export async function PUT(request, { params }) {
   const path = params.path ? params.path.join('/') : '';
-  
+
   try {
     const body = await request.json();
-    
+
     switch (path) {
       case 'user/settings':
         const user = await getCurrentUser();
         if (!user) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         // Update user settings
         const newSettings = { ...user.settings, ...body };
-        
+
         if (isUsingMockData) {
           const mockUser = mockData.users.find(u => u.id === user.id);
           if (mockUser) {
@@ -1607,20 +1607,20 @@ export async function PUT(request, { params }) {
             .from('users')
             .update({ settings: newSettings })
             .eq('id', user.id);
-            
+
           if (error) throw error;
         }
-        
+
         return NextResponse.json({ success: true, settings: newSettings });
-        
+
       case 'notifications/read':
         const { notificationIds } = body;
         const notifUser = await getCurrentUser();
-        
+
         if (!notifUser) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         try {
           if (isUsingMockData) {
             mockData.notifications.forEach(n => {
@@ -1635,21 +1635,21 @@ export async function PUT(request, { params }) {
               .in('id', notificationIds)
               .eq('user_id', notifUser.id);
           }
-          
+
           return NextResponse.json({ success: true });
         } catch (error) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Failed to mark notifications as read',
             message: error.message
           }, { status: 500 });
         }
-        
+
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       message: error.message
     }, { status: 500 });

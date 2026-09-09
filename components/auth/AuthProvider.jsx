@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem('tribefit_user', JSON.stringify(userData));
       setUser(userData);
-      toast.success('Welcome to TribeFit! 🎉');
+      toast.success('Welcome to TribeFit! ');
       return { success: true };
     } catch (error) {
       toast.error(error.message || 'Login failed');
@@ -94,14 +94,14 @@ export const AuthProvider = ({ children }) => {
           group_type: null,
           created_at: new Date().toISOString()
         };
-        
+
         // Add user to database (for dev mode)
         try {
           await fetch('/api/dev/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              action: 'create', 
+            body: JSON.stringify({
+              action: 'create',
               name: name,
               userId: userId,
               initialData: userData
@@ -110,10 +110,10 @@ export const AuthProvider = ({ children }) => {
         } catch (dbError) {
           console.log('Note: Could not add to database, but user created locally');
         }
-        
+
         localStorage.setItem('tribefit_user', JSON.stringify(userData));
         setUser(userData);
-        toast.success('Account created successfully! Welcome! 🎉');
+        toast.success('Account created successfully! Welcome! ');
         return { success: true };
       } else {
         throw new Error('All fields are required');

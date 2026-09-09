@@ -16,8 +16,8 @@ export async function POST(request) {
 
     try {
       const motivationResponse = await getAIMotivation(userContext);
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         success: true,
         message: motivationResponse.message,
         for_user: motivationResponse.for_user,
@@ -32,40 +32,40 @@ export async function POST(request) {
 
     } catch (aiError) {
       console.error('AI Motivation failed:', aiError);
-      
+
       // Provide motivational fallback messages based on context
       const fallbackMessages = {
         highStreak: [
-          `🔥 ${streakDays} days strong! You're building an unstoppable habit, ${userName}!`,
-          `💪 ${streakDays}-day streak? You're officially a fitness warrior! Keep dominating!`,
-          `🏆 ${streakDays} days of consistency = champions mindset. Don't break the chain!`
+          ` ${streakDays} days strong! You're building an unstoppable habit, ${userName}!`,
+          ` ${streakDays}-day streak? You're officially a fitness warrior! Keep dominating!`,
+          ` ${streakDays} days of consistency = champions mindset. Don't break the chain!`
         ],
         mediumStreak: [
-          `💯 ${streakDays} days down! You're in the momentum zone, ${userName}. Keep pushing!`,
-          `🚀 ${streakDays} days of showing up. That's the discipline of greatness right there!`,
-          `⚡ ${streakDays} days strong! Your future self is already thanking you!`
+          ` ${streakDays} days down! You're in the momentum zone, ${userName}. Keep pushing!`,
+          ` ${streakDays} days of showing up. That's the discipline of greatness right there!`,
+          ` ${streakDays} days strong! Your future self is already thanking you!`
         ],
         lowStreak: [
-          `🌟 Every champion started with day 1. You're building something amazing, ${userName}!`,
-          `💪 Progress isn't about perfection, it's about consistency. You've got this!`,
-          `🔥 Small steps, big dreams. Each workout brings you closer to your goals!`
+          ` Every champion started with day 1. You're building something amazing, ${userName}!`,
+          ` Progress isn't about perfection, it's about consistency. You've got this!`,
+          ` Small steps, big dreams. Each workout brings you closer to your goals!`
         ],
         restart: [
-          `🎯 Fresh start, fresh energy! Today is perfect for crushing your ${goal} goals!`,
-          `💪 Champions don't stay down. Time to show your tribe what you're made of!`,
-          `⚡ New day, new opportunity to be stronger than yesterday!`
+          ` Fresh start, fresh energy! Today is perfect for crushing your ${goal} goals!`,
+          ` Champions don't stay down. Time to show your tribe what you're made of!`,
+          ` New day, new opportunity to be stronger than yesterday!`
         ]
       };
-      
+
       let messageCategory = 'restart';
       if (streakDays >= 7) messageCategory = 'highStreak';
       else if (streakDays >= 3) messageCategory = 'mediumStreak';
       else if (streakDays > 0) messageCategory = 'lowStreak';
-      
+
       const messages = fallbackMessages[messageCategory];
       const selectedMessage = messages[Math.floor(Math.random() * messages.length)];
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         success: true,
         message: selectedMessage,
         for_user: userName,

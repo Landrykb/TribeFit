@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useApi, optimisticMutate } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Calendar, Users, Trophy, TrendingUp, Zap, Bell, Settings, 
-  Globe, Moon, Sun, LogOut, Plus, Heart, Share, Camera, 
+  Calendar, Users, Trophy, TrendingUp, Zap, Bell, Settings,
+  Globe, Moon, Sun, LogOut, Plus, Heart, Share, Camera,
   Vote, CheckCircle, XCircle, Clock, Play, Pause, SkipForward, FastForward,
   UserPlus, Award, Star, Crown, Flame, ArrowUp, Coins, Gift,
   MapPin, Target, Dumbbell, Timer, Check, X, Tv, Home, Rss, User, CalendarClock, Shield, Bot, Sparkles, Send,
@@ -45,6 +45,8 @@ import { ProfileCustomization, ProfileIcons } from '../components/ProfileCustomi
 import { AvatarStudio } from '../components/AvatarStudio';
 import { DailyVersus } from '../components/DailyVersus';
 import { ReactionGlyph } from '../components/ReactionIcons';
+import { REACTION_TYPES } from '../components/ReactionTypes';
+import { BigReactionOverlay } from '../components/BigReactionOverlay';
 import { BlobBackground } from '../components/BlobBackground';
 import { StreakRing } from '../components/StreakRing';
 import { CoachMarketplace } from '../components/CoachMarketplace';
@@ -60,8 +62,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const { user, logout, isAuthenticated, updateUser } = useAuth();
   const toast = useToast();
   const { t, language, setLanguage, availableLanguages, getRandomSkipMessage } = useTranslation();
-  
-  
+
+
   const [activeTab, setActiveTab] = useState('home');
   const [loading, setLoading] = useState(!isAuthenticated);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -100,7 +102,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     const g = all.find(t => t.id === selectedTribe);
     return g?.group_type === 'tribe';
   }, [selectedTribe, tribes, squads]);
-  
+
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showWorkoutSession, setShowWorkoutSession] = useState(false);
@@ -182,10 +184,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     }
   };
   // Notifications reactions
-  const [notifReactions, setNotifReactions] = useState({}); // { [notifId]: { [emoji]: { count, my } } }
-  const [showEmojiPickerFor, setShowEmojiPickerFor] = useState(null); // notifId or null
-  const defaultReactions = ['👍','😂','👀','💀','🔥','😴','🪶'];
-  const [reactionBurst, setReactionBurst] = useState(null); // { id, emoji, ts }
+  const [notifReactions, setNotifReactions] = useState({}); // { [notifId]: { [type]: { count, my } } }
+  const [showReactionPickerFor, setShowReactionPickerFor] = useState(null); // notifId or null
+  const defaultReactions = REACTION_TYPES.map(r => r.type);
+  const [reactionBurst, setReactionBurst] = useState(null); // { id, type, ts }
+  const [bigReaction, setBigReaction] = useState(null); // { type, from_user_name, to_user_name }
   // Schedules and reminder state
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [currentReminder, setCurrentReminder] = useState(null);
@@ -343,24 +346,24 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // Removed URL-param catch-up handler; modal flow only
 
   // Toggle reaction on a notification (Slack-like)
-  const toggleReaction = async (notifId, emoji) => {
+  const toggleReaction = async (notifId, reactionType) => {
     const myId = effectiveUserId || 'anon';
-    const hasMy = !!notifReactions?.[notifId]?.[emoji]?.my;
+    const hasMy = !!notifReactions?.[notifId]?.[reactionType]?.my;
     const action = hasMy ? 'remove' : 'add';
     setNotifReactions((prev) => {
       const p = { ...(prev || {}) };
       const row = { ...(p[notifId] || {}) };
-      const entry = { count: (row[emoji]?.count || 0), my: !!row[emoji]?.my };
+      const entry = { count: (row[reactionType]?.count || 0), my: !!row[reactionType]?.my };
       if (action === 'add') { entry.count += 1; entry.my = true; } else { entry.count = Math.max(0, entry.count - 1); entry.my = false; }
-      row[emoji] = entry; p[notifId] = row; return p;
+      row[reactionType] = entry; p[notifId] = row; return p;
     });
     try {
       // fun burst animation
-      setReactionBurst({ id: notifId, emoji, ts: Date.now() });
+      setReactionBurst({ id: notifId, type: reactionType, ts: Date.now() });
       setTimeout(() => setReactionBurst(null), 700);
       await fetch('/api/events/broadcast', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: selectedTribe || 'default', type: 'notif_reaction', originUserId: myId, data: { notificationId: notifId, emoji, action } })
+        body: JSON.stringify({ groupId: selectedTribe || 'default', type: 'notif_reaction', originUserId: myId, data: { notificationId: notifId, reactionType, action } })
       });
     } catch (_) {}
   };
@@ -420,7 +423,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       toast.error('Failed to vote');
     }
   };
-  
+
   // Governance UI helpers
   const openProposeMode = () => {
     const opposite = skipMode === 'tribe_fund' ? 'teammate_boost' : 'tribe_fund';
@@ -713,12 +716,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         fetch('/api/dev/users'),
         fetch('/api/dev/groups')
       ]);
-      
+
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setTestUsers(usersData.users || []);
       }
-      
+
       if (groupsRes.ok) {
         const groupsData = await groupsRes.json();
         setTestGroups(groupsData.groups || []);
@@ -735,7 +738,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create', name })
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         toast.success(`Created user: ${data.user.name}`);
@@ -755,15 +758,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'get', userId })
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         const switchedUser = data.user;
-        
+
         // Update dev override
         setDevUserId(switchedUser.id);
         setDevUserName(switchedUser.name);
-        
+
         // Update auth user to reflect the switched user
         updateUser({
           id: switchedUser.id,
@@ -776,11 +779,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           group_id: switchedUser.group_id,
           group_type: switchedUser.group_type
         });
-        
+
         // Update local balances
         setWalletBalance(switchedUser.wallet_balance_tc || 0);
         setSnatchedBalance(switchedUser.snatched_balance_tc || 0);
-        
+
         toast.success(`Switched to ${switchedUser.name}`);
         loadInitialData();
       }
@@ -795,21 +798,21 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       toast.error('No user selected');
       return;
     }
-    
+
     try {
       const res = await fetch('/api/dev/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'update', 
+        body: JSON.stringify({
+          action: 'update',
           userId: effectiveUserId,
-          updates 
+          updates
         })
       });
-      
+
       if (res.ok) {
         const data = await res.json();
-        
+
         // Update local state immediately for responsive UI
         if (updates.wallet_balance_tc !== undefined) {
           setWalletBalance(updates.wallet_balance_tc);
@@ -817,7 +820,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         if (updates.snatched_balance_tc !== undefined) {
           setSnatchedBalance(updates.snatched_balance_tc);
         }
-        
+
         // Update auth user object if it's the current user
         if (user && user.id === effectiveUserId) {
           updateUser({
@@ -826,7 +829,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             total_workouts: updates.total_workouts !== undefined ? updates.total_workouts : user.total_workouts
           });
         }
-        
+
         toast.success('Stats updated!');
         await loadDevData();
         loadInitialData();
@@ -842,18 +845,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       toast.error('No squad selected');
       return;
     }
-    
+
     try {
       const res = await fetch('/api/dev/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'update_stats', 
+        body: JSON.stringify({
+          action: 'update_stats',
           groupId,
-          updates 
+          updates
         })
       });
-      
+
       if (res.ok) {
         toast.success('Squad stats updated!');
         await loadDevData();
@@ -873,7 +876,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       toast.error('No user selected');
       return null;
     }
-    
+
     try {
       const payload = { userId: effectiveUserId, groupId };
       const res = await fetch('/api/dev/groups', {
@@ -881,7 +884,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         return data;
@@ -1068,23 +1071,23 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // Handle invite links from URL parameters
   useEffect(() => {
     if (typeof window === 'undefined' || !squads.length) return;
-    
+
     const params = new URLSearchParams(window.location.search);
     const squadId = params.get('squad');
-    
+
     if (squadId) {
       const invitedSquad = squads.find(s => s.id === squadId);
-      
+
       if (invitedSquad) {
         // Auto-open squad details modal
         setSelectedSquadForDetails(invitedSquad);
         setShowSquadDetailsModal(true);
-        
+
         // Show friendly toast
         if (!invitedSquad.is_member) {
-          toast.success(`🎉 You've been invited to join ${invitedSquad.name}!`, { duration: 5000 });
+          toast.success(` You've been invited to join ${invitedSquad.name}!`, { duration: 5000 });
         }
-        
+
         // Clean URL (remove squad parameter)
         window.history.replaceState({}, '', window.location.pathname);
       }
@@ -1106,10 +1109,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             ...g,
             is_member: g.members?.includes(effectiveUserId) // Only check members array
           }));
-          
+
           setSquads(allGroups); // Put all in squads array for display
           setTribes([]); // Clear tribes array
-          
+
           // Sync pactBalance with selected tribe's vault
           const currentTribe = allGroups.find((g) => g.id === selectedTribe);
           if (currentTribe) {
@@ -1118,7 +1121,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           } else if (selectedTribe) {
             // Selected tribe not found in loaded groups
           }
-          
+
           if (!allGroups.find((g) => g.id === selectedTribe) && allGroups.length > 0) {
             const firstTribe = allGroups[0];
             setSelectedTribe(firstTribe.id);
@@ -1311,23 +1314,23 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               // New format: split_results array
               const splitResults = Array.isArray(msg.split_results) ? msg.split_results : [];
               const myShare = splitResults.find(r => r.member_id === effectiveUserId);
-              
+
               if (myShare && myShare.amount_received > 0) {
                 setSnatchedBalance(prev => prev + myShare.amount_received);
-                addNotification({ 
-                  title: `${msg.skipper_name || 'Member'} paid to skip`, 
-                  body: `+${myShare.amount_received.toFixed(1)} TC snatched`, 
-                  type: 'snatched' 
+                addNotification({
+                  title: `${msg.skipper_name || 'Member'} paid to skip`,
+                  body: `+${myShare.amount_received.toFixed(1)} TC snatched`,
+                  type: 'snatched'
                 });
                 toast.success(`\ud83c\udf81 ${msg.skipper_name} skipped! You got ${myShare.amount_received.toFixed(1)} TC!`);
               }
-              
+
               // Update vault balance with new total
               if (msg.vault_balance) {
                 setPactBalance(msg.vault_balance);
                 // Also update squads array to keep in sync
-                setSquads(prev => prev.map(s => 
-                  s.id === selectedTribe 
+                setSquads(prev => prev.map(s =>
+                  s.id === selectedTribe
                     ? { ...s, pact_balance_tc: msg.vault_balance, pact_balance: msg.vault_balance }
                     : s
                 ));
@@ -1364,27 +1367,38 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             return;
           }
           if (msg.type === 'notif_reaction') {
-            const { notificationId, emoji, action } = msg;
+            const { notificationId, reactionType, action } = msg;
             setNotifReactions((prev) => {
               const p = { ...(prev || {}) };
               const row = { ...(p[notificationId] || {}) };
-              const entry = { count: (row[emoji]?.count || 0), my: !!row[emoji]?.my };
+              const entry = { count: (row[reactionType]?.count || 0), my: !!row[reactionType]?.my };
               if (action === 'add') entry.count += 1; else entry.count = Math.max(0, entry.count - 1);
-              row[emoji] = entry; p[notificationId] = row; return p;
+              row[reactionType] = entry; p[notificationId] = row; return p;
             });
+            return;
+          }
+          if (msg.type === 'reaction') {
+            const data = msg.data || {};
+            if (data.to_user === effectiveUserId && msg.originUserId !== effectiveUserId) {
+              setBigReaction({
+                type: data.type,
+                from_user_name: data.from_user_name || 'Someone',
+                to_user_name: data.to_user_name || 'you',
+              });
+            }
             return;
           }
           if (msg.type === 'workout_started') {
             if (msg.originUserId !== effectiveUserId) {
               addActiveMember(msg.originUserId, msg.originUserName || 'Member');
-              addNotification({ title: `${msg.originUserName || 'Member'} started a workout`, body: 'Cheer them on! 💪', type: 'activity' });
+              addNotification({ title: `${msg.originUserName || 'Member'} started a workout`, body: 'Cheer them on! ', type: 'activity' });
             }
             return;
           }
           if (msg.type === 'workout_completed') {
             if (msg.originUserId !== effectiveUserId) {
               removeActiveMember(msg.originUserId);
-              addNotification({ title: `${msg.originUserName || 'Member'} finished a workout`, body: '👏 Great job!', type: 'activity' });
+              addNotification({ title: `${msg.originUserName || 'Member'} finished a workout`, body: ' Great job!', type: 'activity' });
             }
             return;
           }
@@ -1423,15 +1437,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       const title = sched.workout || 'Scheduled Workout';
       const m = String(sched.duration || '').match(/(\d+)/);
       const originalDuration = m ? Number(m[1]) : 45;
-      
+
       // Use target minutes if provided (for shrinking), otherwise use original
       const durationMin = targetMinutes || originalDuration;
-      
+
       // Adjust blocks based on target duration
       const block = Math.max(5, Math.round(durationMin / 4));
       const warmupTime = Math.max(3, Math.round(durationMin * 0.15)); // 15% warmup
       const cooldownTime = Math.max(2, Math.round(durationMin * 0.10)); // 10% cooldown
-      
+
       const ex = [
         { name: 'Warm-up', sets: 1, reps: `${warmupTime} min`, restTime: 30, instructions: 'Light cardio + mobility' },
         { name: title, sets: targetMinutes ? Math.max(2, Math.round(3 * (durationMin / originalDuration))) : 3, reps: 12, restTime: 60, instructions: 'Main movement. Focus on form.' },
@@ -1491,7 +1505,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     delete scheduleTimersRef.current[id];
   };
 
-  
+
 
   const scheduleCalendarTimersFromList = (list) => {
     // Clear timers for removed/changed schedules
@@ -1534,7 +1548,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // Poll schedules to capture changes made elsewhere (calendar UI, other tabs)
     const poll = setInterval(() => fetchCalendarToday(), 60000);
     // Refresh when regaining focus or visibility
-    const onVis = () => { 
+    const onVis = () => {
       if (!document.hidden) {
         fetchCalendarToday();
         fetchCustomWorkouts();
@@ -1551,118 +1565,118 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveUserId, selectedTribe]);
 
-  
+
 
   // Snatched contributors now paint from the donors cache above.
 
   const loadTribesAndLeaderboard = async () => {
     // Enhanced mock tribe and squad data with progression system
     const mockTribes = [
-      { 
-        id: '1', 
-        name: 'Founders Tribe', 
+      {
+        id: '1',
+        name: 'Founders Tribe',
         description: 'Elite fitness community of founding members',
         group_type: 'tribe',
-        members: 15, 
+        members: 15,
         member_count: 15,
-        streak_days: 45, 
+        streak_days: 45,
         participation_rate: 89.5,
-        balance: 1250, 
+        balance: 1250,
         pact_balance: 1250,
         rank: 1,
         is_member: true,
         owner_id: user?.id,
         customization_data: { theme_color: 'indigo', logo_url: '/tribe-logos/founders.png' }
       },
-      { 
-        id: '2', 
-        name: 'Elite Warriors', 
+      {
+        id: '2',
+        name: 'Elite Warriors',
         description: 'Premium tribe for dedicated athletes',
         group_type: 'tribe',
-        members: 12, 
+        members: 12,
         member_count: 12,
-        streak_days: 38, 
+        streak_days: 38,
         participation_rate: 92.0,
-        balance: 980, 
+        balance: 980,
         pact_balance: 980,
         rank: 2,
         is_member: false,
         owner_id: 'other-user',
         customization_data: { theme_color: 'red', logo_url: '/tribe-logos/warriors.png' }
       },
-      { 
-        id: '30000000-0000-0000-0000-000000000001', 
-        name: 'Morning Legends', 
+      {
+        id: '30000000-0000-0000-0000-000000000001',
+        name: 'Morning Legends',
         description: 'Early bird workout tribe (auto-upgraded from squad)',
         group_type: 'tribe',
-        members: 6, 
+        members: 6,
         member_count: 6,
-        streak_days: 32, 
+        streak_days: 32,
         participation_rate: 85.5,
-        balance: 450, 
+        balance: 450,
         pact_balance: 450,
         rank: 3,
         is_member: true,
         owner_id: user?.id,
         upgraded_from_squad: true
       },
-      { 
-        id: '30000000-0000-0000-0000-000000000002', 
-        name: 'Iron Hearts', 
+      {
+        id: '30000000-0000-0000-0000-000000000002',
+        name: 'Iron Hearts',
         description: 'Strength training tribe (auto-upgraded)',
         group_type: 'tribe',
-        members: 8, 
+        members: 8,
         member_count: 8,
-        streak_days: 28, 
+        streak_days: 28,
         participation_rate: 78.0,
-        balance: 680, 
+        balance: 680,
         pact_balance: 680,
         rank: 4,
         is_member: false,
         owner_id: 'other-user',
         upgraded_from_squad: true
       },
-      { 
-        id: '30000000-0000-0000-0000-000000000003', 
-        name: 'Cardio Crushers', 
+      {
+        id: '30000000-0000-0000-0000-000000000003',
+        name: 'Cardio Crushers',
         description: 'High-energy cardio squad (ready to upgrade)',
         group_type: 'squad',
-        members: 4, 
+        members: 4,
         member_count: 4,
-        streak_days: 25, 
+        streak_days: 25,
         participation_rate: 88.0,
-        balance: 320, 
+        balance: 320,
         pact_balance: 320,
         rank: 5,
         is_member: false,
         owner_id: 'other-user',
         ready_for_upgrade: true
       },
-      { 
-        id: '30000000-0000-0000-0000-000000000004', 
-        name: 'Fitness Rookies', 
+      {
+        id: '30000000-0000-0000-0000-000000000004',
+        name: 'Fitness Rookies',
         description: 'Beginner-friendly fitness squad',
         group_type: 'squad',
-        members: 4, 
+        members: 4,
         member_count: 4,
-        streak_days: 12, 
+        streak_days: 12,
         participation_rate: 65.0,
-        balance: 180, 
+        balance: 180,
         pact_balance: 180,
         rank: 6,
         is_member: false,
         owner_id: 'other-user'
       },
-      { 
-        id: '3', 
-        name: 'Zen Masters', 
+      {
+        id: '3',
+        name: 'Zen Masters',
         description: 'Mindful fitness and meditation tribe',
         group_type: 'tribe',
-        members: 10, 
+        members: 10,
         member_count: 10,
-        streak_days: 35, 
+        streak_days: 35,
         participation_rate: 75.0,
-        balance: 750, 
+        balance: 750,
         pact_balance: 750,
         rank: 7,
         is_member: false,
@@ -1670,7 +1684,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         customization_data: { theme_color: 'green', logo_url: '/tribe-logos/zen.png' }
       }
     ];
-    
+
     setTribes(mockTribes.filter(t => t.group_type === 'tribe'));
     setSquads(mockTribes.filter(t => t.group_type === 'squad'));
     setLeaderboard(mockTribes);
@@ -1761,22 +1775,22 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const handleShrinkAndStart = (minutes) => {
     // Generate a compressed workout based on user-selected time
     const sched = todaySchedule?.schedule;
-    
+
     // Generate compressed plan
     const compressedPlan = generatePlanFromSchedule(sched, minutes);
-    
+
     setActiveWorkoutData(compressedPlan);
     setShowWorkoutSession(true);
     setShowShrinkModal(false);
-    
-    toast.success(`🎯 ${minutes}-min compressed workout started!`);
+
+    toast.success(` ${minutes}-min compressed workout started!`);
   };
 
   const handleSkip = async (method) => {
     try {
       // Calculate skip cost: 1 TC for tribes, 2 TC for squads (yen-based: 1 TC = ¥100)
       const skipCost = isSelectedTribe ? 1 : 2;
-      
+
       let response, data;
       if (method === 'pay') {
         response = await fetch('/api/skip', {
@@ -1794,20 +1808,20 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         response = { ok: true };
         data = {};
       }
-      
+
       if (response.ok) {
         if (method === 'pay' && data?.balances) {
           setWalletBalance(Number(data.balances.wallet) || 0);
           const newVaultBalance = Number(data.balances.pact) || 0;
           setPactBalance(newVaultBalance);
-          
+
           // Update squads array to keep vault in sync
-          setSquads(prev => prev.map(s => 
-            s.id === selectedTribe 
+          setSquads(prev => prev.map(s =>
+            s.id === selectedTribe
               ? { ...s, pact_balance_tc: newVaultBalance, pact_balance: newVaultBalance }
               : s
           ));
-          
+
           // Update snatched balance if we received a split
           if (data.split_results) {
             const myShare = data.split_results.find(r => r.member_id === effectiveUserId);
@@ -1849,45 +1863,45 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             }
           } catch (_) {}
         } catch (_) {}
-        
-        
+
+
         if (method === 'ad') {
           // Track ad skips and check for abuse
           const newAdSkips = adSkipsThisWeek + 1;
           setAdSkipsThisWeek(newAdSkips);
-          
+
           setShowAdVideo(false);
           setAdProgress(0);
           toast.success(t('skip_ad_success'));
-          
+
           // Deal Breaker Alert on 3rd ad skip - TRIGGER REACTIONS
           if (newAdSkips >= 3 && Features.REACTIONS) {
             toast.error(t('deal_breaker_alert', { count: newAdSkips }));
-            
+
             // Auto-trigger reactions panel for tribe members to react
             setReactionTarget(user);
             setShowReactionsPanel(true);
-            
+
             // Show celebration message encouraging reactions
             setTimeout(() => {
-              toast.info('📺 Deal Breaker Alert! Tribe members can now send reactions 🔥💪😅');
+              toast.info(' Deal Breaker Alert! Tribe members can now send reactions ');
             }, 1000);
           }
-          
+
           // Send snitch notification with ad count
           sendSnitchNotification(user?.name || 'User', method, newAdSkips);
         } else if (method === 'pay') {
           // Show success message with actual fee from API
           const actualFee = data.fee_tc || (user.group_type === 'tribe' ? 1 : 2);
           toast.success(`Paid ${actualFee} TC to skip workout`);
-          
+
           // Show split info if available
           if (data.split_results && data.split_results.length > 0) {
             const perMember = data.split_results[0]?.amount_received || 0;
             const vaultAmount = Math.round(actualFee * 0.20 * 10) / 10;
             setTimeout(() => {
-              toast.info(`💰 Split: ${data.split_results.length} members got ${perMember.toFixed(1)} TC each`);
-              toast.info(`🏛️ Vault: +${vaultAmount} TC`);
+              toast.info(` Split: ${data.split_results.length} members got ${perMember.toFixed(1)} TC each`);
+              toast.info(`️ Vault: +${vaultAmount} TC`);
             }, 500);
           }
 
@@ -1904,7 +1918,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             setPerksCreditsAdded(Number(data.catchUpCredit) || 0);
             setShowSkipPerksModal(true);
           }
-          
+
           // Optional: Allow reactions for paid skips too
           if (Features.REACTIONS && Math.random() > 0.7) { // 30% chance
             setTimeout(() => {
@@ -1912,7 +1926,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               setShowReactionsPanel(true);
             }, 2000);
           }
-          
+
           // Send snitch notification for payment
           sendSnitchNotification(user?.name || 'User', method);
 
@@ -1922,7 +1936,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           } catch (_) {}
           // No client broadcast; server already broadcasts paid_skip
         }
-        
+
         // Split distribution is handled server-side and pushed via SSE to members
       } else {
         toast.error(data.error);
@@ -1936,23 +1950,23 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // Enhanced snitch notification system with ad tracking
   const sendSnitchNotification = async (userName, method, adSkipsThisWeek = 0) => {
     let snitchMessage;
-    
+
     if (method === 'pay') {
       snitchMessage = getRandomSkipMessage(userName);
     } else if (method === 'ad') {
       // Check if user is watching too many ads this week
       const AD_THRESHOLD = (tribeSettings && Number.isFinite(Number(tribeSettings.snitch_ad_threshold))) ? Number(tribeSettings.snitch_ad_threshold) : 3; // Configurable
-      
+
       if (adSkipsThisWeek >= AD_THRESHOLD) {
         // Send special ad abuse notification
         const adAbuseMessages = [
-          'ad_addict', 'binge_watcher', 'commercial_break', 
+          'ad_addict', 'binge_watcher', 'commercial_break',
           'ad_marathon', 'screen_time'
         ];
         const randomAdMessage = adAbuseMessages[Math.floor(Math.random() * adAbuseMessages.length)];
-        snitchMessage = t(`skip_messages.${randomAdMessage}`, { 
-          name: userName, 
-          count: adSkipsThisWeek 
+        snitchMessage = t(`skip_messages.${randomAdMessage}`, {
+          name: userName,
+          count: adSkipsThisWeek
         });
         // Broadcast to group
         try {
@@ -1971,7 +1985,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         snitchMessage = t('skip_messages.watched_ad', { name: userName });
       }
     }
-    
+
     // Add to local notifications
     const newNotification = {
       id: `snitch-${Date.now()}`,
@@ -1981,15 +1995,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       read: false,
       type: 'snitch'
     };
-    
+
     setNotifications(prev => [newNotification, ...prev]);
-    
+
     // Show toast with snitch message
     const toastDuration = adSkipsThisWeek >= 3 ? 7000 : 5000; // longer for ad abuse
     toast.warning(snitchMessage, { duration: toastDuration });
   };
 
-  const handleSharePost = async (caption = 'Just completed my workout! 💪') => {
+  const handleSharePost = async (caption = 'Just completed my workout! ') => {
     try {
       const response = await fetch('/api/posts/create', {
         method: 'POST',
@@ -2020,32 +2034,32 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleLikePost = async (postId) => {
     const encouragingMessages = [
-      '🔥 Your support fuels the tribe!',
-      '💪 Spreading the motivation!',
-      '⚡ Like sent - tribe energy rising!',
-      '🎯 Positive vibes activated!',
-      '🚀 Tribe member encouraged!'
+      ' Your support fuels the tribe!',
+      ' Spreading the motivation!',
+      ' Like sent - tribe energy rising!',
+      ' Positive vibes activated!',
+      ' Tribe member encouraged!'
     ];
-    
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
+
+    setPosts(prev => prev.map(post =>
+      post.id === postId
         ? { ...post, likes_count: (post.likes_count || 0) + 1, liked: true }
         : post
     ));
-    
+
     const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
     toast.success(randomMessage);
   };
 
   const handleBecomeCoach = async () => {
     const coachMessages = [
-      '🏆 Coach application submitted! Time to inspire others!',
-      '💪 Ready to lead the tribe! Application processing...',
-      '🎯 From member to mentor! Coach journey begins!',
-      '⚡ Application sent! Prepare to transform lives!',
-      '🚀 Coach mode activated! Tribe leadership awaits!'
+      ' Coach application submitted! Time to inspire others!',
+      ' Ready to lead the tribe! Application processing...',
+      ' From member to mentor! Coach journey begins!',
+      ' Application sent! Prepare to transform lives!',
+      ' Coach mode activated! Tribe leadership awaits!'
     ];
-    
+
     try {
       const response = await fetch('/api/coach/apply', {
         method: 'POST',
@@ -2061,13 +2075,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       if (response.ok) {
         const randomMessage = coachMessages[Math.floor(Math.random() * coachMessages.length)];
         toast.success(randomMessage);
-        
+
         // Show delayed celebration
         setTimeout(() => {
           const celebrationMessages = [
-            '🎉 Tribe celebrates a new coach!',
-            '💫 Leadership skills unlocked!',
-            '🌟 Your coaching journey has begun!'
+            ' Tribe celebrates a new coach!',
+            ' Leadership skills unlocked!',
+            ' Your coaching journey has begun!'
           ];
           toast.success(celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)]);
         }, 1500);
@@ -2091,14 +2105,14 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleHireCoach = async (coach) => {
     const hireMessages = [
-      `🎯 ${coach.name} is now your coach! Time to level up!`,
-      `💪 Welcome to Team ${coach.name}! Let's crush those goals!`,
-      `🚀 Coach ${coach.name} locked in! Your transformation begins now!`,
-      `⚡ ${coach.name} is ready to guide you to greatness!`,
-      `🏆 Perfect match! ${coach.name} will help you dominate!`,
-      `🔥 Coach ${coach.name} activated! Prepare for epic gains!`
+      ` ${coach.name} is now your coach! Time to level up!`,
+      ` Welcome to Team ${coach.name}! Let's crush those goals!`,
+      ` Coach ${coach.name} locked in! Your transformation begins now!`,
+      ` ${coach.name} is ready to guide you to greatness!`,
+      ` Perfect match! ${coach.name} will help you dominate!`,
+      ` Coach ${coach.name} activated! Prepare for epic gains!`
     ];
-    
+
     try {
       const response = await fetch('/api/coach/hire', {
         method: 'POST',
@@ -2115,17 +2129,17 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       if (response.ok) {
         const randomMessage = hireMessages[Math.floor(Math.random() * hireMessages.length)];
         toast.success(randomMessage);
-        
+
         // Update wallet balance
         if (data.balances) {
           setWalletBalance(data.balances.wallet);
         }
-        
+
         setSelectedHire(data.hire);
-        
+
         // Add celebration animation
         setTimeout(() => {
-          toast.success('🎉 Your tribe is cheering for this amazing decision!');
+          toast.success(' Your tribe is cheering for this amazing decision!');
         }, 2000);
       } else {
         toast.error(data.error || t('failed_hire_coach'));
@@ -2138,13 +2152,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleRateCoach = async (ratingData) => {
     const ratingMessages = {
-      5: ['⭐⭐⭐⭐⭐ Outstanding! Your coach is a legend!', '🌟 Perfect rating! This coach is pure gold!', '🏆 5 stars! Champion-level coaching right here!'],
-      4: ['⭐⭐⭐⭐ Excellent work! Great coaching session!', '👏 4 stars! Your coach is doing amazing!', '💫 Solid performance! Keep it up!'],
-      3: ['⭐⭐⭐ Good session! Room for growth together!', '👍 3 stars! Decent coaching, building momentum!', '📈 Good foundation! Progress is progress!'],
-      2: ['⭐⭐ Thanks for the feedback! Growth opportunity noted!', '🤝 2 stars! Every coach learns and improves!', '💪 Feedback received! Better sessions ahead!'],
-      1: ['⭐ Feedback appreciated! Let\'s work together to improve!', '🔄 1 star! Time to level up the coaching game!', '📝 Thanks for honesty! Improvement starts now!']
+      5: ['⭐⭐⭐⭐⭐ Outstanding! Your coach is a legend!', ' Perfect rating! This coach is pure gold!', ' 5 stars! Champion-level coaching right here!'],
+      4: ['⭐⭐⭐⭐ Excellent work! Great coaching session!', ' 4 stars! Your coach is doing amazing!', ' Solid performance! Keep it up!'],
+      3: ['⭐⭐⭐ Good session! Room for growth together!', ' 3 stars! Decent coaching, building momentum!', ' Good foundation! Progress is progress!'],
+      2: ['⭐⭐ Thanks for the feedback! Growth opportunity noted!', '🤝 2 stars! Every coach learns and improves!', ' Feedback received! Better sessions ahead!'],
+      1: ['⭐ Feedback appreciated! Let\'s work together to improve!', ' 1 star! Time to level up the coaching game!', ' Thanks for honesty! Improvement starts now!']
     };
-    
+
     try {
       const response = await fetch('/api/coach/rate', {
         method: 'POST',
@@ -2157,15 +2171,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         const messages = ratingMessages[rating] || ratingMessages[5];
         const randomMessage = messages[Math.floor(Math.random() * messages.length)];
         toast.success(randomMessage);
-        
+
         const coachResponse = await fetch('/api/coach/list');
         const coachData = await coachResponse.json();
         setCoaches(coachData);
-        
+
         // Add tribe reaction for high ratings
         if (rating >= 4) {
           setTimeout(() => {
-            toast.success('🎉 Your tribe loves seeing great coaching partnerships!');
+            toast.success(' Your tribe loves seeing great coaching partnerships!');
           }, 1500);
         }
       } else {
@@ -2180,21 +2194,21 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleTipUser = async (tipData) => {
     const tipMessages = [
-      `💰 ${tipData.amountTc} TC sent to ${tipData.toUserName || 'tribe member'}! Generosity rocks!`,
-      `✨ Tip delivered! ${tipData.toUserName || 'Your friend'} just got ${tipData.amountTc} TC richer!`,
-      `🎉 ${tipData.amountTc} TC tip sent! Spreading the wealth like a champion!`,
-      `🚀 Tip blast! ${tipData.toUserName || 'Squad member'} received ${tipData.amountTc} TC!`,
-      `👏 Amazing! You just made ${tipData.toUserName || 'someone'}'s day with ${tipData.amountTc} TC!`,
-      `⚡ Lightning tip! ${tipData.amountTc} TC zapped to ${tipData.toUserName || 'your buddy'}!`
+      ` ${tipData.amountTc} TC sent to ${tipData.toUserName || 'tribe member'}! Generosity rocks!`,
+      ` Tip delivered! ${tipData.toUserName || 'Your friend'} just got ${tipData.amountTc} TC richer!`,
+      ` ${tipData.amountTc} TC tip sent! Spreading the wealth like a champion!`,
+      ` Tip blast! ${tipData.toUserName || 'Squad member'} received ${tipData.amountTc} TC!`,
+      ` Amazing! You just made ${tipData.toUserName || 'someone'}'s day with ${tipData.amountTc} TC!`,
+      ` Lightning tip! ${tipData.amountTc} TC zapped to ${tipData.toUserName || 'your buddy'}!`
     ];
-    
+
     const celebrationMessages = [
-      '🎆 The tribe loves your generous spirit!',
-      '💖 Kindness like this makes our community stronger!',
-      '🌟 Your generosity is inspiring others!',
-      '🔥 This is what tribe unity looks like!'
+      ' The tribe loves your generous spirit!',
+      ' Kindness like this makes our community stronger!',
+      ' Your generosity is inspiring others!',
+      ' This is what tribe unity looks like!'
     ];
-    
+
     try {
       const response = await fetch('/api/tip', {
         method: 'POST',
@@ -2209,7 +2223,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         const randomTipMessage = tipMessages[Math.floor(Math.random() * tipMessages.length)];
         toast.success(randomTipMessage);
         setWalletBalance(prev => prev - tipData.amountTc);
-        
+
         // Add celebration for larger tips
         if (tipData.amountTc >= 100) {
           setTimeout(() => {
@@ -2229,13 +2243,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleEquipmentRequest = async (requestData) => {
     const equipmentMessages = [
-      `🏋️ Equipment request submitted! Your tribe will decide soon!`,
-      `💪 Gear request sent! Let's see what the tribe thinks!`,
-      `⚙️ Equipment proposal in the works! Democracy in action!`,
-      `🎆 Request submitted! Your tribe has your back!`,
-      `🚀 Gear upgrade request launched! Tribe voting begins!`
+      `️ Equipment request submitted! Your tribe will decide soon!`,
+      ` Gear request sent! Let's see what the tribe thinks!`,
+      `️ Equipment proposal in the works! Democracy in action!`,
+      ` Request submitted! Your tribe has your back!`,
+      ` Gear upgrade request launched! Tribe voting begins!`
     ];
-    
+
     try {
       const response = await fetch('/api/pact/spend/request', {
         method: 'POST',
@@ -2250,7 +2264,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         const randomMessage = equipmentMessages[Math.floor(Math.random() * equipmentMessages.length)];
         toast.success(randomMessage);
         loadPendingRequests(); // Refresh pending requests
-        
+
         // Add encouraging follow-up
         setTimeout(() => {
           toast.success('🤝 Your tribe members are reviewing your request!');
@@ -2267,13 +2281,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   const handleDonationRequest = async (requestData) => {
     const donationMessages = [
-      `💖 Donation proposal submitted! Your tribe's generosity awaits!`,
-      `✨ Charitable request sent! Let's make a difference together!`,
-      `🌍 Donation request in motion! Tribe unity for good causes!`,
-      `🙏 Proposal submitted! Your tribe believes in giving back!`,
-      `🎆 Donation request launched! Community impact incoming!`
+      ` Donation proposal submitted! Your tribe's generosity awaits!`,
+      ` Charitable request sent! Let's make a difference together!`,
+      ` Donation request in motion! Tribe unity for good causes!`,
+      ` Proposal submitted! Your tribe believes in giving back!`,
+      ` Donation request launched! Community impact incoming!`
     ];
-    
+
     try {
       const response = await fetch('/api/pact/spend/request', {
         method: 'POST',
@@ -2288,10 +2302,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         const randomMessage = donationMessages[Math.floor(Math.random() * donationMessages.length)];
         toast.success(randomMessage);
         loadPendingRequests(); // Refresh pending requests
-        
+
         // Add inspiring follow-up
         setTimeout(() => {
-          toast.success('🌟 Together we can make a real impact!');
+          toast.success(' Together we can make a real impact!');
         }, 2500);
       } else {
         const error = await response.json();
@@ -2356,7 +2370,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           });
         }
 
-        toast.success('✅ Purchase successful!');
+        toast.success(' Purchase successful!');
         setShowEquipmentCatalog(false);
       } else {
         const error = await response.json().catch(() => ({ error: 'Purchase failed' }));
@@ -2371,36 +2385,36 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const handleVote = async (requestId, vote) => {
     const voteMessages = {
       approve: [
-        '👍 Vote cast! Supporting tribe decisions like a champion!',
-        '✅ Approved! Your tribe values your positive voice!',
-        '🎆 Yes vote submitted! Democracy in action!',
-        '🚀 Approved! Moving the tribe forward together!',
-        '✨ Positive vote cast! Building tribe consensus!'
+        ' Vote cast! Supporting tribe decisions like a champion!',
+        ' Approved! Your tribe values your positive voice!',
+        ' Yes vote submitted! Democracy in action!',
+        ' Approved! Moving the tribe forward together!',
+        ' Positive vote cast! Building tribe consensus!'
       ],
       reject: [
-        '👎 Vote recorded! Sometimes tough decisions are necessary!',
-        '❌ Rejected! Your tribe appreciates thoughtful consideration!',
+        ' Vote recorded! Sometimes tough decisions are necessary!',
+        ' Rejected! Your tribe appreciates thoughtful consideration!',
         '🤔 No vote cast! Critical thinking keeps the tribe strong!',
-        '🛡️ Rejected! Protecting tribe resources wisely!',
-        '⚠️ Careful vote cast! Tribe guardianship matters!'
+        '️ Rejected! Protecting tribe resources wisely!',
+        '️ Careful vote cast! Tribe guardianship matters!'
       ]
     };
-    
+
     const decisionMessages = {
       approved: [
-        '🎉 Request APPROVED! Tribe consensus achieved!',
-        '🏆 APPROVED! Your tribe has spoken positively!',
-        '✅ SUCCESS! Request approved by tribe vote!',
-        '🚀 APPROVED! Tribe unity makes it happen!'
+        ' Request APPROVED! Tribe consensus achieved!',
+        ' APPROVED! Your tribe has spoken positively!',
+        ' SUCCESS! Request approved by tribe vote!',
+        ' APPROVED! Tribe unity makes it happen!'
       ],
       rejected: [
-        '🛡️ Request REJECTED! Tribe protection activated!',
-        '❌ REJECTED! Tribe wisdom prevails!',
+        '️ Request REJECTED! Tribe protection activated!',
+        ' REJECTED! Tribe wisdom prevails!',
         '🤔 REJECTED! Thoughtful tribe decision made!',
-        '⚠️ REJECTED! Tribe resources protected!'
+        '️ REJECTED! Tribe resources protected!'
       ]
     };
-    
+
     const previousRequests = pendingRequests;
     // Optimistic UI: apply vote immediately, then sync with server
     setPendingRequests(prev => prev.map(req => {
@@ -2428,7 +2442,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Sync with server response
         setPendingRequests(prev => prev.map(req => {
           if (req.id === requestId) {
@@ -2444,12 +2458,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           }
           return req;
         }));
-        
+
         // Show vote confirmation message
         const voteConfirmations = voteMessages[vote] || voteMessages.approve;
         const randomVoteMessage = voteConfirmations[Math.floor(Math.random() * voteConfirmations.length)];
         toast.success(randomVoteMessage);
-        
+
         // If request was approved or rejected, show decision message
         if (data.status === 'approved' || data.status === 'rejected') {
           setTimeout(() => {
@@ -2459,7 +2473,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             loadPendingRequests();
           }, 1500);
         }
-        
+
         // Add tribe unity message for close votes
         if (data.approve_count > 0 && data.reject_count > 0) {
           setTimeout(() => {
@@ -2480,22 +2494,22 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // Workout completion celebration with tribe reactions
   const handleWorkoutCompletion = async (workoutData) => {
     const completionMessages = [
-      '🔥 Workout CRUSHED! Your tribe is cheering you on!',
-      '💪 Beast mode activated! Tribe pride is through the roof!',
-      '⚡ Workout dominated! Your tribe feels the energy!',
-      '🏆 Champion performance! Tribe motivation is contagious!',
-      '🚀 Workout destroyed! Your tribe is inspired by your dedication!',
-      '🎯 Target eliminated! Your tribe loves your consistency!',
-      '💥 Explosive workout! Your tribe is pumped up!'
+      ' Workout CRUSHED! Your tribe is cheering you on!',
+      ' Beast mode activated! Tribe pride is through the roof!',
+      ' Workout dominated! Your tribe feels the energy!',
+      ' Champion performance! Tribe motivation is contagious!',
+      ' Workout destroyed! Your tribe is inspired by your dedication!',
+      ' Target eliminated! Your tribe loves your consistency!',
+      ' Explosive workout! Your tribe is pumped up!'
     ];
 
     const tribeReactions = [
-      '🎉 Your tribe is doing a virtual victory dance!',
-      '👏 Standing ovation from your entire tribe!',
-      '🔥 Your tribe is on fire with motivation!',
-      '💫 Tribe energy levels just went through the roof!',
-      '🌟 Your dedication is lighting up the whole tribe!',
-      '⚡ Electric vibes spreading through your tribe!'
+      ' Your tribe is doing a virtual victory dance!',
+      ' Standing ovation from your entire tribe!',
+      ' Your tribe is on fire with motivation!',
+      ' Tribe energy levels just went through the roof!',
+      ' Your dedication is lighting up the whole tribe!',
+      ' Electric vibes spreading through your tribe!'
     ];
 
     const randomCompletion = completionMessages[Math.floor(Math.random() * completionMessages.length)];
@@ -2510,7 +2524,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // Add TribeCoin reward notification
     setTimeout(() => {
       const coinReward = Math.floor(Math.random() * 50) + 25; // 25-75 TC
-      toast.success(`💰 +${coinReward} TC earned! Consistency pays off!`);
+      toast.success(` +${coinReward} TC earned! Consistency pays off!`);
       setWalletBalance(prev => prev + coinReward);
     }, 4000);
 
@@ -2518,10 +2532,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     if (Math.random() < 0.3) { // 30% chance
       setTimeout(() => {
         const milestoneMessages = [
-          '🏅 Tribe fitness streak is building momentum!',
-          '📈 Your tribe\'s collective progress is amazing!',
-          '🎊 Tribe workout completion rate is soaring!',
-          '🔥 Your tribe is becoming unstoppable!'
+          ' Tribe fitness streak is building momentum!',
+          ' Your tribe\'s collective progress is amazing!',
+          ' Tribe workout completion rate is soaring!',
+          ' Your tribe is becoming unstoppable!'
         ];
         const randomMilestone = milestoneMessages[Math.floor(Math.random() * milestoneMessages.length)];
         toast.success(randomMilestone);
@@ -2532,20 +2546,20 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // New member welcome celebration
   const handleNewMemberWelcome = async (memberData) => {
     const welcomeMessages = [
-      `🎉 Welcome ${memberData.name} to the tribe! Let's grow stronger together!`,
-      `🚀 ${memberData.name} just joined the squad! Tribe power activated!`,
-      `⚡ New tribe member ${memberData.name} is ready to dominate!`,
-      `🏆 ${memberData.name} joined the family! Tribe unity intensifies!`,
-      `🔥 Fresh energy incoming! Welcome ${memberData.name} to the tribe!`,
-      `💪 ${memberData.name} is now part of the tribe! Let's achieve greatness!`
+      ` Welcome ${memberData.name} to the tribe! Let's grow stronger together!`,
+      ` ${memberData.name} just joined the squad! Tribe power activated!`,
+      ` New tribe member ${memberData.name} is ready to dominate!`,
+      ` ${memberData.name} joined the family! Tribe unity intensifies!`,
+      ` Fresh energy incoming! Welcome ${memberData.name} to the tribe!`,
+      ` ${memberData.name} is now part of the tribe! Let's achieve greatness!`
     ];
 
     const tribeGrowthMessages = [
-      '📈 Tribe strength just leveled up!',
-      '🌟 Our tribe community is expanding!',
-      '🎯 More accountability partners = more success!',
-      '💫 Tribe synergy is getting stronger!',
-      '🔥 The tribe momentum is unstoppable!'
+      ' Tribe strength just leveled up!',
+      ' Our tribe community is expanding!',
+      ' More accountability partners = more success!',
+      ' Tribe synergy is getting stronger!',
+      ' The tribe momentum is unstoppable!'
     ];
 
     const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
@@ -2560,7 +2574,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // Welcome bonus for existing members
     setTimeout(() => {
       const welcomeBonus = 25;
-      toast.success(`💰 +${welcomeBonus} TC welcome bonus! Growing the tribe pays off!`);
+      toast.success(` +${welcomeBonus} TC welcome bonus! Growing the tribe pays off!`);
       setWalletBalance(prev => prev + welcomeBonus);
     }, 5000);
   };
@@ -2568,19 +2582,19 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   // Achievement celebration with tribe recognition
   const handleAchievementUnlock = async (achievementData) => {
     const achievementMessages = [
-      `🏆 ACHIEVEMENT UNLOCKED: ${achievementData.title}! Your tribe is so proud!`,
+      ` ACHIEVEMENT UNLOCKED: ${achievementData.title}! Your tribe is so proud!`,
       `⭐ ${achievementData.title} achieved! Tribe legend status activated!`,
-      `🎯 ${achievementData.title} conquered! Your tribe feels the victory!`,
-      `💥 ${achievementData.title} demolished! Tribe inspiration levels maxed!`,
-      `🚀 ${achievementData.title} completed! Your tribe is celebrating!`
+      ` ${achievementData.title} conquered! Your tribe feels the victory!`,
+      ` ${achievementData.title} demolished! Tribe inspiration levels maxed!`,
+      ` ${achievementData.title} completed! Your tribe is celebrating!`
     ];
 
     const tribeRecognitionMessages = [
-      '👑 Your tribe recognizes your dedication!',
-      '🎊 Tribe celebration mode activated!',
-      '💫 Your achievement inspires the whole tribe!',
-      '🔥 Tribe motivation just went through the roof!',
-      '⚡ Your success energizes every tribe member!'
+      ' Your tribe recognizes your dedication!',
+      ' Tribe celebration mode activated!',
+      ' Your achievement inspires the whole tribe!',
+      ' Tribe motivation just went through the roof!',
+      ' Your success energizes every tribe member!'
     ];
 
     const randomAchievement = achievementMessages[Math.floor(Math.random() * achievementMessages.length)];
@@ -2595,7 +2609,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     // Achievement bonus
     setTimeout(() => {
       const achievementBonus = achievementData.reward || 100;
-      toast.success(`💎 +${achievementBonus} TC achievement bonus! Excellence rewarded!`);
+      toast.success(` +${achievementBonus} TC achievement bonus! Excellence rewarded!`);
       setWalletBalance(prev => prev + achievementBonus);
     }, 5000);
   };
@@ -2614,20 +2628,20 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Show upgrade celebration
         const upgradedSquad = squads.find(s => s.id === squadId);
         const celebrationMessage = SquadProgression.getUpgradeCelebrationMessage(
-          upgradedSquad?.name || 'Your squad', 
+          upgradedSquad?.name || 'Your squad',
           language
         );
-        
+
         toast.success(celebrationMessage, { duration: 8000 });
-        
+
         // Reload data from server to ensure consistency
         await loadDevData();
         await loadInitialData();
-        
+
         setShowSquadUpgradeModal(false);
       } else {
         const error = await response.json();
@@ -2642,24 +2656,24 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const handleJoinSquad = async (squad) => {
     try {
       const isCurrentlyMember = squad.is_member;
-      
+
       if (isCurrentlyMember) {
         // Check if user is owner or admin (only block if these fields are actually set)
         const isOwner = squad.owner_id && squad.owner_id === effectiveUserId;
         const isAdmin = squad.admin_ids && Array.isArray(squad.admin_ids) && squad.admin_ids.includes(effectiveUserId);
-        
+
         if (isOwner || isAdmin) {
           const roleText = isOwner ? 'owner' : 'admin';
           toast.error(`Cannot leave - you are the ${roleText} of ${squad.name}. Transfer ownership or delete the ${squad.group_type === 'tribe' ? 'tribe' : 'squad'} first.`);
           return;
         }
-        
+
         // Leave squad - Update server first
         if (effectiveUserId && squad.id) {
           await devAddToGroup(null, null);
         }
-        
-        toast.success(`Left ${squad.name}. See you later! 👋`);
+
+        toast.success(`Left ${squad.name}. See you later! `);
         setSelectedTribe('');
         setShowSquadDetailsModal(false);
       } else {
@@ -2667,11 +2681,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         if (effectiveUserId && squad.id) {
           await devAddToGroup(squad.id, squad.group_type);
         }
-        
-        toast.success(`Joined ${squad.name}! Welcome to the ${squad.group_type}! 🎉`);
+
+        toast.success(`Joined ${squad.name}! Welcome to the ${squad.group_type}! `);
         setSelectedTribe(squad.id);
       }
-      
+
       // Wait a moment for database to save, then reload everything
       await new Promise(resolve => setTimeout(resolve, 200));
       await loadDevData();
@@ -2688,41 +2702,41 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   const handleDeleteSquad = async (squad) => {
-    
+
     const memberCount = squad.member_count || 1;
     const hasOtherMembers = memberCount > 1;
-    
+
     // Different flow if squad has other members
     if (hasOtherMembers) {
       const confirmed = window.confirm(
-        `⚠️ Delete ${squad.name}?\n\n` +
+        `️ Delete ${squad.name}?\n\n` +
         `This squad has ${memberCount} member${memberCount > 1 ? 's' : ''}.\n\n` +
         `All members will receive a notification and have 48 hours to:\n` +
-        `📊 Download Squad Resume (proof of commitment)\n` +
-        `🌟 Claim Reputation Token (verified credibility)\n` +
-        `👥 See member list (invite via @username to new squad)\n` +
-        `📈 Save performance stats (track progress)\n\n` +
+        ` Download Squad Resume (proof of commitment)\n` +
+        ` Claim Reputation Token (verified credibility)\n` +
+        ` See member list (invite via @username to new squad)\n` +
+        ` Save performance stats (track progress)\n\n` +
         `After 48 hours, the squad will be permanently deleted.\n\n` +
         `Continue with deletion notice?`
       );
-      
+
       if (!confirmed) return;
-      
+
       try {
         const res = await fetch('/api/dev/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'initiate_deletion', 
+          body: JSON.stringify({
+            action: 'initiate_deletion',
             groupId: squad.id,
             ownerId: effectiveUserId,
             ownerName: effectiveUserName
           })
         });
-        
+
         if (res.ok) {
           const data = await res.json();
-          
+
           // Notify all members via SSE
           if (squad.members && squad.members.length > 1) {
             await fetch('/api/events/broadcast', {
@@ -2731,7 +2745,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               body: JSON.stringify({
                 type: 'squad_deletion_notice',
                 groupId: squad.id,
-                title: '⚠️ Squad Deletion Notice',
+                title: '️ Squad Deletion Notice',
                 message: `${effectiveUserName} has initiated deletion of ${squad.name}. You have 48 hours before permanent deletion.`,
                 data: {
                   squadName: squad.name,
@@ -2742,17 +2756,17 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               })
             });
           }
-          
+
           toast.success(
-            `🔔 Deletion notice sent to all ${memberCount} members!\n\n` +
+            ` Deletion notice sent to all ${memberCount} members!\n\n` +
             `${squad.name} will be deleted in 48 hours.`,
             { duration: 8000 }
           );
-          
+
           // Reload data
           await loadDevData();
           await loadInitialData();
-          
+
           setShowSquadDetailsModal(false);
         } else {
           const error = await res.json();
@@ -2765,30 +2779,30 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     } else {
       // Only owner, can delete immediately
       const confirmed = window.confirm(
-        `⚠️ Delete ${squad.name}?\n\n` +
+        `️ Delete ${squad.name}?\n\n` +
         `You're the only member. This squad will be deleted immediately and cannot be recovered.\n\n` +
         `Continue?`
       );
-      
+
       if (!confirmed) return;
-      
+
       try {
         const res = await fetch('/api/dev/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'delete_group', 
-            groupId: squad.id 
+          body: JSON.stringify({
+            action: 'delete_group',
+            groupId: squad.id
           })
         });
-        
+
         if (res.ok) {
-          toast.success(`${squad.name} deleted successfully! 🗑️`);
-          
+          toast.success(`${squad.name} deleted successfully! ️`);
+
           // Reload data
           await loadDevData();
           await loadInitialData();
-          
+
           setShowSquadDetailsModal(false);
         } else {
           const error = await res.json();
@@ -2802,12 +2816,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   const handleCreateSquad = async (formData) => {
-    
+
     try {
       const res = await fetch('/api/dev/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'create_group',
           name: formData.name,
           description: formData.description,
@@ -2817,25 +2831,25 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           isPrivate: formData.isPrivate || false
         })
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         toast.success(
-          `${formData.type === 'squad' ? 'Squad' : 'Tribe'} "${formData.name}" created successfully! 🎉`,
+          `${formData.type === 'squad' ? 'Squad' : 'Tribe'} "${formData.name}" created successfully! `,
           { duration: 5000 }
         );
-        
+
         // Reload data to show new squad
         await loadDevData();
         await loadInitialData();
-        
+
         setShowSquadCreationModal(false);
       } else {
         const error = await res.json();
         toast.error(error.message || 'Failed to create squad');
       }
     } catch (error) {
-      console.error('❌ Creation failed:', error);
+      console.error(' Creation failed:', error);
       toast.error('Failed to create squad: ' + error.message);
       throw error;
     }
@@ -2860,14 +2874,14 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const handleWatchAdToSkip = () => {
     setIsWatchingAd(true);
     setAdProgress(0);
-    
+
     const adRewardMessages = [
-      '📺 Ad watched! Free skip earned - tribe still judges you! 😏',
-      '🎬 Commercial complete! No payment but tribe knows you skipped!',
-      '📺 15 seconds of ads = 1 free skip! Tribe gets notification anyway!',
-      '🎆 Ad reward unlocked! Skip granted but social pressure remains!'
+      ' Ad watched! Free skip earned - tribe still judges you! ',
+      ' Commercial complete! No payment but tribe knows you skipped!',
+      ' 15 seconds of ads = 1 free skip! Tribe gets notification anyway!',
+      ' Ad reward unlocked! Skip granted but social pressure remains!'
     ];
-    
+
     // Simulate 15-second ad for workout skip
     const adInterval = setInterval(() => {
       setAdProgress(prev => {
@@ -2875,7 +2889,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           clearInterval(adInterval);
           setIsWatchingAd(false);
           setShowAdModal(false);
-          
+
           const randomMessage = adRewardMessages[Math.floor(Math.random() * adRewardMessages.length)];
           addNotification({ title: 'Ad watched', body: `You watched an ad to skip your workout`, type: 'ad' });
           toast.success(randomMessage);
@@ -2924,13 +2938,13 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           setPerksCreditsAdded(0);
           setPerksAdSavedPercent(20);
           setShowSkipPerksModal(true);
-          
+
           // No TC changes from ads
-          
+
           setTimeout(() => {
-            toast.success('Workout marked as completed! 🏆');
+            toast.success('Workout marked as completed! ');
           }, 3000);
-          
+
           return 100;
         }
         return prev + 6.67; // 15 seconds = 100/15 per second
@@ -2997,10 +3011,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     setWishlistProgress(prev => {
       const newAmount = prev.currentAmount + amount;
       const isComplete = newAmount >= prev.targetAmount;
-      
+
       if (isComplete) {
-        toast.success(`🎉 ${prev.currentItem} fully funded! {t('ready_purchase')}`);
-        
+        toast.success(` ${prev.currentItem} fully funded! {t('ready_purchase')}`);
+
         // Move to next item or clear progress
         return {
           currentItem: 'Yoga Mat Premium',
@@ -3010,8 +3024,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         };
       } else {
         const remaining = prev.targetAmount - newAmount;
-        toast.info(`+${amount} TC → ${prev.currentItem} progress! ${remaining} TC remaining 🎯`);
-        
+        toast.info(`+${amount} TC → ${prev.currentItem} progress! ${remaining} TC remaining `);
+
         return {
           ...prev,
           currentAmount: newAmount,
@@ -3058,7 +3072,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <h1 className="text-3xl font-bold text-surface-50 mb-2">TribeFit</h1>
             <p className="text-surface-400">{t('app_tagline')}</p>
           </div>
-          
+
           {/* Language Selector */}
           <div className="mb-4">
             <select
@@ -3073,7 +3087,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               ))}
             </select>
           </div>
-          
+
           <Button
             onClick={() => setShowLoginModal(true)}
             variant="primary"
@@ -3081,7 +3095,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           >
             {t('get_started')}
           </Button>
-          
+
           <div className="text-center">
             <p className="text-xs text-surface-500">
               {t('join_thousands')}
@@ -3089,9 +3103,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           </div>
         </div>
 
-        <LoginModal 
-          isOpen={showLoginModal} 
-          onClose={() => setShowLoginModal(false)} 
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
         />
       </div>
     );
@@ -3157,10 +3171,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             </div>
           </div>
         </div>
-        
+
         <div className="mt-6 grid grid-cols-3 gap-4">
-          <button 
-            onClick={() => toast.success(`🔥 ${user?.streak || 0} ${t('day_streak')}! ${t('keep_it_up')}!`)}
+          <button
+            onClick={() => toast.success(` ${user?.streak || 0} ${t('day_streak')}! ${t('keep_it_up')}!`)}
             className="bg-accent/10 hover:bg-accent/15 rounded-2xl p-3 transition-all duration-200 border-2 border-accent/25 hover:border-accent/50 hover-elevate min-h-[90px] flex items-center justify-center"
           >
             <div className="flex flex-col items-center space-y-1 w-full">
@@ -3171,7 +3185,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </div>
             </div>
           </button>
-          <button 
+          <button
             onClick={() => {
               setActiveTab('tribe');
               toast.info(t('viewing_tribe'));
@@ -3186,7 +3200,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </div>
             </div>
           </button>
-          <button 
+          <button
             onClick={() => setShowWorkoutCalendar(true)}
             className="bg-success/10 hover:bg-success/15 rounded-2xl p-3 transition-all duration-200 border-2 border-success/25 hover:border-success/50 hover-elevate min-h-[90px] flex items-center justify-center"
           >
@@ -3212,8 +3226,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-surface-50">{t("todays_plan")}</h3>
           <div className="flex items-center gap-1.5">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               className="h-9 px-3 flex items-center gap-1.5 bg-primary/10 border border-primary/30 hover:bg-primary/20 rounded-xl"
               onClick={() => setShowMyWorkouts(true)}
@@ -3221,8 +3235,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               <Dumbbell size={14} className="flex-shrink-0" />
               <span className="text-xs text-primary light:text-primary-700 font-semibold leading-none">{t('my_workouts')}</span>
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               className="h-9 px-3 flex items-center gap-1.5 bg-success/10 border border-success/30 hover:bg-success/20 rounded-xl"
               onClick={() => setShowEnhancedGenerator(true)}
@@ -3232,7 +3246,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             </Button>
           </div>
         </div>
-        
+
         {todaySchedule ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -3315,7 +3329,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 <button onClick={() => setShowPostModal(true)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Add photo">
                   <Camera size={16} />
                 </button>
-                <button onClick={() => setDraftCaption((d) => `${d} 🔥`)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Fire">
+                <button onClick={() => setDraftCaption((d) => `${d} `)} className="p-2 rounded-lg bg-surface-700/50 light:bg-gray-100 text-surface-300 light:text-gray-600 hover:bg-surface-700 transition-colors" title="Fire">
                   <Flame size={16} />
                 </button>
               </div>
@@ -3417,15 +3431,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               {Features.SQUADS ? t('squads_and_tribes') : t('founders_tribe')}
             </h2>
             <p className="text-surface-300">
-              {Features.SQUADS 
-                ? `${squads.length} squads • ${tribes.length} tribes` 
+              {Features.SQUADS
+                ? `${squads.length} squads • ${tribes.length} tribes`
                 : t('tribe_members_rank', { members: 15, rank: 1 })
               }
             </p>
           </div>
           {/* Removed header View Details button (squad/tribe modal) per request */}
         </div>
-        
+
         {/* Current Group Stats (if member) */}
         {(tribes.some(t => t.is_member) || squads.some(s => s.is_member)) && (
           <div className="grid gap-4 grid-cols-3">
@@ -3452,12 +3466,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 <div className="text-sm text-surface-300">{t('catch_up_credits')}</div>
                 <div className="text-xl font-bold text-surface-50">{catchUpCredits}</div>
               </div>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={(e) => {
                   openCreditsModal(e);
-                }} 
-                variant="ghost" 
+                }}
+                variant="ghost"
                 className="h-8 px-3 text-xs pointer-events-auto relative z-10 cursor-pointer"
               >
                 View Details
@@ -3503,7 +3517,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             <div className="text-xs text-surface-400">{t('community_fund')}</div>
           </div>
         </div>
-        
+
         {/* Vault Info */}
         <div className="mb-4 p-3 bg-surface-800/60 border border-surface-700/60 rounded-2xl">
           <div className="space-y-2">
@@ -3523,7 +3537,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4 items-stretch">
           {/* Priority Wishlist Item (Compact) */}
           <div className="bg-surface-700 border border-surface-600 rounded-xl p-4 flex flex-col gap-3 h-full">
@@ -3626,12 +3640,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </Button>
             </div>
           </div>
-          
+
           {/* Separate Tribes and Squads */}
           {(() => {
             const tribes = squads.filter(s => s.group_type === 'tribe' || s.type === 'tribe');
             const onlySquads = squads.filter(s => s.group_type === 'squad' || s.type === 'squad');
-            
+
             return (
               <>
                 {/* Tribes Section */}
@@ -3659,7 +3673,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Squads Section */}
                 {onlySquads.length > 0 && (
                   <div className="space-y-4" id="squad-leaderboard">
@@ -3685,7 +3699,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Empty State */}
                 {tribes.length === 0 && onlySquads.length === 0 && (
                   <div className="text-center py-12 card">
@@ -3761,8 +3775,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-surface-100 text-sm truncate">{request.label}</h4>
                         <span className={`px-2 py-1 rounded text-xs flex-shrink-0 ${
-                          request.type === 'gear' 
-                            ? 'bg-primary/20 text-primary' 
+                          request.type === 'gear'
+                            ? 'bg-primary/20 text-primary'
                             : 'bg-accent/20 text-accent'
                         }`}>
                           {request.type}
@@ -3773,14 +3787,14 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div className="text-xs text-surface-400 flex-shrink-0">
                         <span className="font-medium text-surface-300">{request.votes.approve}</span>/{Math.ceil(request.totalMembers / 2)}
                       </div>
                       <div className="flex-1 bg-surface-600/50 rounded-full h-1.5 overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-gradient-to-r from-success to-green-500 transition-all duration-300"
                           style={{ width: `${Math.min(100, (request.votes.approve / Math.ceil(request.totalMembers / 2)) * 100)}%` }}
                         />
@@ -3794,7 +3808,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                         className="h-7 px-2 text-xs bg-success/20 hover:bg-success/30 text-success border border-success/30 transition-all duration-200"
                       >
                         <CheckCircle size={10} className="mr-1" />
-                        ✓
+
                       </Button>
                       <Button
                         onClick={() => handleVote(request.id, 'reject')}
@@ -3803,7 +3817,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                         className="h-7 px-2 text-xs bg-danger/20 hover:bg-danger/30 text-danger border border-danger/30 transition-all duration-200"
                       >
                         <XCircle size={10} className="mr-1" />
-                        ✗
+
                       </Button>
                     </div>
                   </div>
@@ -3917,9 +3931,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </div>
             )}
             <div className="flex gap-2 mt-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-9 px-3 bg-primary/10 border-primary/30 hover:bg-primary/20 whitespace-nowrap"
                 onClick={() => setShowAvatarStudio(true)}
               >
@@ -3929,12 +3943,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             </div>
           </div>
         </div>
-        
+
         {/* Status Badge */}
         <div className="mb-4 p-3 bg-surface-700 border border-surface-600 rounded-xl">
-          <StatusBadgeWithProgress 
-            streak={user?.streak || 0} 
-            totalWorkouts={user?.total_workouts || 0} 
+          <StatusBadgeWithProgress
+            streak={user?.streak || 0}
+            totalWorkouts={user?.total_workouts || 0}
           />
         </div>
 
@@ -3953,7 +3967,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {/* Theme & Language Settings */}
       <div className="card">
         <h3 className="text-xl font-bold text-surface-50 mb-4">Settings</h3>
-        
+
         {/* Dark/Light Mode Toggle */}
         <div className="flex items-center justify-between mb-4 p-4 bg-surface-700 border border-surface-600 rounded-xl">
           <div className="flex items-center space-x-3">
@@ -4001,7 +4015,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         </div>
       </div>
 
-      <Button 
+      <Button
         onClick={logout}
         variant="danger"
         size="default"
@@ -4022,7 +4036,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         </h2>
         <p className="text-surface-300 mt-2">Stay updated with your tribe's activities</p>
       </div>
-      
+
       {notifications.length === 0 ? (
         <div className="text-center py-12 card">
           <Bell size={72} className="text-primary mx-auto mb-6" />
@@ -4038,7 +4052,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               <div key={notification.id} className={`card ${notification.type === 'snitch' ? 'border-l-4 border-l-warning' : ''} relative`}>
                 {reactionBurst && reactionBurst.id === rid && (
                   <div className="absolute -top-2 right-2 pointer-events-none">
-                    <div className="animate-bounce drop-shadow"><ReactionGlyph emoji={reactionBurst.emoji} size={24} /></div>
+                    <div className="animate-bounce drop-shadow"><ReactionGlyph type={reactionBurst.type} size={24} /></div>
                   </div>
                 )}
                 <div className="flex items-start justify-between">
@@ -4050,32 +4064,32 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     </div>
                     {isReactable && (
                       <div className="mt-3 flex items-center gap-2 flex-wrap">
-                        {defaultReactions.map((emoji) => {
-                          const stat = (notifReactions?.[rid]?.[emoji]) || { count: 0, my: false };
+                        {defaultReactions.map((reactionType) => {
+                          const stat = (notifReactions?.[rid]?.[reactionType]) || { count: 0, my: false };
                           return (
                             <button
-                              key={emoji}
-                              onClick={() => toggleReaction(rid, emoji)}
+                              key={reactionType}
+                              onClick={() => toggleReaction(rid, reactionType)}
                               className={`px-2 py-1 text-xs rounded-full border transition-colors transition-transform duration-150 active:scale-90 hover:scale-105 flex items-center gap-1 ${stat.my ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-surface-700 border-surface-600 text-surface-300 hover:bg-surface-600'}`}
                             >
-                              <ReactionGlyph emoji={emoji} size={14} />
+                              <ReactionGlyph type={reactionType} size={14} />
                               {stat.count > 0 && <span className="font-medium">{stat.count}</span>}
                             </button>
                           );
                         })}
-                        <Button size="xs" variant="ghost" className="h-7 px-2 text-[11px] border border-surface-700" onClick={() => setShowEmojiPickerFor(rid)}>
+                        <Button size="xs" variant="ghost" className="h-7 px-2 text-[11px] border border-surface-700" onClick={() => setShowReactionPickerFor(rid)}>
                           + Reaction
                         </Button>
                       </div>
                     )}
-                    {showEmojiPickerFor === rid && (
+                    {showReactionPickerFor === rid && (
                       <div className="mt-2 p-2 rounded-lg border border-surface-600 bg-surface-700 flex items-center gap-2 flex-wrap">
-                        {['👏','🙄','🤡','🤖','💪','🧠','😡','🥶','😅','🪶'].map((e) => (
-                          <button key={e} onClick={() => { toggleReaction(rid, e); setShowEmojiPickerFor(null); }} className="px-2 py-1.5 rounded border border-surface-600 hover:bg-surface-600 flex items-center">
-                            <ReactionGlyph emoji={e} size={16} />
+                        {REACTION_TYPES.map((r) => (
+                          <button key={r.type} onClick={() => { toggleReaction(rid, r.type); setShowReactionPickerFor(null); }} className="px-2 py-1.5 rounded border border-surface-600 hover:bg-surface-600 flex items-center">
+                            <ReactionGlyph type={r.type} size={16} />
                           </button>
                         ))}
-                        <Button size="xs" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => setShowEmojiPickerFor(null)}>Close</Button>
+                        <Button size="xs" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => setShowReactionPickerFor(null)}>Close</Button>
                       </div>
                     )}
                   </div>
@@ -4224,8 +4238,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                   key={id}
                   onClick={() => setActiveTab(id)}
                   className={`flex flex-col items-center py-2 px-1 rounded-xl transition-all duration-200 relative min-h-[56px] ${
-                    activeTab === id 
-                      ? 'text-primary' 
+                    activeTab === id
+                      ? 'text-primary'
                       : 'text-surface-400 hover:text-surface-200'
                   }`}
                 >
@@ -4263,18 +4277,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {showSkipModal && (() => {
         const skipCost = isSelectedTribe ? 1 : 2; // 1 TC (¥100) for tribes, 2 TC (¥200) for squads
         const skipYen = skipCost * 100;
-        
+
         return (
         <Modal isOpen={showSkipModal} onClose={() => setShowSkipModal(false)} title={t('skip_workout_question')}>
           <p className="text-surface-400 mb-6">{t('choose_skip_method')}</p>
-          
+
           {/* Ad watch warning */}
           {adSkipsThisWeek >= 2 && (
             <div className="bg-warning/20 border border-warning/30 rounded-lg p-3 mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-warning">⚠️</span>
+                <span className="text-warning">️</span>
                 <p className="text-warning text-sm">
-                  {adSkipsThisWeek === 2 ? 
+                  {adSkipsThisWeek === 2 ?
                     "You've watched 2 ads this week. One more and your tribe gets notified!" :
                     `You've watched ${adSkipsThisWeek} ads this week! Your tribe will be notified of excessive ad watching.`
                   }
@@ -4282,7 +4296,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               </div>
             </div>
           )}
-          
+
           <div className="space-y-3">
             <Button
               onClick={() => handleSkip('pay')}
@@ -4315,11 +4329,11 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
           <div className="text-center text-white">
             <div className="w-64 h-36 bg-surface-800 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-lg">📺 {t('ad_playing')}</span>
+              <span className="text-lg"> {t('ad_playing')}</span>
             </div>
             <div className="w-64 bg-surface-700 rounded-full h-2 mb-4">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all duration-150" 
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-150"
                 style={{ width: `${adProgress}%` }}
               ></div>
             </div>
@@ -4332,8 +4346,8 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
       {/* Post Creation Modal */}
       {showPostModal && (
-        <Modal 
-          isOpen={showPostModal} 
+        <Modal
+          isOpen={showPostModal}
           onClose={() => {
             setShowPostModal(false);
             setPostCaption('');
@@ -4558,7 +4572,30 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         tribeId={selectedTribe || '10000000-0000-0000-0000-000000000001'}
         currentUser={user}
         onReactionSent={(reaction) => {
-          // Optionally update UI or show notification
+          // Show the sender the big reaction and broadcast it to the tribe
+          setBigReaction({
+            type: reaction.type,
+            from_user_name: reaction.from_user_name,
+            to_user_name: reaction.to_user_name,
+          });
+          try {
+            fetch('/api/events/broadcast', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                groupId: selectedTribe || 'default',
+                type: 'reaction',
+                originUserId: reaction.from_user,
+                data: {
+                  type: reaction.type,
+                  from_user: reaction.from_user,
+                  to_user: reaction.to_user,
+                  from_user_name: reaction.from_user_name,
+                  to_user_name: reaction.to_user_name,
+                },
+              }),
+            });
+          } catch (_) {}
         }}
       />
 
@@ -4731,6 +4768,12 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
           squads={squads}
         />
       )}
+
+      {/* Full-screen animated reaction */}
+      <BigReactionOverlay
+        reaction={bigReaction}
+        onDone={() => setBigReaction(null)}
+      />
     </div>
   );
 }
@@ -4770,8 +4813,8 @@ export default function App() {
 
   return (
     <div suppressHydrationWarning className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode 
-        ? 'bg-surface-950 text-surface-50' 
+      isDarkMode
+        ? 'bg-surface-950 text-surface-50'
         : 'bg-white text-gray-900'
     }`} data-theme={isDarkMode ? 'dark' : 'light'}>
       <ToastProvider>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Modal } from './ui/Modal';
-import { 
+import {
   Sparkles, Clock, Target, Zap, TrendingUp, ChevronRight,
   Dumbbell, Heart, Brain, Star, Check, Calendar, Edit3, Trash2,
   Plus, ChevronUp, ChevronDown, Copy, Save
@@ -11,9 +11,9 @@ import { BODY_PARTS, WORKOUT_TEMPLATES, getWorkoutsByBodyPart } from '../lib/wor
 import { BODY_PART_ICONS } from '../lib/body-part-icons';
 import { useToast } from './ui/Toast';
 
-export function EnhancedWorkoutGenerator({ 
-  isOpen, 
-  onClose, 
+export function EnhancedWorkoutGenerator({
+  isOpen,
+  onClose,
   onGenerate,
   userId,
   workoutHistory = []
@@ -73,7 +73,7 @@ export function EnhancedWorkoutGenerator({
   const calculateSmartSuggestions = (history) => {
     const recentWorkouts = history.slice(0, 7); // Last week
     const bodyPartCounts = {};
-    
+
     // Count which body parts were worked
     recentWorkouts.forEach(workout => {
       if (workout.bodyParts) {
@@ -104,14 +104,14 @@ export function EnhancedWorkoutGenerator({
 
   const handleGenerate = async () => {
     setGenerating(true);
-    
+
     try {
       // Find matching template or create custom
       const matchingWorkouts = getWorkoutsByBodyPart(selectedBodyPart);
       const matchingDifficulty = matchingWorkouts.find(w => w.difficulty === difficulty);
-      
+
       let workout = null;
-      
+
       if (matchingDifficulty) {
         // Use template and customize duration
         workout = {
@@ -127,7 +127,7 @@ export function EnhancedWorkoutGenerator({
 
       setGeneratedWorkout(workout);
       setStep(3);
-      
+
       toast.success('Workout generated!');
     } catch (error) {
       console.error('Generation error:', error);
@@ -141,7 +141,7 @@ export function EnhancedWorkoutGenerator({
     // AI-like workout generation based on parameters
     const bodyPartObj = BODY_PARTS.find(p => p.id === bodyPart);
     const exerciseCount = Math.ceil(minutes / 10); // ~10 min per exercise
-    
+
     // This would call your AI API in production
     return {
       id: `ai_${Date.now()}`,
@@ -171,7 +171,7 @@ export function EnhancedWorkoutGenerator({
 
     const exercises = exerciseLibrary[bodyPart] || exerciseLibrary.fullbody;
     const selected = exercises.slice(0, Math.min(count, exercises.length));
-    
+
     return selected.map(name => ({
       name,
       sets: difficulty === 'beginner' ? 3 : difficulty === 'intermediate' ? 4 : 5,
@@ -196,7 +196,7 @@ export function EnhancedWorkoutGenerator({
         const now = new Date();
         const currentDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        
+
         await fetch('/api/calendar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -216,7 +216,7 @@ export function EnhancedWorkoutGenerator({
         console.error('Failed to save to calendar:', error);
         // Continue anyway - don't block workout start
       }
-      
+
       // Start workout immediately
       onGenerate(generatedWorkout);
       onClose();
@@ -252,7 +252,7 @@ export function EnhancedWorkoutGenerator({
 
       if (res.ok) {
         const data = await res.json();
-        toast.success(`🗓️ Workout scheduled for ${scheduleDate} at ${scheduleTime}!`);
+        toast.success(`️ Workout scheduled for ${scheduleDate} at ${scheduleTime}!`);
         onClose();
         // Reset state
         setTimeout(() => {
@@ -322,8 +322,8 @@ export function EnhancedWorkoutGenerator({
           {[1, 2, 3, 4].map(num => (
             <div key={num} className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                step >= num 
-                  ? 'bg-primary text-surface-950' 
+                step >= num
+                  ? 'bg-primary text-surface-950'
                   : 'bg-surface-700 light:bg-gray-300 text-surface-400 light:text-gray-600'
               }`}>
                 {step > num ? <Check size={16} /> : num}
@@ -463,9 +463,9 @@ export function EnhancedWorkoutGenerator({
               <Button onClick={() => setStep(1)} variant="ghost" className="flex-1">
                 Back
               </Button>
-              <Button 
-                onClick={handleGenerate} 
-                variant="primary" 
+              <Button
+                onClick={handleGenerate}
+                variant="primary"
                 className="flex-1"
                 disabled={!selectedBodyPart || generating}
               >
@@ -553,7 +553,7 @@ export function EnhancedWorkoutGenerator({
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-xs text-surface-400 light:text-gray-600">Sets</label>

@@ -3,16 +3,7 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-const reactionEmojis = {
-  fire: '🔥',
-  flex: '💪',
-  clap: '👏',
-  lol: '😅',
-  go: '⚡',
-  heart: '❤️',
-  wow: '😮',
-  thinking: '🤔'
-};
+const REACTION_TYPES = ['fire','flex','clap','lol','go','heart','wow','thinking'];
 
 export async function POST(request) {
   try {
@@ -22,8 +13,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields: tribe_id, from_user, to_user, type' }, { status: 400 });
     }
 
-    const validReactions = Object.keys(reactionEmojis);
-    if (!validReactions.includes(type)) {
+    if (!REACTION_TYPES.includes(type)) {
       return NextResponse.json({ error: 'Invalid reaction type' }, { status: 400 });
     }
 
@@ -73,19 +63,17 @@ export async function POST(request) {
 
     reactionId = reaction.id;
 
-    const emoji = reactionEmojis[type] || '🔥';
     const notification = {
       user_id: to_user,
       type: 'social',
-      title: `${emoji} Reaction Received!`,
+      title: 'Reaction Received!',
       body: `Someone sent you a ${type} reaction`,
       created_at: new Date().toISOString(),
       read: false,
       meta: {
         reaction_id: reactionId,
         from_user,
-        reaction_type: type,
-        emoji
+        reaction_type: type
       }
     };
 
@@ -97,12 +85,8 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      reaction: {
-        id: reactionId,
-        ...reactionData,
-        emoji
-      },
-      message: `${emoji} Reaction sent successfully!`
+      reaction: reactionData,
+      message: 'Reaction sent successfully!'
     });
 
   } catch (error) {
@@ -144,7 +128,6 @@ export async function GET(request) {
 
     const processedReactions = (reactions || []).map(reaction => ({
       ...reaction,
-      emoji: reactionEmojis[reaction.type] || '🔥',
       from_user_name: reaction.from_user_info?.name || reaction.from_user_name || 'Unknown',
       to_user_name: reaction.to_user_info?.name || reaction.to_user_name || 'Unknown'
     }));

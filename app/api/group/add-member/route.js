@@ -87,7 +87,7 @@ export async function POST(request) {
         const notifications = memberIds.map(memberId => ({
           user_id: memberId,
           type: 'group_upgrade',
-          title: 'Squad Upgraded to Tribe! 🏆',
+          title: 'Squad Upgraded to Tribe! ',
           body: `Your Squad "${group.name}" has evolved into a mighty Tribe! Unlock new features and exclusive perks.`,
           created_at: new Date().toISOString(),
           read: false,
@@ -118,7 +118,7 @@ export async function POST(request) {
       member_count: newMemberCount,
       upgrade: upgradeResult,
       message: upgradeResult
-        ? `Member added and ${group.name} upgraded to Tribe! 🏆`
+        ? `Member added and ${group.name} upgraded to Tribe! `
         : 'Member added successfully!'
     });
 
