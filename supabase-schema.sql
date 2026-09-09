@@ -53,7 +53,8 @@ create table if not exists public.tribes (
 create table if not exists public.tribe_members (
   tribe_id uuid references public.tribes(id) on delete cascade,
   user_id uuid references public.users(id) on delete cascade,
-  role text not null default 'member' check (role in ('member', 'admin', 'moderator')),
+  role text not null default 'member' check (role in ('member', 'admin', 'moderator', 'owner')),
+  status text default 'active' check (status in ('active', 'invited', 'left', 'banned')),
   joined_at timestamptz not null default now(),
   primary key (tribe_id, user_id)
 );
@@ -63,12 +64,17 @@ create table if not exists public.pact_wallets (
   id uuid primary key default uuid_generate_v4(),
   tribe_id uuid unique references public.tribes(id) on delete cascade,
   balance_tc numeric(12,2) not null default 0 check (balance_tc >= 0),
+  donation_pool_tc numeric(12,2) default 0 check (donation_pool_tc >= 0),
   goal_label text,
   goal_amount_tc numeric(12,2),
   rules jsonb default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Backfill / safety for existing deployments
+ALTER TABLE public.pact_wallets
+  ADD COLUMN IF NOT EXISTS donation_pool_tc numeric(12,2) default 0 check (donation_pool_tc >= 0);
 
 -- Pact wallet transactions
 create table if not exists public.pact_tx (
@@ -356,6 +362,33 @@ create table if not exists public.pact_spend_requests (
   created_at timestamptz not null default now(),
   approved_at timestamptz
 );
+
+-- Wishlists (group equipment goals)
+create table if not exists public.wishlists (
+  id uuid primary key default uuid_generate_v4(),
+  tribe_id uuid unique references public.tribes(id) on delete cascade,
+  created_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.wishlist_items (
+  id uuid primary key default uuid_generate_v4(),
+  wishlist_id uuid references public.wishlists(id) on delete cascade,
+  catalog_item_id uuid references public.catalog_items(id) on delete set null,
+  label text not null,
+  specs jsonb default '{}'::jsonb,
+  target_tc numeric(12,2) not null check (target_tc > 0),
+  pledged_tc numeric(12,2) not null default 0 check (pledged_tc >= 0),
+  status text not null default 'planned' check (status in ('planned', 'funded', 'purchased', 'cancelled')),
+  created_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Equipment catalog (also expose a `name` alias for client code that expects `name` instead of `title`)
+ALTER TABLE public.catalog_items
+  ADD COLUMN IF NOT EXISTS name text GENERATED ALWAYS AS (title) STORED;
 
 -- Gyms directory
 create table if not exists public.gyms (
