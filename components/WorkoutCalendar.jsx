@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApi, optimisticMutate } from '../lib/api';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
@@ -29,6 +29,20 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const [editTitle, setEditTitle] = useState('');
   const [editDuration, setEditDuration] = useState('45 min');
   const [editShared, setEditShared] = useState(false);
+
+  const contentRef = useRef(null);
+  const dayPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedDate && dayPanelRef.current && contentRef.current) {
+      // wait for the expand animation to start
+      const t = setTimeout(() => {
+        const panelTop = dayPanelRef.current.offsetTop;
+        contentRef.current.scrollTo({ top: Math.max(0, panelTop - 16), behavior: 'smooth' });
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [selectedDate]);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -233,7 +247,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           <Skeleton className="h-64 w-full" />
         </div>
       ) : (
-        <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+        <div ref={contentRef} className="space-y-4 max-h-[80vh] overflow-y-auto">
         {/* Calendar Header - Fixed at top */}
         <div className="sticky top-0 bg-surface-900 light:bg-gray-50 z-10 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -295,11 +309,11 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
               return (
                 <div
                   key={index}
-                  onClick={() => isCurrentMonth && setSelectedDate(formatDate(date))}
+                  onClick={() => setSelectedDate(formatDate(date))}
                   className={`relative min-h-[4.5rem] sm:min-h-[6.5rem] rounded-xl p-1.5 flex flex-col transition-all duration-200 cursor-pointer ${
                     isCurrentMonth
                       ? 'bg-surface-900/80 light:bg-white hover:bg-surface-800/80 light:hover:bg-gray-50'
-                      : 'bg-surface-800/30 light:bg-gray-100/60 text-surface-500 light:text-gray-400'
+                      : 'bg-surface-800/30 light:bg-gray-100/60 text-surface-500 light:text-gray-400 hover:bg-surface-800/50 light:hover:bg-gray-200/60'
                   } ${isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-surface-800 light:ring-offset-white z-10' : ''} ${
                     isSelected ? 'outline outline-2 outline-primary/60' : ''
                   }`}
@@ -310,19 +324,6 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                     } ${isToday ? 'font-bold text-primary' : ''}`}>
                       {date.getDate()}
                     </span>
-                    {isCurrentMonth && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedDate(formatDate(date));
-                          setShowScheduler(true);
-                        }}
-                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-surface-700/50 light:bg-gray-200 hover:bg-primary/20 light:hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
-                        title="Schedule workout"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    )}
                   </div>
 
                   {/* Workout chips */}
@@ -336,10 +337,6 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                             : 'bg-surface-700/70 light:bg-gray-200 text-surface-200 light:text-gray-700 border-surface-600/40 light:border-gray-300'
                         }`}
                         title={`${workout.user_name || workout.user || 'User'} - ${workout.workout} at ${workout.time} (${workout.duration})`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEdit(formatDate(date), workout);
-                        }}
                       >
                         <div className="flex items-center gap-1">
                           {workout.shared && <Users size={8} />}
@@ -366,6 +363,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
         <AnimatePresence>
           {selectedDate && (
             <motion.div
+              ref={dayPanelRef}
               key={selectedDate}
               initial={{ opacity: 0, y: 16, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
