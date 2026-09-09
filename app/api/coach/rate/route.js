@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { addCoachRating, getCoachProfile } from '../../_store/db';
-import { runWithStore } from '@/app/api/_store/db';
+import { addCoachRating, getCoachProfile } from '@/lib/supabase-db';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { hireId, coachId, clientId, stars, text = '' } = body;
@@ -17,12 +17,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Stars must be between 1 and 5' }, { status: 400 });
     }
 
-    const coachProfile = getCoachProfile(coachId);
+    const coachProfile = await getCoachProfile(coachId);
     if (!coachProfile) {
       return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
     }
 
-    const rating = addCoachRating({
+    const rating = await addCoachRating({
       hireId,
       coachId,
       clientId,
@@ -30,8 +30,7 @@ export async function POST(request) {
       text: text || ''
     });
 
-    // Get updated coach profile with new average rating
-    const updatedProfile = getCoachProfile(coachId);
+    const updatedProfile = await getCoachProfile(coachId);
 
     return NextResponse.json({
       success: true,
@@ -39,9 +38,9 @@ export async function POST(request) {
       coach: updatedProfile,
       message: `Thank you for rating ${coachProfile.name}!`
     }, { status: 201 });
+
   } catch (error) {
     console.error('Coach rating error:', error);
-    return NextResponse.json({ error: 'Failed to submit rating' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to submit rating' }, { status: 500 });
   }
-  });
 }

@@ -7,7 +7,6 @@ import {
 } from '@/lib/supabase';
 import { i18n } from '@/lib/i18n';
 import { broadcastToGroup } from '../events/route';
-import { getUser as getStoreUser, getGroup as getStoreGroup, runWithStore } from '../_store/db';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if keys are provided)
@@ -256,9 +255,8 @@ const processWebhookEvent = async (eventId, eventType, payload) => {
 };
 
 export async function GET(request, { params }) {
-  return runWithStore(async () => {
   const path = params.path ? params.path.join('/') : '';
-  
+
   try {
     switch (path) {
       case 'user/current':
@@ -485,19 +483,17 @@ export async function GET(request, { params }) {
     }
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
+    return NextResponse.json({
+      error: 'Internal server error',
       message: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
-  });
 }
 
 export async function POST(request, { params }) {
-  return runWithStore(async () => {
   const path = params.path ? params.path.join('/') : '';
-  
+
   try {
     const body = await request.json();
     
@@ -519,7 +515,7 @@ export async function POST(request, { params }) {
         // - User in a tribe: 1 TC (tribe member discount)
         // - User in a squad or no group: 2 TC (standard price)
         // Membership is tracked in the dev store (group_type) or supabase user record
-        const storeUser = (() => { try { return getStoreUser(user.id); } catch { return null; } })();
+        const storeUser = user;
         const userInTribe = (storeUser?.group_type || user.group_type) === 'tribe'
           || Boolean(user.settings?.active_tribe_id);
         // Beast-stage evolution perk: skip fees -1 TC
@@ -788,13 +784,13 @@ export async function POST(request, { params }) {
             }, { status: 500 });
           }
         } else {
-          // Mock mode - simulate successful payment.
-          // Credit the dev-store user the UI actually reads (body.userId), else fall back to current user.
+          // Mock/demo mode - credit TribeCoins directly.
           let newBalance;
           if (body.userId) {
-            const su = getStoreUser(body.userId);
-            su.wallet_balance_tc = (su.wallet_balance_tc || 0) + parseFloat(amountTc);
-            newBalance = su.wallet_balance_tc;
+            const su = await getUserById(body.userId);
+            if (!su) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            const updated = await adjustWalletTc(su.id, parseFloat(amountTc), 'add');
+            newBalance = updated?.wallet_balance_tc ?? (su.wallet_balance_tc + parseFloat(amountTc));
           } else {
             const updatedUser = await adjustWalletTc(targetUser.id, parseFloat(amountTc), 'add');
             newBalance = updatedUser?.wallet_balance_tc ?? (targetUser.wallet_balance_tc + parseFloat(amountTc));
@@ -1577,13 +1573,12 @@ export async function POST(request, { params }) {
     }
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       message: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
-  });
 }
 
 export async function PUT(request, { params }) {

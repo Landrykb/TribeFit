@@ -1,58 +1,52 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
+const reactionEmojis = {
+  fire: '🔥',
+  flex: '💪',
+  clap: '👏',
+  lol: '😅',
+  go: '⚡',
+  heart: '❤️',
+  wow: '😮',
+  thinking: '🤔'
+};
+
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const { tribe_id, from_user, to_user, type, meta = {} } = await request.json();
 
-    // Validate required fields
     if (!tribe_id || !from_user || !to_user || !type) {
-      return NextResponse.json(
-        { error: 'Missing required fields: tribe_id, from_user, to_user, type' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields: tribe_id, from_user, to_user, type' }, { status: 400 });
     }
 
-    // Validate reaction type
-    const validReactions = ['fire', 'flex', 'clap', 'lol', 'go', 'heart', 'wow', 'thinking'];
+    const validReactions = Object.keys(reactionEmojis);
     if (!validReactions.includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid reaction type' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid reaction type' }, { status: 400 });
     }
 
-    // Check if users are in the same tribe
     const client = supabaseAdmin || supabase;
 
-    try {
-      const { data: fromMember } = await client
-        .from('tribe_members')
-        .select('*')
-        .eq('tribe_id', tribe_id)
-        .eq('user_id', from_user)
-        .single();
+    const { data: fromMember } = await client
+      .from('tribe_members')
+      .select('*')
+      .eq('tribe_id', tribe_id)
+      .eq('user_id', from_user)
+      .single();
 
-      const { data: toMember } = await client
-        .from('tribe_members')
-        .select('*')
-        .eq('tribe_id', tribe_id)
-        .eq('user_id', to_user)
-        .single();
+    const { data: toMember } = await client
+      .from('tribe_members')
+      .select('*')
+      .eq('tribe_id', tribe_id)
+      .eq('user_id', to_user)
+      .single();
 
-      if (!fromMember || !toMember) {
-        return NextResponse.json(
-          { error: 'Users must be in the same tribe to send reactions' },
-          { status: 403 }
-        );
-      }
-    } catch (memberError) {
-      // Continue with mock data in development
+    if (!fromMember || !toMember) {
+      return NextResponse.json({ error: 'Users must be in the same tribe to send reactions' }, { status: 403 });
     }
 
-    // Create reaction record
     const reactionData = {
       tribe_id,
       from_user,
@@ -66,51 +60,23 @@ export async function POST(request) {
 
     let reactionId = `reaction-${Date.now()}`;
 
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        // Mock reaction storage for development
-        // Mock reaction storage for development
-      } else {
-        const { data: reaction, error: reactionError } = await client
-          .from('reactions')
-          .insert(reactionData)
-          .select()
-          .single();
+    const { data: reaction, error: reactionError } = await client
+      .from('reactions')
+      .insert(reactionData)
+      .select()
+      .single();
 
-        if (reactionError) {
-          console.error('Reaction creation error:', reactionError);
-          return NextResponse.json(
-            { error: 'Failed to create reaction' },
-            { status: 500 }
-          );
-        }
-
-        reactionId = reaction.id;
-      }
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return NextResponse.json(
-        { error: 'Failed to save reaction' },
-        { status: 500 }
-      );
+    if (reactionError) {
+      console.error('Reaction creation error:', reactionError);
+      return NextResponse.json({ error: 'Failed to create reaction' }, { status: 500 });
     }
 
-    // Create notification for target user
-    const reactionEmojis = {
-      fire: '🔥',
-      flex: '💪', 
-      clap: '👏',
-      lol: '😅',
-      go: '⚡',
-      heart: '❤️',
-      wow: '😮',
-      thinking: '🤔'
-    };
+    reactionId = reaction.id;
 
     const emoji = reactionEmojis[type] || '🔥';
     const notification = {
       user_id: to_user,
-      type: 'reaction',
+      type: 'social',
       title: `${emoji} Reaction Received!`,
       body: `Someone sent you a ${type} reaction`,
       created_at: new Date().toISOString(),
@@ -124,14 +90,9 @@ export async function POST(request) {
     };
 
     try {
-      if (process.env.NODE_ENV === 'development') {
-        // Mock notification for development
-      } else {
-        await client.from('notifications').insert(notification);
-      }
+      await client.from('notifications').insert(notification);
     } catch (notifError) {
       console.error('Notification creation error:', notifError);
-      // Non-fatal, continue
     }
 
     return NextResponse.json({
@@ -146,16 +107,11 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Send reaction error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send reaction' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to send reaction' }, { status: 500 });
   }
-  });
 }
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const tribe_id = searchParams.get('tribe_id');
@@ -163,22 +119,14 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!tribe_id) {
-      return NextResponse.json(
-        { error: 'Missing tribe_id parameter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing tribe_id parameter' }, { status: 400 });
     }
 
     const client = supabaseAdmin || supabase;
 
-    // Build query
     let query = client
       .from('reactions')
-      .select(`
-        *,
-        from_user_info:users!reactions_from_user_fkey(name),
-        to_user_info:users!reactions_to_user_fkey(name)
-      `)
+      .select(`*, from_user_info:users!reactions_from_user_fkey(name), to_user_info:users!reactions_to_user_fkey(name)`)
       .eq('tribe_id', tribe_id)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -187,86 +135,28 @@ export async function GET(request) {
       query = query.eq('to_user', to_user);
     }
 
-    try {
-      const { data: reactions, error: reactionsError } = await query;
+    const { data: reactions, error: reactionsError } = await query;
 
-      if (reactionsError && process.env.NODE_ENV !== 'development') {
-        console.error('Reactions fetch error:', reactionsError);
-        throw reactionsError;
-      }
-
-      // Mock reactions for development
-      const mockReactions = [
-        {
-          id: 'reaction-1',
-          type: 'fire',
-          emoji: '🔥',
-          from_user_name: 'Alex',
-          to_user_name: 'Jordan',
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 'reaction-2', 
-          type: 'flex',
-          emoji: '💪',
-          from_user_name: 'Sam',
-          to_user_name: 'Jordan',
-          created_at: new Date(Date.now() - 7200000).toISOString()
-        },
-        {
-          id: 'reaction-3',
-          type: 'clap',
-          emoji: '👏', 
-          from_user_name: 'Taylor',
-          to_user_name: 'Jordan',
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        }
-      ];
-
-      const reactionEmojis = {
-        fire: '🔥', flex: '💪', clap: '👏', lol: '😅',
-        go: '⚡', heart: '❤️', wow: '😮', thinking: '🤔'
-      };
-
-      const processedReactions = (reactions || mockReactions).map(reaction => ({
-        ...reaction,
-        emoji: reactionEmojis[reaction.type] || '🔥',
-        from_user_name: reaction.from_user_info?.name || reaction.from_user_name || 'Unknown',
-        to_user_name: reaction.to_user_info?.name || reaction.to_user_name || 'Unknown'
-      }));
-
-      return NextResponse.json({
-        success: true,
-        reactions: processedReactions,
-        total: processedReactions.length
-      });
-
-    } catch (queryError) {
-      // Use mock data in development
-      const mockReactions = [
-        {
-          id: 'reaction-1',
-          type: 'fire',
-          emoji: '🔥',
-          from_user_name: 'Alex',
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        }
-      ];
-
-      return NextResponse.json({
-        success: true,
-        reactions: mockReactions,
-        total: mockReactions.length,
-        note: 'Using mock data'
-      });
+    if (reactionsError) {
+      console.error('Reactions fetch error:', reactionsError);
+      throw reactionsError;
     }
+
+    const processedReactions = (reactions || []).map(reaction => ({
+      ...reaction,
+      emoji: reactionEmojis[reaction.type] || '🔥',
+      from_user_name: reaction.from_user_info?.name || reaction.from_user_name || 'Unknown',
+      to_user_name: reaction.to_user_info?.name || reaction.to_user_name || 'Unknown'
+    }));
+
+    return NextResponse.json({
+      success: true,
+      reactions: processedReactions,
+      total: processedReactions.length
+    });
 
   } catch (error) {
     console.error('Get reactions error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get reactions' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get reactions' }, { status: 500 });
   }
-  });
 }

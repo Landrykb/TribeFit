@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const { tribe_id, user_id, invited_by } = await request.json();
 
-    // Validate required fields
     if (!tribe_id || !user_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: tribe_id, user_id' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields: tribe_id, user_id' }, { status: 400 });
     }
 
     const client = supabaseAdmin || supabase;
 
-    // Get current group info
     const { data: group, error: groupError } = await client
       .from('tribes')
       .select('*, tribe_members(*)')
@@ -26,39 +21,24 @@ export async function POST(request) {
 
     if (groupError || !group) {
       console.error('Group fetch error:', groupError);
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
-    // Check if user is already a member
     const existingMember = group.tribe_members.find(m => m.user_id === user_id);
     if (existingMember) {
-      return NextResponse.json(
-        { error: 'User is already a member of this group' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User is already a member of this group' }, { status: 400 });
     }
 
     const currentMemberCount = group.tribe_members.length;
     const squadMax = parseInt(process.env.SQUAD_MAX || '4');
     const tribeMin = parseInt(process.env.TRIBE_MIN || '5');
 
-    // Check size constraints for squads
     if (group.group_type === 'squad' && currentMemberCount >= squadMax) {
-      // Squad is at max capacity, check if we can upgrade
-      if (currentMemberCount + 1 >= tribeMin) {
-        // Will upgrade to tribe, allow the addition
-      } else {
-        return NextResponse.json(
-          { error: `Squad is at maximum capacity (${squadMax} members)` },
-          { status: 400 }
-        );
+      if (currentMemberCount + 1 < tribeMin) {
+        return NextResponse.json({ error: `Squad is at maximum capacity (${squadMax} members)` }, { status: 400 });
       }
     }
 
-    // Add the new member
     const { error: memberError } = await client
       .from('tribe_members')
       .insert({
@@ -71,21 +51,16 @@ export async function POST(request) {
 
     if (memberError) {
       console.error('Member addition error:', memberError);
-      return NextResponse.json(
-        { error: 'Failed to add member to group' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to add member to group' }, { status: 500 });
     }
 
     const newMemberCount = currentMemberCount + 1;
     let upgradeResult = null;
 
-    // Check for auto-upgrade: Squad → Tribe by size
-    if (process.env.FEATURE_TRIBE_UPGRADE_BY_SIZE === 'true' && 
-        group.group_type === 'squad' && 
+    if (process.env.FEATURE_TRIBE_UPGRADE_BY_SIZE === 'true' &&
+        group.group_type === 'squad' &&
         newMemberCount >= tribeMin) {
-      
-      // Upgrade the group to tribe
+
       const { error: upgradeError } = await client
         .from('tribes')
         .update({
@@ -107,10 +82,8 @@ export async function POST(request) {
           threshold: tribeMin
         };
 
-        // Send upgrade notifications to all members
         const memberIds = [...group.tribe_members.map(m => m.user_id), user_id];
-        
-        // Create upgrade notification
+
         const notifications = memberIds.map(memberId => ({
           user_id: memberId,
           type: 'group_upgrade',
@@ -125,17 +98,14 @@ export async function POST(request) {
           }
         }));
 
-        // Insert notifications (if notifications table exists)
         try {
           await client.from('notifications').insert(notifications);
         } catch (notifError) {
           console.error('Notification error:', notifError);
-          // Non-fatal, continue
         }
       }
     }
 
-    // Get updated group info
     const { data: updatedGroup } = await client
       .from('tribes')
       .select('*')
@@ -147,84 +117,44 @@ export async function POST(request) {
       group: updatedGroup,
       member_count: newMemberCount,
       upgrade: upgradeResult,
-      message: upgradeResult 
+      message: upgradeResult
         ? `Member added and ${group.name} upgraded to Tribe! 🏆`
         : 'Member added successfully!'
     });
 
   } catch (error) {
     console.error('Add member error:', error);
-    return NextResponse.json(
-      { error: 'Failed to add member' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to add member' }, { status: 500 });
   }
-  });
 }
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const tribe_id = searchParams.get('tribe_id');
+    const user_id = searchParams.get('user_id');
 
-    if (!tribe_id) {
-      return NextResponse.json(
-        { error: 'Missing tribe_id parameter' },
-        { status: 400 }
-      );
+    if (!tribe_id || !user_id) {
+      return NextResponse.json({ error: 'Missing tribe_id or user_id' }, { status: 400 });
     }
 
     const client = supabaseAdmin || supabase;
 
-    // Get group with members
-    const { data: group, error: groupError } = await client
-      .from('tribes')
-      .select(`
-        *,
-        tribe_members (
-          user_id,
-          role,
-          joined_at,
-          users (
-            id,
-            name,
-            email
-          )
-        )
-      `)
-      .eq('id', tribe_id)
+    const { data: existingMember } = await client
+      .from('tribe_members')
+      .select('*')
+      .eq('tribe_id', tribe_id)
+      .eq('user_id', user_id)
       .single();
 
-    if (groupError || !group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
-    }
-
-    const squadMax = parseInt(process.env.SQUAD_MAX || '4');
-    const tribeMin = parseInt(process.env.TRIBE_MIN || '5');
-    const memberCount = group.tribe_members.length;
-
     return NextResponse.json({
-      group,
-      member_count: memberCount,
-      constraints: {
-        type: group.group_type,
-        max_members: group.group_type === 'squad' ? squadMax : null,
-        upgrade_threshold: group.group_type === 'squad' ? tribeMin : null,
-        can_add_members: group.group_type === 'tribe' || memberCount < squadMax,
-        will_upgrade_on_next: group.group_type === 'squad' && memberCount + 1 >= tribeMin
-      }
+      isMember: !!existingMember,
+      tribe_id,
+      user_id
     });
 
   } catch (error) {
-    console.error('Get group members error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get group members' },
-      { status: 500 }
-    );
+    console.error('Check membership error:', error);
+    return NextResponse.json({ error: 'Failed to check membership' }, { status: 500 });
   }
-  });
 }

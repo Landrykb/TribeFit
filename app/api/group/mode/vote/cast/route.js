@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
-import { castModeVote } from '../../../../_store/db';
+import { castModeVote } from '@/lib/supabase-db';
 import { broadcastToGroup } from '../../../../events/route';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const { groupId = 'default', userId, support } = await request.json();
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-    const res = castModeVote({ groupId, userId, support: !!support });
+    const res = await castModeVote({ groupId, userId, support: !!support });
     try {
       broadcastToGroup({
         groupId,
@@ -25,7 +25,7 @@ export async function POST(request) {
     } catch {}
     return NextResponse.json({ success: true, ...res });
   } catch (e) {
+    console.error('Mode vote cast error:', e);
     return NextResponse.json({ error: e.message || 'Failed to cast vote' }, { status: 400 });
   }
-  });
 }

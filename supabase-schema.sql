@@ -401,6 +401,18 @@ create table if not exists public.gyms (
   created_at timestamptz not null default now()
 );
 
+-- Reactions between tribe members
+
+create table if not exists public.reactions (
+  id uuid primary key default uuid_generate_v4(),
+  tribe_id uuid references public.tribes(id) on delete cascade,
+  from_user uuid references public.users(id) on delete cascade,
+  to_user uuid references public.users(id) on delete cascade,
+  type text not null check (type in ('fire', 'flex', 'clap', 'lol', 'go', 'heart', 'wow', 'thinking')),
+  meta jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 -- Legacy/ephemeral app state (used for features not yet migrated to normalized tables)
 -- This single-row JSON blob is loaded at the start of each API request and saved
 -- at the end. It lets file-store-backed endpoints persist on Vercel until they are
@@ -898,6 +910,7 @@ alter table public.user_effects enable row level security;
 alter table public.group_mode_votes enable row level security;
 alter table public.daily_versus enable row level security;
 alter table public.user_usage enable row level security;
+alter table public.reactions enable row level security;
 alter table public.coach_sessions enable row level security;
 
 create policy "Users can manage own schedules" on public.user_schedules for all using (auth.uid() = user_id);
@@ -917,6 +930,13 @@ create policy "Tribe members can read daily versus" on public.daily_versus for s
 );
 create policy "Users can manage coach sessions" on public.coach_sessions for all using (
   auth.uid() = coach_id or auth.uid() = client_id
+);
+
+create policy "Tribe members can create reactions" on public.reactions for insert with check (
+  exists (select 1 from public.tribe_members tm where tm.tribe_id = reactions.tribe_id and tm.user_id = auth.uid())
+);
+create policy "Tribe members can read reactions" on public.reactions for select using (
+  exists (select 1 from public.tribe_members tm where tm.tribe_id = reactions.tribe_id and tm.user_id = auth.uid())
 );
 
 -- =====================================================================================
