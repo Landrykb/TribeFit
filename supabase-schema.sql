@@ -798,6 +798,18 @@ create policy "Public can view avatars" on storage.objects
 -- FUNCTIONS AND TRIGGERS
 -- =====================================================================================
 
+-- Drop all existing triggers in public so this script is safe to re-run
+DO $$
+DECLARE
+  trg RECORD;
+BEGIN
+  FOR trg IN SELECT trigger_name, event_object_table
+             FROM information_schema.triggers
+             WHERE trigger_schema = 'public' LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS %I ON public.%I', trg.trigger_name, trg.event_object_table);
+  END LOOP;
+END $$;
+
 -- Function to update updated_at timestamp
 create or replace function public.update_updated_at_column()
 returns trigger as $$
