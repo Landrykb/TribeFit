@@ -104,14 +104,26 @@ function StageDecor({ stage, skin }) {
   }
 }
 
-// Mood pill badge — render outside any ring/frame
-export function MoodPill({ mood = 'steady', streak = 0 }) {
+// Mood pill badge — full message, redesigned as a vertical status chip
+export function MoodPill({ mood = 'steady', streak = 0, className = '' }) {
   const m = MOOD_META[mood] || MOOD_META.steady;
+  const fullText = `${m.label}${streak > 0 ? ` · ${streak}d` : ''}`;
   return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full min-w-0 truncate ${m.pill}`}>
-      <m.Icon size={12} className="flex-shrink-0" />
-      <span className="truncate">{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
-    </div>
+    <motion.div
+      key={mood}
+      layout
+      initial={{ opacity: 0, scale: 0.85, y: 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+      title={fullText}
+      className={`flex flex-col items-center text-center w-full min-w-0 px-2.5 py-1.5 rounded-2xl border text-[10px] sm:text-xs font-semibold shadow-sm break-words whitespace-normal leading-tight ${m.pill} ${className}`}
+    >
+      <m.Icon size={14} className={m.iconClass} />
+      <span className="mt-0.5">{m.label}</span>
+      {streak > 0 && (
+        <span className="opacity-80 mt-0.5 font-bold">· {streak}d streak</span>
+      )}
+    </motion.div>
   );
 }
 

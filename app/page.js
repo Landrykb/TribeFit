@@ -3117,10 +3117,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {/* Hero Section */}
       <div className="card relative overflow-hidden">
         <BlobBackground />
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 relative z-10">
+          <div className="flex items-start gap-3 min-w-0 w-full sm:w-auto">
             {tribeling && (
-              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="shrink-0 w-28 flex flex-col items-center" title="Open Avatar Studio">
+              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="shrink-0 w-32 flex flex-col items-center" title="Open Avatar Studio">
                 <StreakRing streak={tribeling.streak} goal={7} size={104} active={tribeling.mood === 'pumped'}>
                   <Tribeling
                     mood={tribeling.mood}
@@ -3884,9 +3884,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const renderProfile = () => (
     <div className="space-y-4 animate-fade-in">
       <div className="card">
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="flex flex-col items-center flex-shrink-0">
-            <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform max-w-full" title="Open Avatar Studio">
+        <div className="flex items-start space-x-4 mb-6">
+          <div className="flex flex-col items-center flex-shrink-0 w-32 min-w-0">
+            <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="w-full flex flex-col items-center relative hover:scale-105 transition-transform" title="Open Avatar Studio">
               {tribeling ? (
                 <StreakRing streak={tribeling.streak} goal={7} size={116} active={tribeling.mood === 'pumped'}>
                   <Tribeling
@@ -3907,9 +3907,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 </div>
               )}
             </motion.button>
-            <div className="flex flex-col items-center gap-1 mt-2 max-w-full">
+            <div className="flex flex-col items-center gap-1 mt-2 w-full min-w-0">
               {tribeling?.stage && (
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/40 text-primary truncate max-w-full">
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/40 text-primary truncate w-full">
                   {tribeling.stage.name}
                 </span>
               )}
