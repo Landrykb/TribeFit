@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { addUserToGroup, getAllGroups, getGroup, getDB, saveDB } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const groups = getAllGroups();
     return NextResponse.json({ success: true, groups });
@@ -9,9 +11,11 @@ export async function GET(request) {
     console.error('Failed to list groups:', error);
     return NextResponse.json({ error: 'Failed to list groups' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { action, userId, groupId, updates } = body;
@@ -166,4 +170,5 @@ export async function POST(request) {
     console.error('Failed to process group action:', error);
     return NextResponse.json({ error: error.message || 'Failed to process group action' }, { status: 500 });
   }
+  });
 }

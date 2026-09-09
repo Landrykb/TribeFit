@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { startModeVote } from '../../../../_store/db';
 import { broadcastToGroup } from '../../../../events/route';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { groupId = 'default', proposerId, targetMode } = await request.json();
     if (!proposerId) return NextResponse.json({ error: 'Missing proposerId' }, { status: 400 });
@@ -21,4 +23,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: e.message || 'Failed to start vote' }, { status: 400 });
   }
+  });
 }

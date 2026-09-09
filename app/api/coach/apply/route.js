@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getUser, createCoachApplication, getCoachProfile, getCoachApplication, approveCoachApplication } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { userId, name, tribeId } = body;
@@ -75,4 +77,5 @@ export async function POST(request) {
     console.error('Coach application error:', error);
     return NextResponse.json({ error: 'Failed to process application' }, { status: 500 });
   }
+  });
 }

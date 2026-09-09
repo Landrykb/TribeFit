@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { getCalendarSettings, setAppleCalendarSettings } from '../../../_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -10,9 +12,11 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to get Apple settings' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const userId = body?.userId || 'anon';
@@ -22,4 +26,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to save Apple settings' }, { status: 500 });
   }
+  });
 }

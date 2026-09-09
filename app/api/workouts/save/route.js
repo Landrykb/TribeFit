@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 
 // Simple in-memory store (replace with database in production)
 // Note: In production, replace this with a real database (PostgreSQL, MongoDB, etc.)
@@ -18,6 +19,7 @@ function getUserWorkoutsStore() {
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { userId, workout } = await request.json();
 
@@ -58,4 +60,5 @@ export async function POST(request) {
     console.error('Save workout error:', error);
     return NextResponse.json({ error: 'Failed to save workout' }, { status: 500 });
   }
+  });
 }

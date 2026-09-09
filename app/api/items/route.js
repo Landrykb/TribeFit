@@ -6,9 +6,11 @@ import {
   getEffects, setEffect, getTribelingState,
   ITEM_CATALOG, CARD_PACK, listAllUsers,
 } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 // GET /api/items?userId=... → inventory, effects, catalog, tribeling state, snatch targets
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -49,10 +51,12 @@ export async function GET(request) {
     console.error('Items GET error:', error);
     return NextResponse.json({ error: 'Failed to load items' }, { status: 500 });
   }
+  });
 }
 
 // POST /api/items { action, userId, item?, targetUserId? }
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { action, userId, item, targetUserId } = body;
@@ -150,6 +154,7 @@ export async function POST(request) {
     console.error('Items POST error:', error);
     return NextResponse.json({ error: 'Failed', message: error.message }, { status: 500 });
   }
+  });
 }
 
 function countItems(userId) {

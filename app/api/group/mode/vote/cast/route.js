@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { castModeVote } from '../../../../_store/db';
 import { broadcastToGroup } from '../../../../events/route';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { groupId = 'default', userId, support } = await request.json();
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
@@ -25,4 +27,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: e.message || 'Failed to cast vote' }, { status: 400 });
   }
+  });
 }

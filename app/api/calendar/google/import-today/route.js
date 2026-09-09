@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { getGoogleToken, setGoogleToken, addCalendarEntry, getCalendarSettings, listCalendar } from '../../../_store/db';
 
 async function refreshAccessToken(token) {
@@ -26,6 +27,7 @@ async function refreshAccessToken(token) {
 }
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -111,4 +113,5 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Import failed' }, { status: 500 });
   }
+  });
 }

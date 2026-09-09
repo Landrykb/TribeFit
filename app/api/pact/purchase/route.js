@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { broadcastToGroup } from '../../events/route';
 import { recordPurchase } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { item_id, specs = {}, amount_tc, from_snatched = 0, from_wallet = 0, userId, groupId = 'default' } = await request.json();
 
@@ -32,4 +34,5 @@ export async function POST(request) {
     console.error('purchase error', e);
     return NextResponse.json({ error: 'purchase failed' }, { status: 500 });
   }
+  });
 }

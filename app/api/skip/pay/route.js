@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { recordPaidSkip } from '../../_store/db';
 import { broadcastToGroup } from '../../events/route';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { userId, userName, groupId = 'default', costTc = 10 } = await request.json();
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
@@ -32,4 +34,5 @@ export async function POST(request) {
     console.error('skip/pay error', e);
     return NextResponse.json({ error: 'skip/pay failed' }, { status: 500 });
   }
+  });
 }

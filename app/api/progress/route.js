@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { addProgress, listProgress } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id') || 'anon';
@@ -11,9 +13,11 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { user_id, title, duration_sec, completed_sets, date, type, distance_m } = body || {};
@@ -23,4 +27,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to record progress' }, { status: 500 });
   }
+  });
 }

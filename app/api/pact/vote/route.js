@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { supabase, supabaseAdmin, isUsingMockData } from '@/lib/supabase';
 
 // Mock vote data - in real app this would be in Supabase
@@ -24,6 +25,7 @@ let votes = {
 };
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const url = new URL(request.url);
     const requestId = url.searchParams.get('request_id');
@@ -114,9 +116,11 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { request_id, user_id, vote, user_name } = body;
@@ -264,4 +268,5 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+  });
 }

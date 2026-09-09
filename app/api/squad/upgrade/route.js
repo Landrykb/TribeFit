@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getDB, saveDB } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { squadId, upgradedBy } = await request.json();
 
@@ -81,9 +83,11 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+  });
 }
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     // Get upgrade requirements and eligibility info
     const upgradeInfo = {
@@ -117,4 +121,5 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+  });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 
 // Photo/Screenshot OCR for Workout Import
 // This uses Tesseract.js for client-side OCR
@@ -9,6 +10,7 @@ import { NextResponse } from 'next/server';
 // AWS_SECRET_ACCESS_KEY=your_secret (optional)
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const formData = await request.formData();
     const file = formData.get('image');
@@ -31,6 +33,7 @@ export async function POST(request) {
     console.error('Photo OCR Error:', error);
     return fallbackPhotoData();
   }
+  });
 }
 
 async function processWithCloudVision(file, apiKey) {

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getUser } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -10,4 +12,5 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ balance_tc: 0 });
   }
+  });
 }

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { getGoogleToken } from '../../../_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -11,4 +13,5 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ connected: false }, { status: 500 });
   }
+  });
 }

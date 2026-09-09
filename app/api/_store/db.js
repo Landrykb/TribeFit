@@ -1,100 +1,192 @@
-import { loadDB, saveDB as saveDBToFile } from './fsdb';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { loadDB, saveDB as fsSaveDB } from './fsdb';
+import { supabaseAdmin, isUsingMockData } from '@/lib/supabase';
 
-// Simple in-memory store for dev/testing. Resets on server restart.
+// Per-request storage. When Supabase is configured, the entire legacy app state
+// is loaded into ALS at the start of each API request and persisted back at the
+// end. This lets file-store-backed endpoints survive Vercel's serverless runtime.
+const als = new AsyncLocalStorage();
+
+function createDefaultDB() {
+  return {
+    users: {},
+    groups: {},
+    usageByUser: {},
+    votesByGroup: {},
+    schedulesByUser: {}, // { [userId]: [{ id, groupId, title, start_at, duration_min } ...] }
+    googleTokensByUser: {}, // { [userId]: { access_token, refresh_token, expiry_date } }
+    calendarSettingsByUser: {}, // { [userId]: { calendars: string[], keywords: string } }
+    calendarByUser: {}, // { [userId]: { [YYYY-MM-DD]: [ { id, user_id, user_name, time, workout, type, shared, duration, ai_plan? } ] } }
+    progressByUser: {}, // { [userId]: [ { id, date, title, duration_sec, completed_sets } ] }
+    creditsByUser: {}, // { [userId]: [ { id, created_at, expires_at } ] }
+    missedWorkoutsByUser: {}, // { [userId]: [ { id, date, title, type, ai_plan } ] }
+    itemsByUser: {},
+    effectsByUser: {},
+    coachProfiles: {},
+    coachApplications: {},
+    coachHires: {},
+    coachSessions: {},
+    coachRatings: {},
+  };
+}
+
+function seedDefaultData(db) {
+  // Seed with default SQUADS only (tribes are evolved from squads)
+  const alphaSquadId = '10000000-0000-0000-0000-000000000001';
+  const betaSquadId = '10000000-0000-0000-0000-000000000002';
+
+  db.groups[alphaSquadId] = {
+    id: alphaSquadId,
+    name: 'Alpha Squad',
+    description: 'The original fitness crew',
+    type: 'squad',
+    group_type: 'squad',
+    members: [],
+    member_count: 0,
+    streak_days: 0,
+    participation_rate: 0,
+    donors: [],
+    pact_balance_tc: 0,
+  };
+
+  db.groups[betaSquadId] = {
+    id: betaSquadId,
+    name: 'Beta Squad',
+    description: 'Join us and start your journey!',
+    type: 'squad',
+    group_type: 'squad',
+    members: [],
+    member_count: 0,
+    streak_days: 0,
+    participation_rate: 0,
+    donors: [],
+    pact_balance_tc: 0,
+  };
+
+  // Seed test users (NOT in any group - they join manually)
+  ['u_alice', 'u_bob', 'u_carol', 'u_david', 'u_emily', 'u_frank', 'u_grace', 'u_henry'].forEach((uid, i) => {
+    db.users[uid] = {
+      id: uid,
+      name: uid.replace('u_', '').replace(/\b\w/g, c => c.toUpperCase()),
+      wallet_balance_tc: 500 + i * 25,
+      snatched_balance_tc: 0,
+      streak: 0,
+      total_workouts: 0,
+      group_id: null,
+      group_type: null,
+    };
+  });
+}
+
+function ensureContainers(db) {
+  if (!db.users) db.users = {};
+  if (!db.groups) db.groups = {};
+  if (!db.usageByUser) db.usageByUser = {};
+  if (!db.votesByGroup) db.votesByGroup = {};
+  if (!db.schedulesByUser) db.schedulesByUser = {};
+  if (!db.googleTokensByUser) db.googleTokensByUser = {};
+  if (!db.calendarSettingsByUser) db.calendarSettingsByUser = {};
+  if (!db.calendarByUser) db.calendarByUser = {};
+  if (!db.progressByUser) db.progressByUser = {};
+  if (!db.creditsByUser) db.creditsByUser = {};
+  if (!db.missedWorkoutsByUser) db.missedWorkoutsByUser = {};
+  if (!db.itemsByUser) db.itemsByUser = {};
+  if (!db.effectsByUser) db.effectsByUser = {};
+  if (!db.coachProfiles) db.coachProfiles = {};
+  if (!db.coachApplications) db.coachApplications = {};
+  if (!db.coachHires) db.coachHires = {};
+  if (!db.coachSessions) db.coachSessions = {};
+  if (!db.coachRatings) db.coachRatings = {};
+}
 
 function getDB() {
+  const store = als.getStore();
+  if (store) return store.db;
+
   if (!globalThis.__DB__) {
     const persisted = loadDB();
     if (persisted && typeof persisted === 'object') {
       globalThis.__DB__ = persisted;
     } else {
-      globalThis.__DB__ = {
-        users: {},
-        groups: {},
-        usageByUser: {},
-        votesByGroup: {},
-        schedulesByUser: {}, // { [userId]: [{ id, groupId, title, start_at, duration_min } ...] }
-        googleTokensByUser: {}, // { [userId]: { access_token, refresh_token, expiry_date } }
-        calendarSettingsByUser: {}, // { [userId]: { calendars: string[], keywords: string } }
-        calendarByUser: {}, // { [userId]: { [YYYY-MM-DD]: [ { id, user_id, user_name, time, workout, type, shared, duration, ai_plan? } ] } }
-        progressByUser: {}, // { [userId]: [ { id, date, title, duration_sec, completed_sets } ] }
-        creditsByUser: {}, // { [userId]: [ { id, created_at, expires_at } ] }
-        missedWorkoutsByUser: {}, // { [userId]: [ { id, date, title, type, ai_plan } ] }
-      };
-
-      // Seed with default SQUADS only (tribes are evolved from squads)
-      const alphaSquadId = '10000000-0000-0000-0000-000000000001';
-      const betaSquadId = '10000000-0000-0000-0000-000000000002';
-      
-      // Alpha Squad - empty, ready for members to join
-      globalThis.__DB__.groups[alphaSquadId] = {
-        id: alphaSquadId,
-        name: 'Alpha Squad',
-        description: 'The original fitness crew',
-        type: 'squad',
-        group_type: 'squad',
-        members: [],
-        member_count: 0,
-        streak_days: 0,
-        participation_rate: 0,
-        donors: [],
-        pact_balance_tc: 0,
-      };
-      
-      // Beta Squad - empty, ready for new members
-      globalThis.__DB__.groups[betaSquadId] = {
-        id: betaSquadId,
-        name: 'Beta Squad',
-        description: 'Join us and start your journey!',
-        type: 'squad',
-        group_type: 'squad',
-        members: [],
-        member_count: 0,
-        streak_days: 0,
-        participation_rate: 0,
-        donors: [],
-        pact_balance_tc: 0,
-      };
-
-      // Seed test users (NOT in any group - they join manually)
-      ['u_alice', 'u_bob', 'u_carol', 'u_david', 'u_emily', 'u_frank', 'u_grace', 'u_henry'].forEach((uid, i) => {
-        globalThis.__DB__.users[uid] = {
-          id: uid,
-          name: uid.replace('u_', '').replace(/\b\w/g, c => c.toUpperCase()),
-          wallet_balance_tc: 500 + i * 25,
-          snatched_balance_tc: 0,
-          streak: 0,
-          total_workouts: 0,
-          group_id: null,
-          group_type: null,
-        };
-      });
-      saveDBToFile(globalThis.__DB__);
+      globalThis.__DB__ = createDefaultDB();
+      seedDefaultData(globalThis.__DB__);
+      saveDB(globalThis.__DB__);
     }
-
-    // Ensure new fields exist when loading older DBs
-    if (!globalThis.__DB__.users) globalThis.__DB__.users = {};
-    if (!globalThis.__DB__.groups) globalThis.__DB__.groups = {};
-    if (!globalThis.__DB__.usageByUser) globalThis.__DB__.usageByUser = {};
-    if (!globalThis.__DB__.votesByGroup) globalThis.__DB__.votesByGroup = {};
-    if (!globalThis.__DB__.schedulesByUser) globalThis.__DB__.schedulesByUser = {};
-    if (!globalThis.__DB__.googleTokensByUser) globalThis.__DB__.googleTokensByUser = {};
-    if (!globalThis.__DB__.calendarSettingsByUser) globalThis.__DB__.calendarSettingsByUser = {};
-    if (!globalThis.__DB__.calendarByUser) globalThis.__DB__.calendarByUser = {};
-    if (!globalThis.__DB__.progressByUser) globalThis.__DB__.progressByUser = {};
-    if (!globalThis.__DB__.creditsByUser) globalThis.__DB__.creditsByUser = {};
-    if (!globalThis.__DB__.missedWorkoutsByUser) globalThis.__DB__.missedWorkoutsByUser = {};
+    ensureContainers(globalThis.__DB__);
   }
   // Always ensure required containers exist (hot-reload safe)
-  if (!globalThis.__DB__.users) globalThis.__DB__.users = {};
-  if (!globalThis.__DB__.groups) globalThis.__DB__.groups = {};
-  if (!globalThis.__DB__.schedulesByUser) globalThis.__DB__.schedulesByUser = {};
-  if (!globalThis.__DB__.googleTokensByUser) globalThis.__DB__.googleTokensByUser = {};
-  if (!globalThis.__DB__.calendarSettingsByUser) globalThis.__DB__.calendarSettingsByUser = {};
-  if (!globalThis.__DB__.calendarByUser) globalThis.__DB__.calendarByUser = {};
-  if (!globalThis.__DB__.progressByUser) globalThis.__DB__.progressByUser = {};
+  ensureContainers(globalThis.__DB__);
 
   return globalThis.__DB__;
+}
+
+export function saveDB(db) {
+  const store = als.getStore();
+  if (store) {
+    store.dirty = true;
+    return true;
+  }
+  return fsSaveDB(db);
+}
+
+export async function runWithStore(handler) {
+  if (isUsingMockData) {
+    const db = getDB();
+    return als.run({ db, dirty: false }, async () => {
+      try {
+        return await handler();
+      } finally {
+        const store = als.getStore();
+        if (store?.dirty) fsSaveDB(store.db);
+      }
+    });
+  }
+
+  let db;
+  const { data: row, error } = await supabaseAdmin
+    .from('app_state')
+    .select('data')
+    .eq('id', 1)
+    .single();
+
+  if (error || !row?.data) {
+    db = createDefaultDB();
+    seedDefaultData(db);
+    const { error: insertError } = await supabaseAdmin
+      .from('app_state')
+      .insert({ id: 1, data: db, updated_at: new Date().toISOString() });
+    if (insertError) {
+      console.warn('app_state insert error (may already exist):', insertError.message);
+      const { data: retryRow } = await supabaseAdmin
+        .from('app_state')
+        .select('data')
+        .eq('id', 1)
+        .single();
+      if (retryRow?.data) db = retryRow.data;
+    }
+  } else {
+    db = row.data;
+  }
+
+  ensureContainers(db);
+
+  return als.run({ db, dirty: false }, async () => {
+    try {
+      return await handler();
+    } finally {
+      const store = als.getStore();
+      if (store?.dirty) {
+        const { error: saveError } = await supabaseAdmin
+          .from('app_state')
+          .upsert({ id: 1, data: store.db, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+        if (saveError) console.error('app_state save error:', saveError);
+      }
+    }
+  });
+}
+
+export function isStoreActive() {
+  return als.getStore() !== undefined;
 }
 
 // ---- Google Tokens ----
@@ -108,7 +200,7 @@ export function setGoogleToken(userId, token) {
   const db = getDB();
   if (!db.googleTokensByUser || typeof db.googleTokensByUser !== 'object') db.googleTokensByUser = {};
   db.googleTokensByUser[userId] = { ...(db.googleTokensByUser[userId] || {}), ...(token || {}) };
-  saveDBToFile(db);
+  saveDB(db);
   return db.googleTokensByUser[userId];
 }
 
@@ -277,7 +369,7 @@ export function listCatchUpCredits(userId) {
   const valid = all.filter((c) => new Date(c.expires_at).getTime() > now);
   // Purge expired
   db.creditsByUser[userId] = valid;
-  saveDBToFile(db);
+  saveDB(db);
   return valid.slice();
 }
 
@@ -289,7 +381,7 @@ export function grantCatchUpCredits(userId, count = 1) {
   for (let i = 0; i < (Number(count) || 0); i++) {
     db.creditsByUser[userId].push({ id: `cred_${Date.now()}_${Math.floor(Math.random()*1e6)}`, created_at: new Date().toISOString(), expires_at });
   }
-  saveDBToFile(db);
+  saveDB(db);
   return listCatchUpCredits(userId).length;
 }
 
@@ -300,7 +392,7 @@ export function consumeCatchUpCredit(userId) {
   // remove oldest
   const oldestId = list[0].id;
   db.creditsByUser[userId] = (db.creditsByUser[userId] || []).filter((c) => c.id !== oldestId);
-  saveDBToFile(db);
+  saveDB(db);
   return true;
 }
 
@@ -312,7 +404,7 @@ export function addMissedWorkout({ userId, id, date, title, type, ai_plan }) {
   db.missedWorkoutsByUser[userId].unshift({ id: id || `miss_${Date.now()}`, date: date || new Date().toISOString(), title: title || 'Workout', type: type || 'general', ai_plan: ai_plan || null });
   // cap list
   db.missedWorkoutsByUser[userId] = db.missedWorkoutsByUser[userId].slice(0, 50);
-  saveDBToFile(db);
+  saveDB(db);
   return db.missedWorkoutsByUser[userId];
 }
 
@@ -328,7 +420,7 @@ export function popLatestMissedWorkout(userId) {
   const list = db.missedWorkoutsByUser[userId] || [];
   const item = list.shift() || null;
   db.missedWorkoutsByUser[userId] = list;
-  saveDBToFile(db);
+  saveDB(db);
   return item;
 }
 
@@ -340,7 +432,7 @@ export function removeMissedWorkout(userId, id) {
   if (idx === -1) return null;
   const [removed] = list.splice(idx, 1);
   db.missedWorkoutsByUser[userId] = list;
-  saveDBToFile(db);
+  saveDB(db);
   return removed || null;
 }
 
@@ -425,7 +517,7 @@ export function startModeVote({ groupId, proposerId, targetMode, durationHours =
     finalized: false,
   };
   db.votesByGroup[groupId] = vote;
-  saveDBToFile(db);
+  saveDB(db);
   return getModeVote(groupId);
 }
 
@@ -442,7 +534,7 @@ export function castModeVote({ groupId, userId, support }) {
   }
   vote.votes[userId] = !!support;
   db.votesByGroup[groupId] = vote;
-  saveDBToFile(db);
+  saveDB(db);
   // Check immediate majority of active members
   const totals = computeVoteTotals(groupId, vote);
   if (totals.yes >= totals.required) {
@@ -482,7 +574,7 @@ export function finalizeModeVote(groupId, { forcePass = false } = {}) {
     newMode = g.skip_mode;
   }
   db.votesByGroup[groupId] = { ...vote, finalized: true, finalized_at: new Date().toISOString() };
-  saveDBToFile(db);
+  saveDB(db);
   const totals = computeVoteTotals(groupId, vote);
   return { vote: db.votesByGroup[groupId], passed, newMode, totals };
 }
@@ -512,7 +604,7 @@ function saveUsage(userId, usage) {
   const db = getDB();
   if (!db.usageByUser || typeof db.usageByUser !== 'object') db.usageByUser = {};
   db.usageByUser[userId] = { ...(db.usageByUser[userId] || {}), ...(usage || {}) };
-  saveDBToFile(db);
+  saveDB(db);
 }
 
 export function applyStreakShield(userId, capPerMonth = 2) {
@@ -553,7 +645,7 @@ export function addSchedule({ userId, groupId, title, start_at, duration_min = 3
     duration_min: Number(duration_min) || 30,
   };
   db.schedulesByUser[userId].push(schedule);
-  saveDBToFile(db);
+  saveDB(db);
   return schedule;
 }
 
@@ -678,7 +770,7 @@ export function setCalendarSettings(userId, settings) {
     apple_ics_url: typeof settings?.apple_ics_url === 'string' ? settings.apple_ics_url : prev.apple_ics_url,
   };
   db.calendarSettingsByUser[userId] = next;
-  saveDBToFile(db);
+  saveDB(db);
   return next;
 }
 
@@ -691,7 +783,7 @@ export function setAppleCalendarSettings(userId, { icsUrl }) {
     apple_ics_url: typeof icsUrl === 'string' ? icsUrl : prev.apple_ics_url
   };
   db.calendarSettingsByUser[userId] = next;
-  saveDBToFile(db);
+  saveDB(db);
   return next;
 }
 
@@ -732,7 +824,7 @@ export function addCalendarEntry({ userId, date, time, workout, type = 'general'
   db.calendarByUser[userId][date].push(entry);
   // sort by time
   db.calendarByUser[userId][date].sort((a, b) => String(a.time).localeCompare(String(b.time)));
-  saveDBToFile(db);
+  saveDB(db);
   return entry;
 }
 
@@ -768,7 +860,7 @@ export function updateCalendarEntry({ userId, id, changes = {} }) {
     db.calendarByUser[userId][oldDate][loc.idx] = updated;
     db.calendarByUser[userId][oldDate].sort((a, b) => String(a.time).localeCompare(String(b.time)));
   }
-  saveDBToFile(db);
+  saveDB(db);
   return updated;
 }
 
@@ -778,7 +870,7 @@ export function deleteCalendarEntry({ userId, id }) {
   if (!loc) return false;
   if (!db.calendarByUser || !db.calendarByUser[userId] || !db.calendarByUser[userId][loc.date]) return false;
   db.calendarByUser[userId][loc.date].splice(loc.idx, 1);
-  saveDBToFile(db);
+  saveDB(db);
   return true;
 }
 
@@ -818,7 +910,7 @@ export function addProgress({ userId, title, duration_sec, completed_sets, date,
   };
   db.progressByUser[userId].unshift(entry);
   db.progressByUser[userId] = db.progressByUser[userId].slice(0, 200);
-  saveDBToFile(db);
+  saveDB(db);
   return entry;
 }
 
@@ -857,7 +949,7 @@ export function createCoachProfile({ userId, name, tribeId, bio = '', specialtie
   };
   
   db.coachProfiles[userId] = profile;
-  saveDBToFile(db);
+  saveDB(db);
   return profile;
 }
 
@@ -865,7 +957,7 @@ export function updateCoachProfile(userId, changes = {}) {
   const db = getDB();
   if (!db.coachProfiles || !db.coachProfiles[userId]) return null;
   db.coachProfiles[userId] = { ...db.coachProfiles[userId], ...changes };
-  saveDBToFile(db);
+  saveDB(db);
   return db.coachProfiles[userId];
 }
 
@@ -911,7 +1003,7 @@ export function createCoachApplication({ userId, name, tribeId }) {
   };
   
   db.coachApplications[userId] = application;
-  saveDBToFile(db);
+  saveDB(db);
   return application;
 }
 
@@ -934,7 +1026,7 @@ export function approveCoachApplication(userId, pricing = {}) {
     pricing: pricing.per_session ? pricing : { per_session: 150 }
   });
   
-  saveDBToFile(db);
+  saveDB(db);
   return { application, profile };
 }
 
@@ -961,7 +1053,7 @@ export function createCoachHire({ clientId, coachId, priceTc }) {
     coachProfile.clients_count = (coachProfile.clients_count || 0) + 1;
   }
   
-  saveDBToFile(db);
+  saveDB(db);
   return hire;
 }
 
@@ -1007,7 +1099,7 @@ export function recordCoachSession({ hireId, coachId, clientId, priceTc }) {
   };
   
   db.coachSessions[coachId].push(session);
-  saveDBToFile(db);
+  saveDB(db);
   
   return { session, coachEarnings, platformFee };
 }
@@ -1038,7 +1130,7 @@ export function addCoachRating({ hireId, coachId, clientId, stars, text = '' }) 
     coachProfile.avg_rating = Math.round(avgRating * 10) / 10;
   }
   
-  saveDBToFile(db);
+  saveDB(db);
   return rating;
 }
 
@@ -1065,7 +1157,7 @@ export function createTestUser(name, userId, initialData) {
     created_at: new Date().toISOString()
   };
   
-  saveDBToFile(db);
+  saveDB(db);
   return db.users[id];
 }
 
@@ -1081,7 +1173,7 @@ export function updateUserStats(userId, updates) {
   if (updates.group_type !== undefined) user.group_type = updates.group_type;
   if (updates.group_id !== undefined) user.group_id = updates.group_id;
   
-  saveDBToFile(db);
+  saveDB(db);
   return user;
 }
 
@@ -1100,7 +1192,7 @@ export function addUserToGroup(userId, groupId) {
     }
     user.group_id = null;
     user.group_type = null;
-    saveDBToFile(db);
+    saveDB(db);
     return { user, group: null };
   }
   
@@ -1125,7 +1217,7 @@ export function addUserToGroup(userId, groupId) {
     group.owner_id = userId;
   }
   
-  saveDBToFile(db);
+  saveDB(db);
   return { user, group };
 }
 
@@ -1169,7 +1261,7 @@ export function grantItem(userId, itemId, count = 1) {
   for (let i = 0; i < count; i++) {
     db.itemsByUser[userId].push({ id: `item_${Date.now()}_${Math.floor(Math.random() * 1e6)}`, type: itemId, acquired_at: new Date().toISOString() });
   }
-  saveDBToFile(db);
+  saveDB(db);
   return getItems(userId);
 }
 
@@ -1180,7 +1272,7 @@ export function consumeItem(userId, itemId) {
   if (idx === -1) return null;
   const [used] = list.splice(idx, 1);
   db.itemsByUser[userId] = list;
-  saveDBToFile(db);
+  saveDB(db);
   return used;
 }
 
@@ -1203,7 +1295,7 @@ export function setEffect(userId, key, value) {
   const fx = getEffects(userId);
   fx[key] = value;
   db.effectsByUser[userId] = fx;
-  saveDBToFile(db);
+  saveDB(db);
   return fx;
 }
 
@@ -1254,7 +1346,7 @@ export function recordAdWatch(userId) {
   const wk = weekKey();
   if (user.ads_week_key !== wk) { user.ads_week_key = wk; user.ads_this_week = 0; }
   user.ads_this_week = (user.ads_this_week || 0) + 1;
-  saveDBToFile(db);
+  saveDB(db);
   return user.ads_this_week;
 }
 
@@ -1329,14 +1421,14 @@ export function getDailyVersus(groupId) {
     delete v.pending_day;
     v.last_result = last_result;
     db.versusByGroup[groupId] = v;
-    saveDBToFile(db);
+    saveDB(db);
   }
   // Mark today as pending so tomorrow it settles
   const todayStandings = computeDayStandings(db, group, today);
   if (todayStandings.length > 0 && v.pending_day !== today) {
     v.pending_day = today;
     db.versusByGroup[groupId] = v;
-    saveDBToFile(db);
+    saveDB(db);
   }
 
   return {
@@ -1367,8 +1459,5 @@ function computeDayStandings(db, group, dayKeyStr) {
     .sort((a, b) => b.minutes - a.minutes || new Date(a.first_at) - new Date(b.first_at));
 }
 
-// Export getDB and saveDB for API routes
+// Export getDB for API routes
 export { getDB };
-export function saveDB(db) {
-  return saveDBToFile(db);
-}

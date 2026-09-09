@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { 
   listCalendar,
   getCalendarDay,
@@ -9,6 +10,7 @@ import {
 } from '../_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const url = new URL(request.url);
     const date = url.searchParams.get('date');
@@ -49,9 +51,11 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { date, time, workout_type, workout_name, user_id, user_name, shared = false, duration, ai_plan } = body;
@@ -96,9 +100,11 @@ export async function POST(request) {
     console.error('Error scheduling workout:', error);
     return NextResponse.json({ error: error?.message || 'Failed to schedule workout' }, { status: 500 });
   }
+  });
 }
 
 export async function PATCH(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { user_id, id, date, time, workout_name, workout_type, shared, duration } = body || {};
@@ -116,9 +122,11 @@ export async function PATCH(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
   }
+  });
 }
 
 export async function DELETE(request) {
+  return runWithStore(async () => {
   try {
     const url = new URL(request.url);
     const user_id = url.searchParams.get('user_id') || 'anon';
@@ -130,4 +138,5 @@ export async function DELETE(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
+  });
 }

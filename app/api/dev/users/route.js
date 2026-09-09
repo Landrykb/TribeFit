@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createTestUser, updateUserStats, listAllUsers, getUser } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const users = listAllUsers();
     return NextResponse.json({ success: true, users });
@@ -9,9 +11,11 @@ export async function GET(request) {
     console.error('Failed to list users:', error);
     return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { action, userId, name, updates, initialData } = body;
@@ -42,4 +46,5 @@ export async function POST(request) {
     console.error('User operation failed:', error);
     return NextResponse.json({ error: 'Operation failed' }, { status: 500 });
   }
+  });
 }

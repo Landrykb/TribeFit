@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 
 // Simple in-memory store (replace with database in production)
 // Use global to persist across hot reloads
@@ -10,6 +11,7 @@ function getUserWorkoutsStore() {
 }
 
 export async function GET(request) {
+  return runWithStore(async () => {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 
@@ -21,4 +23,5 @@ export async function GET(request) {
   const workouts = userWorkouts.get(userId) || [];
   
   return NextResponse.json({ workouts, count: workouts.length });
+  });
 }

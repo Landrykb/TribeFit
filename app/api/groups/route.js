@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { listGroups } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET() {
+  return runWithStore(async () => {
   try {
     const groups = listGroups().map(g => ({ 
       id: g.id, 
@@ -24,4 +26,5 @@ export async function GET() {
   } catch (e) {
     return NextResponse.json({ success: false, groups: [] }, { status: 500 });
   }
+  });
 }

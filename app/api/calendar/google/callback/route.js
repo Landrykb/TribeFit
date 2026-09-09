@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { setGoogleToken } from '../../../_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
@@ -52,4 +54,5 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Callback error' }, { status: 500 });
   }
+  });
 }

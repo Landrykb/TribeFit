@@ -5,9 +5,11 @@ import {
   getAvatarState, recordAdWatch,
   AVATAR_SKINS, AVATAR_ACCESSORIES,
 } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 // GET /api/avatar?userId=... → full avatar state + catalogs
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -23,10 +25,12 @@ export async function GET(request) {
     console.error('Avatar GET error:', error);
     return NextResponse.json({ error: 'Failed to load avatar' }, { status: 500 });
   }
+  });
 }
 
 // POST /api/avatar { action, userId, skin?, accessory? }
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { action, userId, skin, accessory } = body;
@@ -176,4 +180,5 @@ export async function POST(request) {
     console.error('Avatar POST error:', error);
     return NextResponse.json({ error: 'Failed', message: error.message }, { status: 500 });
   }
+  });
 }

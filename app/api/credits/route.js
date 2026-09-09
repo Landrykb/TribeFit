@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { listCatchUpCredits, getMissedWorkouts, consumeCatchUpCredit, removeMissedWorkout } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || searchParams.get('user_id') || 'dev_user';
@@ -11,9 +13,11 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to get credits' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const userId = body.userId || 'dev_user';
@@ -32,4 +36,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 });
   }
+  });
 }

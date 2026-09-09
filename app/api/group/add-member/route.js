@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { tribe_id, user_id, invited_by } = await request.json();
 
@@ -157,9 +159,11 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+  });
 }
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const tribe_id = searchParams.get('tribe_id');
@@ -222,4 +226,5 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+  });
 }

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { addCoachRating, getCoachProfile } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { hireId, coachId, clientId, stars, text = '' } = body;
@@ -41,4 +43,5 @@ export async function POST(request) {
     console.error('Coach rating error:', error);
     return NextResponse.json({ error: 'Failed to submit rating' }, { status: 500 });
   }
+  });
 }

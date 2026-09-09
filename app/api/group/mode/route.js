@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { getGroup, getGroupSkipMode, setGroupSkipMode } from '../../_store/db';
 import { broadcastToGroup } from '../../events/route';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId') || 'default';
@@ -16,9 +18,11 @@ export async function GET(request) {
     console.error('group/mode GET error', e);
     return NextResponse.json({ error: 'Failed to get mode' }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { groupId = 'default', mode } = await request.json();
     if (!mode || !['teammate_boost', 'tribe_fund'].includes(mode)) {
@@ -44,4 +48,5 @@ export async function POST(request) {
     console.error('group/mode POST error', e);
     return NextResponse.json({ error: 'Failed to set mode' }, { status: 500 });
   }
+  });
 }

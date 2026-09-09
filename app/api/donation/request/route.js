@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { tribe_id, amount_tc, label, gym_name, created_by } = body;
@@ -48,4 +50,5 @@ export async function POST(request) {
     console.error('Donation request error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+  });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { addCalendarEntry, listCalendar, getCalendarSettings } from '../../../_store/db';
 
 function parseICS(icsText) {
@@ -51,6 +52,7 @@ function icsDateToLocal(val) {
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const userId = body?.userId || 'anon';
@@ -104,4 +106,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: 'Apple ICS import failed' }, { status: 500 });
   }
+  });
 }

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { listSchedules, addSchedule, ensureMembership } from '../../_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -13,9 +15,11 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ success: false, schedules: [] }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { userId, groupId = 'default', title, start_at, duration_min = 30 } = body || {};
@@ -28,4 +32,5 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ success: false, error: 'Failed to add schedule' }, { status: 500 });
   }
+  });
 }

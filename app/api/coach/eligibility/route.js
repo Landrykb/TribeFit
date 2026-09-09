@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getUser, getCoachProfile, getCoachApplication } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -69,4 +71,5 @@ export async function GET(request) {
     console.error('Eligibility check error:', error);
     return NextResponse.json({ error: 'Failed to check eligibility' }, { status: 500 });
   }
+  });
 }

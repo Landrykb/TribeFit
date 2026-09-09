@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { google } from 'googleapis';
 
 // Google Calendar API Integration
@@ -8,6 +9,7 @@ import { google } from 'googleapis';
 // GOOGLE_REDIRECT_URI=http://localhost:3000/api/calendar/google/callback
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { accessToken } = await request.json();
 
@@ -96,10 +98,12 @@ export async function POST(request) {
     console.log('⚠️ Google Calendar API failed, using fallback data');
     return fallbackCalendarData();
   }
+  });
 }
 
 // OAuth URL generation
 export async function GET(request) {
+  return runWithStore(async () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
@@ -124,6 +128,7 @@ export async function GET(request) {
   });
 
   return NextResponse.json({ authUrl: url });
+  });
 }
 
 function calculateDuration(start, end) {

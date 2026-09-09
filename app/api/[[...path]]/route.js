@@ -7,7 +7,7 @@ import {
 } from '@/lib/supabase';
 import { i18n } from '@/lib/i18n';
 import { broadcastToGroup } from '../events/route';
-import { getUser as getStoreUser, getGroup as getStoreGroup } from '../_store/db';
+import { getUser as getStoreUser, getGroup as getStoreGroup, runWithStore } from '../_store/db';
 import Stripe from 'stripe';
 
 // Initialize Stripe (only if keys are provided)
@@ -256,6 +256,7 @@ const processWebhookEvent = async (eventId, eventType, payload) => {
 };
 
 export async function GET(request, { params }) {
+  return runWithStore(async () => {
   const path = params.path ? params.path.join('/') : '';
   
   try {
@@ -490,9 +491,11 @@ export async function GET(request, { params }) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
+  });
 }
 
 export async function POST(request, { params }) {
+  return runWithStore(async () => {
   const path = params.path ? params.path.join('/') : '';
   
   try {
@@ -1580,6 +1583,7 @@ export async function POST(request, { params }) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
+  });
 }
 
 export async function PUT(request, { params }) {

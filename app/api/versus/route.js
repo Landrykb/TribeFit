@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getDailyVersus, getUser, getGroup } from '../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 // GET /api/versus?groupId=...&userId=... → today's standings + pot + last result
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -18,4 +20,5 @@ export async function GET(request) {
     console.error('Versus GET error:', error);
     return NextResponse.json({ error: 'Failed to load versus' }, { status: 500 });
   }
+  });
 }

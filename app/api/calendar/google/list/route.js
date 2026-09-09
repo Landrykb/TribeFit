@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { getGoogleToken, setGoogleToken } from '../../../_store/db';
 
 async function refreshAccessToken(token) {
@@ -26,6 +27,7 @@ async function refreshAccessToken(token) {
 }
 
 export async function GET(request) {
+  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
@@ -70,4 +72,5 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: 'List calendars failed' }, { status: 500 });
   }
+  });
 }

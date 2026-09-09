@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 
 // Apple Calendar (.ics/.ical) Parser
 // This handles iCalendar format used by Apple Calendar and other calendar apps
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { icsData } = await request.json();
 
@@ -26,6 +28,7 @@ export async function POST(request) {
       details: error.message 
     }, { status: 500 });
   }
+  });
 }
 
 function parseICalendar(icsData) {

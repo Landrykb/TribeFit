@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getUser, getCoachProfile, createCoachHire, setBalances, getBalances, getGroup } from '../../_store/db';
+import { runWithStore } from '@/app/api/_store/db';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const body = await request.json();
     const { clientId, coachId, priceTc } = body;
@@ -83,4 +85,5 @@ export async function POST(request) {
     console.error('Coach hire error:', error);
     return NextResponse.json({ error: 'Failed to hire coach' }, { status: 500 });
   }
+  });
 }

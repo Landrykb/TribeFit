@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { runWithStore } from '@/app/api/_store/db';
 import { generateAIWorkout } from '../../../lib/ai-service.js';
 
 export async function POST(request) {
+  return runWithStore(async () => {
   try {
     const { fitnessGoals, availableTime, equipment, experienceLevel, userId } = await request.json();
 
@@ -83,6 +85,7 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+  });
 }
 
 // Fallback function for when AI is unavailable

@@ -401,6 +401,16 @@ create table if not exists public.gyms (
   created_at timestamptz not null default now()
 );
 
+-- Legacy/ephemeral app state (used for features not yet migrated to normalized tables)
+-- This single-row JSON blob is loaded at the start of each API request and saved
+-- at the end. It lets file-store-backed endpoints persist on Vercel until they are
+-- migrated to proper Supabase tables.
+create table if not exists public.app_state (
+  id integer primary key default 1 check (id = 1),
+  data jsonb not null default '{}',
+  updated_at timestamptz not null default now()
+);
+
 -- =====================================================================================
 -- ROW LEVEL SECURITY POLICIES
 -- =====================================================================================
