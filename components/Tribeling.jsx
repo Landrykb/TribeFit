@@ -114,6 +114,15 @@ export function MoodPill({ mood = 'steady', streak = 0 }) {
 }
 
 // Layered-image avatar — composites body + face assets from /public/avatar.
+// Full-character stage artwork (preferred when present)
+const STAGE_ART = {
+  sprout: '/avatar/stage-sprout.png',
+  rookie: '/avatar/stage-rookie.png',
+  athlete: '/avatar/stage-rookie.png',
+  beast: '/avatar/stage-legend.png',
+  legend: '/avatar/stage-legend.png',
+};
+
 const SKIN_BODY = {
   ember: 'lime', solar: 'orange', venom: 'teal', frost: 'blue',
   magma: 'coral', midnight: 'dark',
@@ -152,25 +161,38 @@ export function Tribeling({
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.3, Math.max(0.6, energy));
 
+  const stageArt = STAGE_ART[stage];
   const layers = (
     <div className="relative" style={{ width: size * scale, height: size * scale }}>
       {aura && (
         <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />
       )}
-      <img
-        src={`/avatar/body-${body}.svg`}
-        alt="Tribeling"
-        className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
-        style={{ width: '100%', height: '100%', filter, display: 'block' }}
-        draggable={false}
-      />
-      <img
-        src={`/avatar/face-${face}.svg`}
-        alt=""
-        aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter, pointerEvents: 'none' }}
-        draggable={false}
-      />
+      {stageArt ? (
+        <img
+          src={stageArt}
+          alt="Tribeling"
+          className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', filter, display: 'block' }}
+          draggable={false}
+        />
+      ) : (
+        <>
+          <img
+            src={`/avatar/body-${body}.svg`}
+            alt="Tribeling"
+            className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
+            style={{ width: '100%', height: '100%', filter, display: 'block' }}
+            draggable={false}
+          />
+          <img
+            src={`/avatar/face-${face}.svg`}
+            alt=""
+            aria-hidden="true"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter, pointerEvents: 'none' }}
+            draggable={false}
+          />
+        </>
+      )}
       {mood === 'couch' && (
         <span className="absolute -top-1 -right-1 text-surface-400 font-bold" style={{ fontSize: size * 0.16 }}>z z</span>
       )}
