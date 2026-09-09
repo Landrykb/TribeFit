@@ -1290,7 +1290,7 @@ export function getAvatarState(userId) {
     avatar_icon: user.avatar_icon || null,
     skin: user.avatar_skin || 'ember',
     accessory: user.avatar_accessory || 'none',
-    custom: user.avatar_custom || null,
+    custom: null, // user.avatar_custom — disabled until flat art assets are ready
     owned_skins: user.owned_skins || ['ember'],
     owned_accessories: user.owned_accessories || ['none'],
     energy: Math.min(1.3, 0.6 + streak * 0.08 + (hasToday ? 0.15 : 0)),

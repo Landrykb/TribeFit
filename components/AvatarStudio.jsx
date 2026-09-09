@@ -95,8 +95,8 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
             />
           </div>
 
-          {/* Custom look — flat avatar maker */}
-          <div>
+          {/* Custom look — flat avatar maker (hidden until flat art assets exist) */}
+          {false && <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-bold text-surface-100 flex items-center gap-1.5">
                 <Sparkles size={14} className="text-primary" /> Custom Look
@@ -151,7 +151,7 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Evolution track */}
           <div>
