@@ -33,7 +33,7 @@ def clean_cell(im, mask, bg, x0, x1, y0, y1):
         largest = np.argmax(sizes) + 1
         keep = set([largest])
         for i, sz in enumerate(sizes):
-            if sz >= 30:
+            if sz >= 120:
                 keep.add(i+1)
         m2 = np.zeros_like(m)
         for lab in keep:

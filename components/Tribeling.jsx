@@ -183,15 +183,19 @@ export function Tribeling({
 
   // User-built layered avatar from extracted sheet parts
   if (parts && Object.values(parts).some(v => v > 0)) {
+    const base = parts.outfit ? { key: 'outfit', src: PART_SRC.outfit(parts.outfit) }
+      : parts.body ? { key: 'body', src: PART_SRC.body(parts.body) }
+      : parts.aura ? { key: 'aura', src: PART_SRC.aura(parts.aura) }
+      : null;
+    const head = parts.accessory ? { key: 'accessory', src: PART_SRC.accessory(parts.accessory) }
+      : parts.hair ? { key: 'hair', src: PART_SRC.hair(parts.hair) }
+      : parts.face ? { key: 'face', src: PART_SRC.face(parts.face) }
+      : null;
     return (
       <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
-        <div className="relative inline-block">
-          {parts.aura && <img src={PART_SRC.aura(parts.aura)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-0" draggable={false} />}
-          {(!parts.outfit && parts.body) && <img src={PART_SRC.body(parts.body)} alt="" className="block w-full h-auto" style={{ width: size * scale }} draggable={false} />}
-          {parts.outfit && <img src={PART_SRC.outfit(parts.outfit)} alt="" className="block w-full h-auto" style={{ width: size * scale }} draggable={false} />}
-          {parts.face && <img src={PART_SRC.face(parts.face)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-30" style={{ width: size * scale }} draggable={false} />}
-          {parts.hair && <img src={PART_SRC.hair(parts.hair)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-40" style={{ width: size * scale }} draggable={false} />}
-          {parts.accessory && <img src={PART_SRC.accessory(parts.accessory)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-50" style={{ width: size * scale }} draggable={false} />}
+        <div className="relative inline-block" style={{ width: size * scale }}>
+          {base && <img src={base.src} alt="" className="block h-auto w-full" draggable={false} />}
+          {head && <img src={head.src} alt="" className="absolute top-0 left-0 w-full h-auto z-10" draggable={false} />}
         </div>
         {showLabel && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
