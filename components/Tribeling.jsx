@@ -58,26 +58,43 @@ function Accessory({ type, skin }) {
   }
 }
 
-// Stage decorations
+// Stage decorations — hair/aura per evolution stage
 function StageDecor({ stage, skin }) {
   switch (stage) {
     case 'sprout':
-      return null; // sprout leaf drawn on head in body
+      return null;
+    case 'rookie':
+      return (
+        // simple side-swept hair
+        <g>
+          <path d="M28 44 q2 -22 32 -26 q30 -4 32 26 q-6 -12 -18 -14 q-22 -6 -34 4 q-8 6 -12 10 Z" fill={skin.accent} />
+          <path d="M44 20 q-6 -8 -14 -8 q2 8 8 12 Z" fill={skin.accent} />
+        </g>
+      );
     case 'athlete':
-      return <path d="M60 6 q5 10 0 18 q-5 -8 0 -18" fill={skin.accent} />;
+      return (
+        // spiky sport hair + sweatband already via accessory
+        <g>
+          <path d="M28 44 q0 -20 16 -26 l-4 -12 q10 6 14 12 l4 -14 q6 8 6 14 l10 -10 q2 10 -2 16 q14 4 16 26 q-4 -10 -14 -14 q-24 -8 -36 -2 q-8 4 -10 12 Z" fill={skin.accent} />
+        </g>
+      );
     case 'beast':
       return (
+        // wild mane
         <g>
-          <path d="M36 18 q-10 -15 -18 -12 q3 13 10 20 Z" fill={skin.accent} />
-          <path d="M84 18 q10 -15 18 -12 q-3 13 -10 20 Z" fill={skin.accent} />
+          <path d="M24 50 q-2 -26 20 -34 l-6 -14 q12 4 16 12 l6 -14 q4 10 4 16 l12 -12 q0 12 -6 18 q16 6 14 30 q-2 -12 -12 -18 q-26 -10 -40 -2 q-10 6 -8 16 Z" fill={skin.accent} />
+          <path d="M22 44 q-8 -10 -16 -8 q4 8 10 12 Z" fill={skin.accent} />
+          <path d="M98 44 q8 -10 16 -8 q-4 8 -10 12 Z" fill={skin.accent} />
         </g>
       );
     case 'legend':
       return (
+        // flowing hair + golden aura ring
         <g>
-          <path d="M32 22 q-12 -17 -20 -15 q3 15 11 22 Z" fill={skin.accent} />
-          <path d="M88 22 q12 -17 20 -15 q-3 15 -11 22 Z" fill={skin.accent} />
-          <path d="M60 2 q7 12 0 22 q-7 -10 0 -22" fill={skin.accent} />
+          <circle cx="60" cy="52" r="46" fill="none" stroke="#FFD166" strokeWidth="2.5" strokeDasharray="6 5" opacity="0.7" />
+          <path d="M22 52 q-4 -30 22 -38 l-6 -12 q12 2 18 10 l6 -14 q4 10 4 16 l12 -12 q0 12 -6 18 q16 6 14 30 q-2 -14 -12 -20 q-28 -12 -42 -2 q-10 6 -10 22 Z" fill={skin.accent} />
+          <path d="M24 56 q-6 16 4 26 q-14 -6 -14 -20 q0 -8 10 -6 Z" fill={skin.accent} opacity="0.8" />
+          <path d="M96 56 q6 16 -4 26 q14 -6 14 -20 q0 -8 -10 -6 Z" fill={skin.accent} opacity="0.8" />
         </g>
       );
     default:
@@ -122,24 +139,26 @@ export function Tribeling({
         <svg width={w} height={h} viewBox="0 0 120 140" className="animate-wiggle" aria-hidden="true">
           {/* ground shadow */}
           <ellipse cx="60" cy="126" rx="30" ry="6" fill="#000" opacity="0.25" />
-          {/* leaf sprout */}
-          <path d="M60 38 q-3 -18 -14 -24 q16 -2 18 10 q8 -12 18 -8 q-6 14 -22 22 Z" fill="#8CE99A" stroke="#2EC4B6" strokeWidth="2" />
-          {/* seedling body */}
-          <ellipse cx="60" cy="82" rx="34" ry="38" fill={skin.body} />
-          <ellipse cx="60" cy="92" rx="22" ry="24" fill={skin.belly} opacity="0.8" />
-          {/* tiny feet */}
-          <ellipse cx="46" cy="118" rx="8" ry="5" fill={skin.accent} />
-          <ellipse cx="74" cy="118" rx="8" ry="5" fill={skin.accent} />
+          {/* tiny chibi body */}
+          <ellipse cx="60" cy="106" rx="20" ry="18" fill={skin.body} />
+          <ellipse cx="60" cy="110" rx="12" ry="11" fill={skin.belly} opacity="0.8" />
+          {/* stubby legs + shoes */}
+          <ellipse cx="50" cy="126" rx="8" ry="4.5" fill={skin.accent} />
+          <ellipse cx="70" cy="126" rx="8" ry="4.5" fill={skin.accent} />
+          {/* big chibi head */}
+          <ellipse cx="60" cy="62" rx="36" ry="32" fill={skin.body} />
+          {/* leaf sprout on head */}
+          <path d="M60 32 q-3 -20 -16 -26 q16 -4 18 8 q8 -12 18 -8 q-6 16 -20 26 Z" fill="#8CE99A" stroke="#2EC4B6" strokeWidth="2" />
           {/* big cute eyes */}
-          <circle cx="48" cy="74" r="7" fill="#0C0B10" />
-          <circle cx="72" cy="74" r="7" fill="#0C0B10" />
-          <circle cx="50.5" cy="71.5" r="2.5" fill="#fff" />
-          <circle cx="74.5" cy="71.5" r="2.5" fill="#fff" />
+          <ellipse cx="46" cy="62" rx="8" ry="9" fill="#0C0B10" />
+          <ellipse cx="74" cy="62" rx="8" ry="9" fill="#0C0B10" />
+          <circle cx="49" cy="58" r="3" fill="#fff" />
+          <circle cx="77" cy="58" r="3" fill="#fff" />
           {/* blush cheeks */}
-          <ellipse cx="38" cy="84" rx="6" ry="4" fill={skin.cheek} opacity="0.7" />
-          <ellipse cx="82" cy="84" rx="6" ry="4" fill={skin.cheek} opacity="0.7" />
+          <ellipse cx="32" cy="72" rx="6" ry="4" fill={skin.cheek} opacity="0.7" />
+          <ellipse cx="88" cy="72" rx="6" ry="4" fill={skin.cheek} opacity="0.7" />
           {/* tiny smile */}
-          <path d="M54 88 q6 5 12 0" stroke="#0C0B10" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M52 74 q8 6 16 0" stroke="#0C0B10" strokeWidth="3" fill="none" strokeLinecap="round" />
           {/* sparkles */}
           <path d="M96 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" fill={skin.accent} opacity="0.9" />
         </svg>
@@ -172,11 +191,12 @@ export function Tribeling({
         <ellipse cx="44" cy="130" rx="10" ry="5" fill={skin.accent} />
         <ellipse cx="76" cy="130" rx="10" ry="5" fill={skin.accent} />
 
-        {/* chibi torso */}
+        {/* chibi torso — little tee + shorts */}
         <ellipse cx="60" cy={droop || couch ? 108 : 104} rx={couch ? 30 : 25} ry={droop || couch ? 22 : 24} fill={skin.body} />
-        <ellipse cx="60" cy={droop || couch ? 112 : 108} rx={couch ? 20 : 15} ry="14" fill={skin.belly} opacity="0.8" />
-        {/* little belt line */}
-        <path d="M38 116 q22 8 44 0" stroke={skin.accent} strokeWidth="3" fill="none" opacity="0.6" />
+        <path d="M42 112 q18 10 36 0 l0 8 q-18 8 -36 0 Z" fill={skin.accent} opacity="0.9" />
+        <path d="M46 92 q14 -7 28 0 l-4 8 q-10 -6 -20 0 Z" fill={skin.belly} opacity="0.9" />
+        {/* collar */}
+        <path d="M50 88 q10 6 20 0 l-4 6 q-6 -4 -12 0 Z" fill={skin.accent} />
 
         {/* arms — up when pumped, droopy when deflated/couch */}
         {mood === 'pumped' ? (
@@ -198,12 +218,26 @@ export function Tribeling({
           </>
         )}
 
+        {/* ears */}
+        <ellipse cx="22" cy="56" rx="6" ry="8" fill={skin.body} />
+        <ellipse cx="98" cy="56" rx="6" ry="8" fill={skin.body} />
+        <ellipse cx="23" cy="57" rx="3" ry="4" fill={skin.cheek} opacity="0.5" />
+        <ellipse cx="97" cy="57" rx="3" ry="4" fill={skin.cheek} opacity="0.5" />
+
         {/* big chibi head */}
         <ellipse cx="60" cy={droop || couch ? 56 : 50} rx="40" ry="36" fill={skin.body} />
         {/* forehead highlight */}
         <ellipse cx="50" cy="34" rx="16" ry="8" fill="#fff" opacity="0.12" />
-        {/* hair tuft */}
-        <path d="M60 16 q-8 -10 -16 -10 q4 8 8 10 q-8 2 -10 8 q8 -1 12 -4 q2 6 6 8 q0 -8 0 -12" fill={skin.accent} />
+
+        {/* eyebrows */}
+        {!couch && !droop && accessory !== 'shades' && (
+          <>
+            <path d="M38 42 q7 -4 14 -1" stroke="#0C0B10" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.75" />
+            <path d="M68 41 q7 -3 14 1" stroke="#0C0B10" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.75" />
+          </>
+        )}
+        {/* tiny nose */}
+        <path d="M60 58 q-2 4 0 6" stroke="#0C0B10" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.4" />
 
         {/* blush cheeks on face */}
         <ellipse cx="34" cy="62" rx="7" ry="4.5" fill={skin.cheek} opacity="0.65" />
