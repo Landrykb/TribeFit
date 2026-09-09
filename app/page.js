@@ -3817,32 +3817,36 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     <div className="space-y-4 animate-fade-in">
       <div className="card">
         <div className="flex items-center space-x-4 mb-6">
-          <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform" title="Open Avatar Studio">
-            {tribeling ? (
-              <StreakRing streak={tribeling.streak} goal={7} size={116} active={tribeling.mood === 'pumped'}>
-                <Tribeling
-                  mood={tribeling.mood}
-                  energy={tribeling.energy}
-                  streak={tribeling.streak}
-                  stage={tribeling.stage?.id}
-                  skin={tribeling.skin}
-                  accessory={tribeling.accessory}
-                  size={92}
-                  showLabel={false}
-                />
-              </StreakRing>
-            ) : (
-              <div className="w-20 h-20 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
-                <span className="font-bold text-2xl text-primary">{effectiveUserName?.charAt(0) || 'A'}</span>
-              </div>
-            )}
-            <div className="mt-2"><MoodPill mood={tribeling?.mood || 'steady'} streak={tribeling?.streak || 0} /></div>
-            {tribeling?.stage && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 border border-primary/40 text-primary-300 whitespace-nowrap">
-                {tribeling.stage.name}
-              </span>
-            )}
-          </motion.button>
+          <div className="flex flex-col items-center flex-shrink-0">
+            <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="relative hover:scale-105 transition-transform" title="Open Avatar Studio">
+              {tribeling ? (
+                <StreakRing streak={tribeling.streak} goal={7} size={116} active={tribeling.mood === 'pumped'}>
+                  <Tribeling
+                    mood={tribeling.mood}
+                    energy={tribeling.energy}
+                    streak={tribeling.streak}
+                    stage={tribeling.stage?.id}
+                    skin={tribeling.skin}
+                    accessory={tribeling.accessory}
+                    size={92}
+                    showLabel={false}
+                  />
+                </StreakRing>
+              ) : (
+                <div className="w-20 h-20 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center">
+                  <span className="font-bold text-2xl text-primary">{effectiveUserName?.charAt(0) || 'A'}</span>
+                </div>
+              )}
+            </motion.button>
+            <div className="flex flex-col items-center gap-1 mt-2">
+              {tribeling?.stage && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/40 text-primary whitespace-nowrap">
+                  {tribeling.stage.name}
+                </span>
+              )}
+              <MoodPill mood={tribeling?.mood || 'steady'} streak={tribeling?.streak || 0} />
+            </div>
+          </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-surface-50 flex items-center gap-2">
               {effectiveUserName}

@@ -163,74 +163,95 @@ export function Tribeling({
         aria-hidden="true"
       >
         {/* ground shadow */}
-        <ellipse cx="60" cy="128" rx={couch ? 42 : 34} ry="7" fill="#000" opacity="0.25" />
+        <ellipse cx="60" cy="132" rx={couch ? 44 : 34} ry="6" fill="#000" opacity="0.22" />
         <StageDecor stage={stage} skin={skin} />
-        {/* feet */}
-        <ellipse cx="42" cy={droop || couch ? 118 : 120} rx="10" ry="6" fill={skin.accent} />
-        <ellipse cx="78" cy={droop || couch ? 118 : 120} rx="10" ry="6" fill={skin.accent} />
-        {/* little arms — up when pumped, droopy when deflated */}
+
+        {/* legs + shoes */}
+        <path d="M48 118 l0 8" stroke={skin.body} strokeWidth="9" strokeLinecap="round" />
+        <path d="M72 118 l0 8" stroke={skin.body} strokeWidth="9" strokeLinecap="round" />
+        <ellipse cx="44" cy="130" rx="10" ry="5" fill={skin.accent} />
+        <ellipse cx="76" cy="130" rx="10" ry="5" fill={skin.accent} />
+
+        {/* chibi torso */}
+        <ellipse cx="60" cy={droop || couch ? 108 : 104} rx={couch ? 30 : 25} ry={droop || couch ? 22 : 24} fill={skin.body} />
+        <ellipse cx="60" cy={droop || couch ? 112 : 108} rx={couch ? 20 : 15} ry="14" fill={skin.belly} opacity="0.8" />
+        {/* little belt line */}
+        <path d="M38 116 q22 8 44 0" stroke={skin.accent} strokeWidth="3" fill="none" opacity="0.6" />
+
+        {/* arms — up when pumped, droopy when deflated/couch */}
         {mood === 'pumped' ? (
           <>
-            <path d="M24 70 q-14 -18 -8 -28" stroke={skin.body} strokeWidth="9" fill="none" strokeLinecap="round" />
-            <path d="M96 70 q14 -18 8 -28" stroke={skin.body} strokeWidth="9" fill="none" strokeLinecap="round" />
-            <circle cx="16" cy="40" r="7" fill={skin.body} />
-            <circle cx="104" cy="40" r="7" fill={skin.body} />
+            <path d="M38 100 q-16 -14 -14 -30" stroke={skin.body} strokeWidth="9" fill="none" strokeLinecap="round" />
+            <path d="M82 100 q16 -14 14 -30" stroke={skin.body} strokeWidth="9" fill="none" strokeLinecap="round" />
+            <circle cx="23" cy="66" r="7" fill={skin.body} />
+            <circle cx="97" cy="66" r="7" fill={skin.body} />
           </>
         ) : droop || couch ? (
           <>
-            <path d="M26 78 q-10 12 -6 22" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
-            <path d="M94 78 q10 12 6 22" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
+            <path d="M38 102 q-12 10 -8 22" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
+            <path d="M82 102 q12 10 8 22" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
           </>
         ) : (
           <>
-            <path d="M26 74 q-10 8 -6 16" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
-            <path d="M94 74 q10 8 6 16" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
+            <path d="M37 100 q-12 8 -8 20" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
+            <path d="M83 100 q12 8 8 20" stroke={skin.body} strokeWidth="8" fill="none" strokeLinecap="round" />
           </>
         )}
-        {/* body blob — squashed when deflated/couch */}
-        <ellipse cx="60" cy={droop || couch ? 84 : 76} rx={couch ? 48 : 42} ry={droop || couch ? 38 : 46} fill={skin.body} />
-        {/* belly — bigger when couch potato */}
-        <ellipse cx="60" cy={droop || couch ? 94 : 90} rx={couch ? 34 : 26} ry={droop || couch ? 24 : 28} fill={skin.belly} opacity="0.75" />
-        {/* blush cheeks */}
-        <ellipse cx="40" cy="72" rx="6" ry="4" fill={skin.cheek} opacity="0.6" />
-        <ellipse cx="80" cy="72" rx="6" ry="4" fill={skin.cheek} opacity="0.6" />
+
+        {/* big chibi head */}
+        <ellipse cx="60" cy={droop || couch ? 56 : 50} rx="40" ry="36" fill={skin.body} />
+        {/* forehead highlight */}
+        <ellipse cx="50" cy="34" rx="16" ry="8" fill="#fff" opacity="0.12" />
+        {/* hair tuft */}
+        <path d="M60 16 q-8 -10 -16 -10 q4 8 8 10 q-8 2 -10 8 q8 -1 12 -4 q2 6 6 8 q0 -8 0 -12" fill={skin.accent} />
+
+        {/* blush cheeks on face */}
+        <ellipse cx="34" cy="62" rx="7" ry="4.5" fill={skin.cheek} opacity="0.65" />
+        <ellipse cx="86" cy="62" rx="7" ry="4.5" fill={skin.cheek} opacity="0.65" />
+
         {/* eyes */}
         {couch ? (
           <>
-            <path d="M38 62 h14" stroke="#0C0B10" strokeWidth="4" strokeLinecap="round" />
-            <path d="M68 62 h14" stroke="#0C0B10" strokeWidth="4" strokeLinecap="round" />
-            <path d="M38 62 q7 5 14 0" stroke="#0C0B10" strokeWidth="2.5" fill="none" opacity="0.5" />
-            <path d="M68 62 q7 5 14 0" stroke="#0C0B10" strokeWidth="2.5" fill="none" opacity="0.5" />
+            <path d="M40 52 h14" stroke="#0C0B10" strokeWidth="4" strokeLinecap="round" />
+            <path d="M66 52 h14" stroke="#0C0B10" strokeWidth="4" strokeLinecap="round" />
+            <path d="M40 52 q7 5 14 0" stroke="#0C0B10" strokeWidth="2.5" fill="none" opacity="0.5" />
+            <path d="M66 52 q7 5 14 0" stroke="#0C0B10" strokeWidth="2.5" fill="none" opacity="0.5" />
           </>
         ) : droop ? (
           <>
-            <path d="M40 62 q6 6 12 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-            <path d="M68 62 q6 6 12 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+            <path d="M42 52 q6 6 12 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+            <path d="M66 52 q6 6 12 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
           </>
         ) : accessory === 'shades' ? null : (
           <>
-            <circle cx="46" cy="60" r="6.5" fill="#0C0B10" />
-            <circle cx="74" cy="60" r="6.5" fill="#0C0B10" />
-            <circle cx="48.5" cy="57.5" r="2.2" fill="#fff" />
-            <circle cx="76.5" cy="57.5" r="2.2" fill="#fff" />
+            {/* big expressive chibi eyes */}
+            <ellipse cx="46" cy="52" rx="8" ry="9" fill="#0C0B10" />
+            <ellipse cx="74" cy="52" rx="8" ry="9" fill="#0C0B10" />
+            <circle cx="49" cy="48" r="3" fill="#fff" />
+            <circle cx="77" cy="48" r="3" fill="#fff" />
+            <circle cx="43.5" cy="56" r="1.4" fill="#fff" opacity="0.7" />
+            <circle cx="71.5" cy="56" r="1.4" fill="#fff" opacity="0.7" />
           </>
         )}
+
         {/* mouth */}
         {mood === 'pumped' ? (
-          <path d="M50 76 q10 10 20 0" stroke="#0C0B10" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M50 66 q10 12 20 0" stroke="#0C0B10" strokeWidth="4" fill={skin.accent} strokeLinecap="round" opacity="0.9" />
         ) : couch ? (
           <>
-            <ellipse cx="60" cy="78" rx="8" ry="6" fill="#0C0B10" opacity="0.85" />
-            <text x="104" y="38" fontSize="13" fill="#8E8EA3">z</text>
-            <text x="110" y="28" fontSize="10" fill="#8E8EA3">z</text>
+            <ellipse cx="60" cy="68" rx="8" ry="6" fill="#0C0B10" opacity="0.85" />
+            <text x="102" y="24" fontSize="13" fill="#8E8EA3">z</text>
+            <text x="109" y="14" fontSize="10" fill="#8E8EA3">z</text>
           </>
         ) : droop ? (
-          <path d="M52 80 q8 -5 16 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+          <path d="M52 70 q8 -5 16 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
         ) : (
-          <path d="M52 76 q8 5 16 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+          <path d="M52 66 q8 6 16 0" stroke="#0C0B10" strokeWidth="3.5" fill="none" strokeLinecap="round" />
         )}
+
         {/* sweat drop when deflated */}
-        {droop && <path d="M94 46 q7 12 0 17 q-7 -5 0 -17" fill={skin.belly} opacity="0.9" />}
+        {droop && <path d="M96 40 q7 12 0 17 q-7 -5 0 -17" fill={skin.belly} opacity="0.9" />}
+
         {/* accessory on top */}
         <Accessory type={accessory} skin={skin} />
       </svg>
