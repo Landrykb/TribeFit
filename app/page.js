@@ -896,67 +896,128 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     }
   };
 
-  const devTriggerSkip = () => {
-    const now = new Date().toISOString();
-    const skipNotif = {
-      id: `skip_${Date.now()}`,
-      type: 'paid_skip',
-      title: 'Teammate Paid Skip',
-      body: `${effectiveUserName} PAID to skip! 💸 Your tribe is stronger than excuses.`,
-      message: `${effectiveUserName} PAID to skip! 💸 Your tribe is stronger than excuses.`,
-      created_at: now,
-      timestamp: Date.now(),
-      read: false
-    };
-    
-    setNotifications(prev => [skipNotif, ...prev]);
-    toast.info('Skip notification triggered');
+  const devTriggerSkip = async () => {
+    if (!effectiveUserId || !selectedTribe) {
+      toast.error('Select a user and a tribe first');
+      return;
+    }
+    try {
+      const cost = 10;
+      if ((walletBalance || 0) < cost) {
+        await fetch('/api/dev/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            userId: effectiveUserId,
+            updates: { wallet_balance_tc: cost }
+          })
+        });
+      }
+
+      const res = await fetch('/api/skip/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: effectiveUserId,
+          userName: effectiveUserName,
+          groupId: selectedTribe,
+          costTc: cost
+        })
+      });
+
+      if (res.ok) {
+        toast.info(`${effectiveUserName} paid ${cost} TC to skip`);
+        loadInitialData();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Skip failed');
+      }
+    } catch (error) {
+      toast.error('Failed to trigger skip');
+      console.error(error);
+    }
   };
 
-  const devTriggerSnatch = (amount) => {
-    setSnatchedBalance(prev => prev + amount);
-    
-    // Get a random user name from testUsers or use a fun name
-    const skipperNames = testUsers && testUsers.length > 0 
-      ? testUsers.filter(u => u.id !== effectiveUserId).map(u => u.name)
-      : ['Sarah', 'Mike', 'Jessica', 'Tom', 'Emily', 'David'];
-    const skipperName = skipperNames[Math.floor(Math.random() * skipperNames.length)] || 'Teammate';
-    
-    // Fun sarcastic messages
-    const funMessages = [
-      `💸 Cha-ching! You snatched ${amount} TC from ${skipperName}'s guilt skip. Thanks for the donation! 😏`,
-      `🎉 ${skipperName} paid ${amount} TC to avoid sweating. Your wallet says thanks! 💰`,
-      `😎 ${skipperName} bought their way out for ${amount} TC. You're welcome for making them feel guilty!`,
-      `🤑 Ka-ching! ${skipperName} dropped ${amount} TC for you. Skipping never felt so expensive!`,
-      `💪 While ${skipperName} rested, you earned ${amount} TC. Capitalism at its finest!`,
-      `🎊 ${skipperName}'s laziness = Your ${amount} TC. The tribe thanks you for your sacrifice... I mean, their sacrifice!`,
-      `😂 ${skipperName} paid ${amount} TC to skip. Meanwhile, you're here grinding. Enjoy their money!`
-    ];
-    
-    const message = funMessages[Math.floor(Math.random() * funMessages.length)];
-    toast.success(`+${amount} TC snatched from ${skipperName}! 💰`);
-    
-    const now = new Date().toISOString();
-    const snatchNotif = {
-      id: `snatch_${Date.now()}`,
-      type: 'snatch',
-      title: `Snatched ${amount} TC from ${skipperName}`,
-      body: message,
-      message: message,
-      created_at: now,
-      timestamp: Date.now(),
-      read: false
-    };
-    
-    setNotifications(prev => [snatchNotif, ...prev]);
+  const devTriggerSnatch = async (amount) => {
+    if (!effectiveUserId) {
+      toast.error('No user selected');
+      return;
+    }
+    try {
+      const res = await fetch('/api/dev/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          userId: effectiveUserId,
+          updates: { snatched_balance_tc: Math.max(0, (snatchedBalance || 0) + amount) }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSnatchedBalance(data.user?.snatched_balance_tc || 0);
+      }
+
+      const skipperNames = testUsers && testUsers.length > 0
+        ? testUsers.filter(u => u.id !== effectiveUserId).map(u => u.name)
+        : ['Sarah', 'Mike', 'Jessica', 'Tom', 'Emily', 'David'];
+      const skipperName = skipperNames[Math.floor(Math.random() * skipperNames.length)] || 'Teammate';
+
+      const funMessages = [
+        `You snatched ${amount} TC from ${skipperName}'s guilt skip.`,
+        `${skipperName} paid ${amount} TC to avoid sweating. Your wallet says thanks!`,
+        `${skipperName} bought their way out for ${amount} TC.`,
+        `Ka-ching! ${skipperName} dropped ${amount} TC for you.`,
+        `While ${skipperName} rested, you earned ${amount} TC.`,
+        `${skipperName}'s laziness = Your ${amount} TC.`,
+        `${skipperName} paid ${amount} TC to skip. Meanwhile, you're grinding. Enjoy their money!`
+      ];
+      const message = funMessages[Math.floor(Math.random() * funMessages.length)];
+      toast.success(`+${amount} TC snatched from ${skipperName}!`);
+
+      setNotifications(prev => [{
+        id: `snatch_${Date.now()}`,
+        type: 'snatch',
+        title: `Snatched ${amount} TC from ${skipperName}`,
+        body: message,
+        message,
+        created_at: new Date().toISOString(),
+        timestamp: Date.now(),
+        read: false
+      }, ...prev]);
+    } catch (error) {
+      toast.error('Failed to update snatched balance');
+      console.error(error);
+    }
   };
 
-  const devAddBalance = (amount) => {
-    setWalletBalance(prev => Math.max(0, prev + amount));
-    if (amount > 0) {
-      toast.success(`+${amount} TC added to wallet`);
-    } else {
-      toast.info(`${amount} TC deducted from wallet`);
+  const devAddBalance = async (amount) => {
+    if (!effectiveUserId) {
+      toast.error('No user selected');
+      return;
+    }
+    try {
+      const res = await fetch('/api/dev/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          userId: effectiveUserId,
+          updates: { wallet_balance_tc: Math.max(0, (walletBalance || 0) + amount) }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWalletBalance(data.user?.wallet_balance_tc || 0);
+        toast.success(`${amount > 0 ? '+' : ''}${amount} TC wallet updated`);
+        loadInitialData();
+      } else {
+        toast.error('Failed to update wallet');
+      }
+    } catch (error) {
+      toast.error('Failed to update wallet');
+      console.error(error);
     }
   };
 
@@ -967,31 +1028,29 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     }
 
     try {
-      // Generate fake workout sessions
       const workoutTypes = ['Push Day', 'Pull Day', 'Leg Day', 'Full Body', 'HIIT', 'Cardio', 'Core Blast'];
-      const sessions = [];
-      
+
       for (let i = 0; i < count; i++) {
-        const daysAgo = Math.floor(Math.random() * 30); // Random date in last 30 days
+        const daysAgo = Math.floor(Math.random() * 30);
         const date = new Date();
         date.setDate(date.getDate() - daysAgo);
-        
-        sessions.push({
-          id: `prog_${Date.now()}_${i}`,
-          user_id: effectiveUserId,
-          date: date.toISOString(),
-          title: workoutTypes[Math.floor(Math.random() * workoutTypes.length)],
-          duration_sec: 1800 + Math.floor(Math.random() * 1800), // 30-60 minutes
-          completed_sets: 8 + Math.floor(Math.random() * 8) // 8-15 sets
+
+        await fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: effectiveUserId,
+            date: date.toISOString().slice(0, 10),
+            title: workoutTypes[Math.floor(Math.random() * workoutTypes.length)],
+            duration_sec: 1800 + Math.floor(Math.random() * 1800),
+            completed_sets: 8 + Math.floor(Math.random() * 8),
+            type: 'workout'
+          })
         });
       }
 
-      // Add to progressHistory state
-      setProgressHistory(prev => [...sessions, ...prev].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ));
-
       toast.success(`Added ${count} workout sessions!`);
+      loadInitialData();
     } catch (error) {
       toast.error('Failed to add progress');
       console.error(error);
