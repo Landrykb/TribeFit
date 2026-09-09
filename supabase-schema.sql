@@ -415,13 +415,13 @@ create table if not exists public.app_state (
 -- ROW LEVEL SECURITY POLICIES
 -- =====================================================================================
 
--- Drop all existing policies in public so this script is safe to re-run
+-- Drop all existing policies in public and storage so this script is safe to re-run
 DO $$
 DECLARE
   pol RECORD;
 BEGIN
-  FOR pol IN SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public' LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+  FOR pol IN SELECT policyname, tablename, schemaname FROM pg_policies WHERE schemaname IN ('public', 'storage') LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', pol.policyname, pol.schemaname, pol.tablename);
   END LOOP;
 END $$;
 
