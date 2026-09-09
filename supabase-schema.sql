@@ -81,7 +81,7 @@ create table if not exists public.pact_tx (
   id uuid primary key default uuid_generate_v4(),
   wallet_id uuid references public.pact_wallets(id) on delete cascade,
   user_id uuid references public.users(id) on delete set null,
-  type text not null check (type in ('skip', 'topup', 'spend', 'donate', 'reward')),
+  type text not null check (type in ('skip', 'topup', 'spend', 'donate', 'reward', 'wishlist_pledge', 'catalog_purchase')),
   amount_tc numeric(12,2) not null,
   description text,
   meta jsonb default '{}'::jsonb,
@@ -193,7 +193,7 @@ create table if not exists public.notifications (
 create table if not exists public.payments (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid references public.users(id) on delete cascade,
-  type text not null check (type in ('topup', 'coach', 'pact', 'tip', 'skip', 'refund')),
+  type text not null check (type in ('topup', 'coach', 'pact', 'tip', 'skip', 'refund', 'catalog_purchase')),
   amount_tc numeric(12,2) not null,
   amount_cents int not null, -- Original payment amount in cents
   currency text not null default 'USD',
@@ -638,6 +638,8 @@ create table if not exists public.user_google_tokens (
   user_id uuid primary key references public.users(id) on delete cascade,
   access_token text not null,
   refresh_token text,
+  scope text,
+  token_type text,
   expiry_date bigint,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
