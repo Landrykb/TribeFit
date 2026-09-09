@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
-import { Zap, Clock, Target, Dumbbell } from 'lucide-react';
+import { Zap, Clock, Target, Dumbbell, Home, Warehouse, Building2, Sprout, TrendingUp, Flame } from 'lucide-react';
 
 export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
   const [formData, setFormData] = useState({
@@ -37,7 +37,7 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
       const data = await response.json();
       
       if (response.ok) {
-        toast.success('Workout plan generated successfully! 🎯');
+        toast.success('Workout plan generated successfully!');
         onPlanGenerated(data);
         onClose();
         setFormData({
@@ -131,24 +131,28 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
           </label>
           <div className="grid grid-cols-1 gap-2">
             {[
-              { value: 'no_equipment', label: '🏠 No Equipment (Bodyweight Only)' },
-              { value: 'basic_home', label: '🏡 Basic Home Equipment (Dumbbells, Bands)' },
-              { value: 'home_gym', label: '🏋️ Home Gym (Full Equipment)' },
-              { value: 'commercial_gym', label: '🏢 Commercial Gym Access' }
-            ].map((eq) => (
-              <button
-                key={eq.value}
-                type="button"
-                onClick={() => handleInputChange('equipment', eq.value)}
-                className={`p-4 text-left rounded-xl border transition-all duration-200 hover-elevate ${
-                  formData.equipment === eq.value
-                    ? 'bg-gradient-to-br from-success/20 to-success/10 border-success text-success shadow-lg'
-                    : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
-                }`}
-              >
-                <span className="text-sm font-bold">{eq.label}</span>
-              </button>
-            ))}
+              { value: 'no_equipment', label: 'No Equipment (Bodyweight Only)', Icon: Home },
+              { value: 'basic_home', label: 'Basic Home Equipment (Dumbbells, Bands)', Icon: Dumbbell },
+              { value: 'home_gym', label: 'Home Gym (Full Equipment)', Icon: Warehouse },
+              { value: 'commercial_gym', label: 'Commercial Gym Access', Icon: Building2 }
+            ].map((eq) => {
+              const EqIcon = eq.Icon;
+              return (
+                <button
+                  key={eq.value}
+                  type="button"
+                  onClick={() => handleInputChange('equipment', eq.value)}
+                  className={`p-4 text-left rounded-xl border transition-all duration-200 hover-elevate flex items-center gap-3 ${
+                    formData.equipment === eq.value
+                      ? 'bg-gradient-to-br from-success/20 to-success/10 border-success text-success shadow-lg'
+                      : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
+                  }`}
+                >
+                  <EqIcon size={20} />
+                  <span className="text-sm font-bold">{eq.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -160,24 +164,28 @@ export function WorkoutGenerator({ isOpen, onClose, onPlanGenerated }) {
           </label>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { value: 'beginner', label: '🌱 Beginner', desc: '0-6 months' },
-              { value: 'intermediate', label: '🌿 Intermediate', desc: '6 months - 2 years' },
-              { value: 'advanced', label: '🌳 Advanced', desc: '2+ years' }
-            ].map((level) => (
-              <button
-                key={level.value}
-                type="button"
-                onClick={() => handleInputChange('experienceLevel', level.value)}
-                className={`p-4 text-center rounded-xl border transition-all duration-200 hover-elevate ${
-                  formData.experienceLevel === level.value
-                    ? 'bg-gradient-to-br from-warning/20 to-warning/10 border-warning text-warning shadow-lg'
-                    : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
-                }`}
-              >
-                <div className="text-sm font-bold">{level.label}</div>
-                <div className="text-xs opacity-70 mt-1">{level.desc}</div>
-              </button>
-            ))}
+              { value: 'beginner', label: 'Beginner', desc: '0-6 months', Icon: Sprout },
+              { value: 'intermediate', label: 'Intermediate', desc: '6 months - 2 years', Icon: TrendingUp },
+              { value: 'advanced', label: 'Advanced', desc: '2+ years', Icon: Flame }
+            ].map((level) => {
+              const LevelIcon = level.Icon;
+              return (
+                <button
+                  key={level.value}
+                  type="button"
+                  onClick={() => handleInputChange('experienceLevel', level.value)}
+                  className={`p-4 text-center rounded-xl border transition-all duration-200 hover-elevate ${
+                    formData.experienceLevel === level.value
+                      ? 'bg-gradient-to-br from-warning/20 to-warning/10 border-warning text-warning shadow-lg'
+                      : 'bg-surface-700 border-surface-600 text-surface-200 hover:border-surface-500 hover:bg-surface-600 light:bg-white light:border-gray-300 light:text-gray-700 light:hover:border-gray-400'
+                  }`}
+                >
+                  <LevelIcon size={24} className="mx-auto mb-2" />
+                  <div className="text-sm font-bold">{level.label}</div>
+                  <div className="text-xs opacity-70 mt-1">{level.desc}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 

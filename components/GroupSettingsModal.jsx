@@ -127,12 +127,12 @@ export function GroupSettingsModal({
                   disabled={!canEdit}
                   className="w-full px-4 py-2 rounded-lg border border-surface-700 light:border-gray-300 bg-surface-900 light:bg-white text-surface-100 light:text-gray-900 disabled:opacity-50"
                 >
-                  <option value="teammate_boost">🤝 Teammate Boost (80% to active members, 20% to vault)</option>
-                  <option value="tribe_fund">🏛️ Tribe Fund (100% to vault for community causes)</option>
+                  <option value="teammate_boost">Teammate Boost (80% to active members, 20% to vault)</option>
+                  <option value="tribe_fund">Tribe Fund (100% to vault for community causes)</option>
                 </select>
                 {settings && draft.skip_mode !== settings.skip_mode && (
                   <div className="text-xs text-warning light:text-yellow-600 mt-1">
-                    ⚠️ Changing skip mode requires a tribe vote
+                    Changing skip mode requires a tribe vote
                   </div>
                 )}
               </div>

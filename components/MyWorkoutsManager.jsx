@@ -11,10 +11,7 @@ import {
   LayoutGrid, Shield, Layers, Footprints, Target, HeartPulse, Flame, Sprout, Activity
 } from 'lucide-react';
 
-const BODY_PART_ICONS = {
-  all: LayoutGrid, chest: Dumbbell, back: Shield, shoulders: Layers,
-  arms: Zap, legs: Footprints, core: Target, cardio: HeartPulse, fullbody: Flame,
-};
+import { BODY_PART_ICONS } from '../lib/body-part-icons';
 
 const LEVEL_CHIPS = [
   { id: 'all', label: 'All', Icon: LayoutGrid },

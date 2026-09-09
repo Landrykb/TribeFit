@@ -77,7 +77,7 @@ export function DonationModal({ isOpen, onClose, onSubmitRequest }) {
 
           <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 light:bg-primary-50 border border-accent/20 light:border-primary-200 rounded-xl">
             <p className="text-sm text-surface-200 light:text-gray-700">
-              💡 <strong className="text-accent">How it works:</strong> Your tribe will vote on this donation request. Once approved, the funds will be sent to support the gym.
+              <strong className="text-accent">How it works:</strong> Your tribe will vote on this donation request. Once approved, the funds will be sent to support the gym.
             </p>
           </div>
 

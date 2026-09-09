@@ -116,11 +116,11 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
         price_tc: price,
         tribe_id: tribeId
       });
-      alert(`✅ Successfully purchased ${catalogItem.name}!`);
+      alert(`Successfully purchased ${catalogItem.name}!`);
     } catch (error) {
       onBuyWithBalance?.(price);
       console.error('Failed to buy item:', error);
-      alert(`❌ Purchase failed: ${error.message || 'unknown'}`);
+      alert(`Purchase failed: ${error.message || 'unknown'}`);
     }
   };
 

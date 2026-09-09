@@ -103,7 +103,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
             setIsResting(false);
             setIsRunning(false);
             setShowSkipOptions(false);
-            toast.success('Rest complete! Ready for next set! 🔥');
+            toast.success('Rest complete! Ready for next set!');
             return 0;
           }
           return prev - 1;
@@ -134,7 +134,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
 
   const startWorkout = () => {
     setWorkoutStarted(true);
-    toast.success('Workout started! Let\'s go! 🔥');
+    toast.success('Workout started! Let\'s go!');
   };
 
   const completeSet = () => {
@@ -170,12 +170,12 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
     setIsRunning(false);
     setTimeLeft(0);
     setShowSkipOptions(false);
-    toast.success('Rest skipped! 💪');
+    toast.success('Rest skipped!');
   };
 
   const handlePayToSkip = () => {
     // Mock payment logic - in real app, integrate with payment system
-    toast.success('Paid 5 TC to skip rest! 💰');
+    toast.success('Paid 5 TC to skip rest!');
     skipRest();
   };
 
@@ -189,7 +189,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
         if (prev >= 100) {
           clearInterval(adInterval);
           setIsWatchingAd(false);
-          toast.success('Ad completed! Rest skipped! 📺');
+          toast.success('Ad completed! Rest skipped!');
           skipRest();
           return 100;
         }
@@ -201,7 +201,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
   const completeWorkout = async () => {
     setWorkoutStarted(false);
     setCelebrating(true);
-    toast.success('🎉 Workout Complete! Amazing work! 🏆');
+    toast.success('Workout Complete! Amazing work!');
     
     // Persist session results
     try {
@@ -416,7 +416,7 @@ export function WorkoutSession({ isOpen, onClose, workoutData, userId, groupId, 
                       <span className="text-surface-300 light:text-gray-600">
                         {exercises[set.exercise].name} - Set {set.set}
                       </span>
-                      <span className="text-success">✓</span>
+                      <Check size={14} className="text-success" />
                     </div>
                   ))}
                 </div>

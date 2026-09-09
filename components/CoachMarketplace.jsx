@@ -313,7 +313,7 @@ function EligibilityChecker({ userStreak, userTotalWorkouts, isInTribe, requirem
       label: 'Be part of a Tribe',
       requirement: 'Must be in a Tribe (not Squad)',
       met: isInTribe,
-      current: isInTribe ? 'In Tribe ✓' : 'Not in Tribe',
+      current: isInTribe ? 'In Tribe' : 'Not in Tribe',
       icon: Users
     },
     {

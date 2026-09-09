@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Modal } from './ui/Modal';
 import { 
-  Plus, Trash2, GripVertical, Clock, Target, 
+  Plus, Trash2, GripVertical, Clock, Target, Dumbbell,
   TrendingUp, Save, X, ChevronUp, ChevronDown,
   Copy, Upload, Calendar as CalendarIcon, Image as ImageIcon
 } from 'lucide-react';
 import { BODY_PARTS } from '../lib/workout-library';
+import { BODY_PART_ICONS } from '../lib/body-part-icons';
 import { useToast } from './ui/Toast';
 
 export function AdvancedWorkoutEditor({ 
@@ -185,7 +186,10 @@ export function AdvancedWorkoutEditor({
                       : 'bg-surface-800 light:bg-white border-surface-600 light:border-gray-300 text-surface-300 light:text-gray-600 hover:border-surface-500 light:hover:border-gray-400'
                   }`}
                 >
-                  <div className="text-lg mb-0.5">{part.emoji}</div>
+                  {(() => {
+                    const Icon = BODY_PART_ICONS[part.id] || Dumbbell;
+                    return <Icon size={18} className="mx-auto mb-1 text-surface-300" />;
+                  })()}
                   <div className="font-medium">{part.label}</div>
                 </button>
               ))}

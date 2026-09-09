@@ -116,11 +116,6 @@ export function MoodPill({ mood = 'steady', streak = 0 }) {
 
 // Layered-image avatar — composites body + face assets from /public/avatar.
 // Full-character stage artwork (preferred when present)
-const PRESETS = {
-  1: '/avatar/presets/preset-1.svg',
-  2: '/avatar/presets/preset-2.svg',
-};
-
 const STAGE_ART = {
   sprout: '/avatar/stage-sprout.png',
   rookie: '/avatar/stage-rookie.png',
@@ -160,11 +155,8 @@ export function Tribeling({
   size = 96,
   showLabel = true,
   custom = null,
-  preset = null,
   parts = null,
 }) {
-  const chosenPreset = PRESETS[preset];
-
   const PART_SRC = {
     body: (i) => `/avatar/sheet/body-${i}.png`,
     outfit: (i) => `/avatar/sheet/outfit-${i}.png`,
@@ -196,30 +188,6 @@ export function Tribeling({
         <div className="relative inline-block" style={{ width: size * scale }}>
           {base && <img src={base.src} alt="" className="block h-auto w-full" draggable={false} />}
           {head && <img src={head.src} alt="" className="absolute top-0 left-0 w-full h-auto z-10" draggable={false} />}
-        </div>
-        {showLabel && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
-            <m.Icon size={12} />
-            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // User-selected vector preset art
-  if (chosenPreset) {
-    return (
-      <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
-        <div className="relative" style={{ width: size * scale, height: size * scale }}>
-          {aura && <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />}
-          <img
-            src={chosenPreset}
-            alt="Tribeling"
-            className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-            draggable={false}
-          />
         </div>
         {showLabel && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>

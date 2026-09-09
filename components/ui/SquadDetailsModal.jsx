@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './button';
 import { 
-  Users, Flame, Crown, Star, Trophy, TrendingUp, 
+  Users, Flame, Crown, Star, Trophy, TrendingUp, Check,
   Calendar, Settings, UserPlus, LogOut, Copy,
   ArrowUp, Gift, Target, Clock, Trash2, Link, QrCode, Share2, Coins, Sparkles, Swords, Feather, Heart, Zap, MessageSquare
 } from 'lucide-react';
@@ -175,7 +175,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
               <div className="flex justify-between text-xs text-surface-400 mb-1">
                 <span>Streak: {squad.streak_days}/30 days</span>
                 <span className={progressionStatus.requirements.streakDays.met ? 'text-success' : ''}>
-                  {progressionStatus.requirements.streakDays.met ? '✓' : Math.round(progressionStatus.streakProgress)}%
+                  {progressionStatus.requirements.streakDays.met ? <Check size={14} /> : `${Math.round(progressionStatus.streakProgress)}%`}
                 </span>
               </div>
               <div className="w-full bg-surface-700 rounded-full h-2">
@@ -190,7 +190,7 @@ export function SquadDetailsModal({ isOpen, onClose, squad, user, onJoin, onLeav
               <div className="flex justify-between text-xs text-surface-400 mb-1">
                 <span>Participation: {squad.participation_rate}%/70%</span>
                 <span className={progressionStatus.requirements.participation.met ? 'text-success' : ''}>
-                  {progressionStatus.requirements.participation.met ? '✓' : Math.round(progressionStatus.participationProgress)}%
+                  {progressionStatus.requirements.participation.met ? <Check size={14} /> : `${Math.round(progressionStatus.participationProgress)}%`}
                 </span>
               </div>
               <div className="w-full bg-surface-700 rounded-full h-2">

@@ -8,6 +8,7 @@ import {
   Plus, ChevronUp, ChevronDown, Copy, Save
 } from 'lucide-react';
 import { BODY_PARTS, WORKOUT_TEMPLATES, getWorkoutsByBodyPart } from '../lib/workout-library';
+import { BODY_PART_ICONS } from '../lib/body-part-icons';
 import { useToast } from './ui/Toast';
 
 export function EnhancedWorkoutGenerator({ 
@@ -127,7 +128,7 @@ export function EnhancedWorkoutGenerator({
       setGeneratedWorkout(workout);
       setStep(3);
       
-      toast.success('🎯 Workout generated!');
+      toast.success('Workout generated!');
     } catch (error) {
       console.error('Generation error:', error);
       toast.error('Failed to generate workout');
@@ -404,7 +405,10 @@ export function EnhancedWorkoutGenerator({
                         : 'bg-surface-800 border-surface-600 text-surface-300 hover:border-surface-500'
                     }`}
                   >
-                    <div className="text-2xl mb-1">{part.emoji}</div>
+                    {(() => {
+                      const Icon = BODY_PART_ICONS[part.id] || Dumbbell;
+                      return <Icon size={22} className="mx-auto mb-1 text-surface-300" />;
+                    })()}
                     <div className="text-sm font-medium">{part.label}</div>
                   </button>
                 ))}
