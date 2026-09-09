@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApi, optimisticMutate } from '../lib/api';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
@@ -29,20 +29,6 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const [editTitle, setEditTitle] = useState('');
   const [editDuration, setEditDuration] = useState('45 min');
   const [editShared, setEditShared] = useState(false);
-
-  const contentRef = useRef(null);
-  const dayPanelRef = useRef(null);
-
-  useEffect(() => {
-    if (selectedDate && dayPanelRef.current && contentRef.current) {
-      // wait for the expand animation to start
-      const t = setTimeout(() => {
-        const panelTop = dayPanelRef.current.offsetTop;
-        contentRef.current.scrollTo({ top: Math.max(0, panelTop - 16), behavior: 'smooth' });
-      }, 50);
-      return () => clearTimeout(t);
-    }
-  }, [selectedDate]);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -239,17 +225,17 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Tribe Workout Calendar" size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} title="Tribe Workout Calendar" size="2xl" contentClassName="p-0 flex flex-col overflow-hidden h-[75vh]">
       {loading ? (
-        <div className="space-y-4 max-h-[80vh] overflow-y-auto p-1">
+        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
           <Skeleton className="h-8 w-1/3" />
           <Skeleton className="h-8 w-1/2" />
           <Skeleton className="h-64 w-full" />
         </div>
       ) : (
-        <div ref={contentRef} className="space-y-4 max-h-[80vh] overflow-y-auto">
-        {/* Calendar Header - Fixed at top */}
-        <div className="sticky top-0 bg-surface-900 light:bg-gray-50 z-10 pb-4">
+        <div className="flex-1 min-h-0 flex flex-col">
+        {/* Calendar Header */}
+        <div className="shrink-0 px-6 pt-6 pb-3 bg-surface-900 light:bg-gray-50 z-10">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-3 min-w-0">
               <h3 className="text-lg sm:text-xl font-bold text-surface-50 light:text-gray-900 whitespace-nowrap truncate">
@@ -287,10 +273,12 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </div>
         </div>
 
-        {/* Calendar Grid - Artistic & Responsive */}
-        <div className="rounded-3xl p-2 bg-surface-800/40 light:bg-white/60 border-2 border-surface-700 light:border-gray-200 shadow-toon overflow-hidden">
+        {/* Main area: grid + day panel */}
+        <div className="flex-1 min-h-0 flex flex-col sm:flex-row gap-4 px-6 pb-4 overflow-hidden">
+          {/* Calendar Grid - Artistic & Responsive */}
+        <div className="flex-1 min-h-0 flex flex-col rounded-3xl p-2 bg-surface-800/40 light:bg-white/60 border-2 border-surface-700 light:border-gray-200 shadow-toon overflow-hidden">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="shrink-0 grid grid-cols-7 gap-1 mb-1">
             {dayNames.map(day => (
               <div key={day} className="py-2 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-surface-400 light:text-gray-500">
                 {day}
@@ -299,7 +287,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </div>
 
           {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-7 gap-1 content-start">
             {getDaysInMonth(currentDate).map((date, index) => {
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const isToday = formatDate(date) === formatDate(new Date());
@@ -357,21 +345,36 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
               );
             })}
           </div>
+
+          {/* Legend */}
+          <div className="shrink-0 flex items-center justify-between text-[10px] sm:text-xs p-2 pt-1">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 bg-primary/20 border border-primary/30 rounded"></div>
+                <span className="text-surface-400 light:text-gray-600">Tribe</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 bg-surface-700 light:bg-gray-300 rounded"></div>
+                <span className="text-surface-400 light:text-gray-600">Solo</span>
+              </div>
+            </div>
+            <span className="text-surface-500 light:text-gray-500 hidden sm:inline">Tap a day to manage</span>
+          </div>
         </div>
 
         {/* Selected Day Detail — expanded sheet */}
         <AnimatePresence>
           {selectedDate && (
             <motion.div
-              ref={dayPanelRef}
               key={selectedDate}
-              initial={{ opacity: 0, y: 16, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -16, height: 0 }}
-              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="overflow-hidden"
+              layout
+              initial={{ opacity: 0, x: 40, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 40, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              className="shrink-0 w-full sm:w-[22rem] h-full max-h-[40%] sm:max-h-full overflow-hidden"
             >
-              <div className="mt-3 rounded-3xl border-2 border-surface-700/60 light:border-gray-200 bg-surface-800/60 light:bg-white/80 shadow-toon p-4">
+              <div className="flex flex-col h-full rounded-3xl border-2 border-surface-700/60 light:border-gray-200 bg-surface-800/60 light:bg-white/80 shadow-toon p-4 overflow-hidden">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
                     <h4 className="text-lg font-black text-surface-50 light:text-gray-900 leading-tight">
@@ -390,7 +393,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                   </Button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
                   <AnimatePresence mode="popLayout">
                     {(workoutSchedule[selectedDate] || []).map((w, i) => (
                       <motion.div
@@ -454,45 +457,26 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
                     >
                       <Dumbbell size={28} className="mx-auto text-surface-500 light:text-gray-400 mb-2" />
                       <p className="text-sm text-surface-300 light:text-gray-600 font-medium">No workouts yet</p>
-                      <p className="text-xs text-surface-500 light:text-gray-500 mt-0.5">Tap + to add one</p>
+                      <p className="text-xs text-surface-500 light:text-gray-500 mt-0.5">Tap Add Workout</p>
                     </motion.div>
                   )}
-
-                  <Button
-                    variant="primary"
-                    onClick={() => setShowScheduler(true)}
-                    className="w-full h-11 mt-2 shadow-lg shadow-primary/20"
-                  >
-                    <Plus size={18} /> Add Workout
-                  </Button>
                 </div>
+
+                <Button
+                  variant="primary"
+                  onClick={() => setShowScheduler(true)}
+                  className="w-full h-11 mt-3 shadow-lg shadow-primary/20 shrink-0"
+                >
+                  <Plus size={18} /> Add Workout
+                </Button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Legend */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-primary/20 border border-primary/30 rounded"></div>
-              <span className="text-surface-400 light:text-gray-600">Shared with tribe</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-surface-700 light:bg-gray-300 rounded"></div>
-              <span className="text-surface-400 light:text-gray-600">Private workout</span>
-            </div>
-          </div>
-          
-          <div className="text-surface-500 light:text-gray-500">
-            Click + to schedule a workout
-          </div>
-        </div>
       </div>
-      )}
 
-      {/* Fixed Action Buttons at Bottom */}
-      <div className="sticky bottom-0 bg-surface-900 light:bg-gray-50 pt-4 border-t border-surface-700 light:border-gray-200">
+      {/* Bottom action bar */}
+      <div className="shrink-0 px-6 py-3 border-t border-surface-700/50 light:border-gray-200">
         <div className="flex space-x-3">
           <Button
             variant="ghost"
@@ -516,6 +500,8 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </Button>
         </div>
       </div>
+      </div>
+      )}
 
       {/* Workout Scheduler Modal */}
       {showScheduler && (

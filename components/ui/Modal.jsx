@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', contentClassName = '' }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             </button>
           </div>
         </div>
-        <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+        <div className={`p-6 max-h-[calc(90vh-120px)] overflow-y-auto ${contentClassName}`}>
           {children}
         </div>
       </div>
