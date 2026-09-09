@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
-import { getGoogleToken, setGoogleToken, addCalendarEntry, getCalendarSettings, listCalendar } from '../../../_store/db';
+import { getGoogleToken, setGoogleToken, addCalendarEntry, getCalendarSettings, listCalendar } from '@/lib/supabase-db';
+
+export const dynamic = 'force-dynamic';
 
 async function refreshAccessToken(token) {
   const client_id = process.env.GOOGLE_CLIENT_ID;
@@ -27,18 +28,17 @@ async function refreshAccessToken(token) {
 }
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
-    let token = getGoogleToken(userId);
+    let token = await getGoogleToken(userId);
     if (!token || !token.access_token) {
       return NextResponse.json({ error: 'Not connected' }, { status: 401 });
     }
-    // Refresh if expiring
+
     if (token.expiry_date && token.expiry_date - Date.now() < 60000) {
       const refreshed = await refreshAccessToken(token);
-      if (refreshed) { token = refreshed; setGoogleToken(userId, refreshed); }
+      if (refreshed) { token = refreshed; await setGoogleToken(userId, refreshed); }
     }
 
     const now = new Date();
@@ -54,7 +54,7 @@ export async function GET(request) {
     paramsBase.set('timeMin', startOfDay.toISOString());
     paramsBase.set('timeMax', endOfDay.toISOString());
 
-    const settings = getCalendarSettings(userId);
+    const settings = await getCalendarSettings(userId);
     const keywords = String(settings?.keywords || 'workout,gym,run,exercise')
       .split(',')
       .map(s => s.trim())
@@ -62,8 +62,7 @@ export async function GET(request) {
     const regex = keywords.length ? new RegExp(keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i') : null;
     const calIds = Array.isArray(settings?.calendars) && settings.calendars.length > 0 ? settings.calendars : ['primary'];
 
-    // For duplicate avoidance
-    const existing = listCalendar({ userId });
+    const existing = await listCalendar({ userId });
     const hasDuplicate = (dateStr, timeStr, title) => {
       const day = existing[dateStr] || [];
       return day.some(w => w.time === timeStr && w.workout === title);
@@ -78,7 +77,7 @@ export async function GET(request) {
       if (calRes1.status === 401) {
         const refreshed = await refreshAccessToken(token);
         if (refreshed) {
-          token = refreshed; setGoogleToken(userId, refreshed);
+          token = refreshed; await setGoogleToken(userId, refreshed);
           const calRes2 = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?${paramsBase.toString()}`, {
             headers: { Authorization: `Bearer ${token.access_token}` }
           });
@@ -104,14 +103,14 @@ export async function GET(request) {
         const text = `${title} ${ev.description || ''}`;
         if (regex && !regex.test(text)) continue;
         if (hasDuplicate(dateStr, timeStr, title)) continue;
-        addCalendarEntry({ userId, date: dateStr, time: timeStr, workout: title, duration: '45 min', shared: false });
+        await addCalendarEntry({ userId, date: dateStr, time: timeStr, workout: title, type: 'general', duration: '45 min', shared: false });
         imported++;
       }
     }
 
     return NextResponse.json({ imported });
   } catch (e) {
+    console.error('Google import error:', e);
     return NextResponse.json({ error: 'Import failed' }, { status: 500 });
   }
-  });
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  return runWithStore(async () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
   const scopes = ['https://www.googleapis.com/auth/calendar.readonly'].join(' ');
@@ -29,5 +29,4 @@ export async function GET(request) {
   authUrl.searchParams.set('state', state);
 
   return NextResponse.redirect(authUrl.toString());
-  });
 }

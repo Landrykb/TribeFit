@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
 
-// Photo/Screenshot OCR for Workout Import
-// This uses Tesseract.js for client-side OCR
-// For server-side, you can integrate Google Cloud Vision API or AWS Textract
-// Add to .env.local:
-// GOOGLE_CLOUD_VISION_API_KEY=your_api_key (optional)
-// AWS_ACCESS_KEY_ID=your_key (optional)
-// AWS_SECRET_ACCESS_KEY=your_secret (optional)
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const formData = await request.formData();
     const file = formData.get('image');
@@ -19,7 +11,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Image file required' }, { status: 400 });
     }
 
-    // Check if Cloud Vision API is configured
     const visionApiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
 
     if (visionApiKey) {
@@ -33,7 +24,6 @@ export async function POST(request) {
     console.error('Photo OCR Error:', error);
     return fallbackPhotoData();
   }
-  });
 }
 
 async function processWithCloudVision(file, apiKey) {
@@ -86,19 +76,16 @@ function extractWorkoutsFromText(text) {
   let currentWorkout = null;
   let currentExercises = [];
 
-  lines.forEach((line, index) => {
-    // Detect workout headers (usually contain time/date or workout type)
+  lines.forEach((line) => {
     const timeMatch = line.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
     const dateMatch = line.match(/(\d{1,2})\/(\d{1,2})|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/i);
-    
+
     if (timeMatch || dateMatch || isWorkoutTitle(line)) {
-      // Save previous workout if exists
       if (currentWorkout && currentExercises.length > 0) {
         currentWorkout.exercises = currentExercises;
         workouts.push(currentWorkout);
       }
 
-      // Start new workout
       currentWorkout = {
         name: line,
         date: new Date().toISOString().split('T')[0],
@@ -110,7 +97,6 @@ function extractWorkoutsFromText(text) {
       };
       currentExercises = [];
     }
-    // Detect exercises (format: "Exercise Name 3x12" or "Exercise Name - 3 sets")
     else if (isExerciseLine(line)) {
       const exercise = parseExercise(line);
       if (exercise) {
@@ -119,13 +105,11 @@ function extractWorkoutsFromText(text) {
     }
   });
 
-  // Save last workout
   if (currentWorkout && currentExercises.length > 0) {
     currentWorkout.exercises = currentExercises;
     workouts.push(currentWorkout);
   }
 
-  // If no workouts detected but we have exercises, create a generic workout
   if (workouts.length === 0 && currentExercises.length > 0) {
     workouts.push({
       name: 'Workout from Photo',
@@ -153,13 +137,11 @@ function isWorkoutTitle(line) {
 }
 
 function isExerciseLine(line) {
-  // Check for sets/reps patterns: "3x12", "3 x 12", "3 sets", etc.
   const setsRepsPattern = /\d+\s*[x×]\s*\d+|\d+\s+sets?|\d+\s+reps?/i;
   return setsRepsPattern.test(line);
 }
 
 function parseExercise(line) {
-  // Extract exercise name and sets/reps
   const setsRepsMatch = line.match(/(\d+)\s*[x×]\s*(\d+)/);
   const setsMatch = line.match(/(\d+)\s+sets?/i);
   const repsMatch = line.match(/(\d+)\s+reps?/i);
@@ -176,7 +158,6 @@ function parseExercise(line) {
     reps = parseInt(repsMatch[1]);
   }
 
-  // Extract exercise name (remove sets/reps part)
   let name = line
     .replace(/\d+\s*[x×]\s*\d+/gi, '')
     .replace(/\d+\s+sets?/gi, '')
@@ -197,7 +178,6 @@ function parseExercise(line) {
 }
 
 function fallbackPhotoData() {
-  // Return sample extracted workout
   const workouts = [
     {
       name: 'Upper Body Workout (From Photo)',

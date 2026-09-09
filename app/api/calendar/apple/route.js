@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
 
-// Apple Calendar (.ics/.ical) Parser
-// This handles iCalendar format used by Apple Calendar and other calendar apps
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const { icsData } = await request.json();
 
@@ -23,18 +20,17 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Apple Calendar Parse Error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to parse calendar file',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
-  });
 }
 
 function parseICalendar(icsData) {
   const workouts = [];
   const events = icsData.split('BEGIN:VEVENT');
-  
+
   events.slice(1).forEach(eventBlock => {
     try {
       const lines = eventBlock.split(/\r?\n/);
@@ -53,19 +49,16 @@ function parseICalendar(icsData) {
 
       lines.forEach(line => {
         line = line.trim();
-        
-        // Handle multi-line values
+
         if (line.startsWith(' ') && currentField) {
           fieldValue += line.substring(1);
           return;
         }
 
-        // Process completed field
         if (currentField && fieldValue) {
           processField(event, currentField, fieldValue);
         }
 
-        // Parse new field
         if (line.includes(':')) {
           const colonIndex = line.indexOf(':');
           currentField = line.substring(0, colonIndex);
@@ -73,12 +66,10 @@ function parseICalendar(icsData) {
         }
       });
 
-      // Process last field
       if (currentField && fieldValue) {
         processField(event, currentField, fieldValue);
       }
 
-      // Filter workout-related events
       if (isWorkoutEvent(event)) {
         workouts.push(event);
       }
@@ -108,7 +99,6 @@ function processField(event, field, value) {
   } else if (field.startsWith('LOCATION')) {
     event.location = cleanValue(value);
   } else if (field.startsWith('DURATION')) {
-    // Parse ISO 8601 duration (e.g., PT1H30M)
     const durationMatch = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
     if (durationMatch) {
       const hours = parseInt(durationMatch[1] || 0);
@@ -119,15 +109,12 @@ function processField(event, field, value) {
 }
 
 function parseDateTimeField(field, value) {
-  // Handle TZID parameter
   let dateTimeStr = value;
   if (field.includes('TZID=')) {
-    // Extract actual datetime value after timezone
     const parts = value.split(':');
     dateTimeStr = parts[parts.length - 1];
   }
 
-  // Parse datetime (format: YYYYMMDDTHHMMSS or YYYYMMDD)
   if (dateTimeStr.length >= 8) {
     const year = dateTimeStr.substring(0, 4);
     const month = dateTimeStr.substring(4, 6);
@@ -158,7 +145,7 @@ function cleanValue(value) {
 
 function isWorkoutEvent(event) {
   const searchText = `${event.name} ${event.description} ${event.location}`.toLowerCase();
-  
+
   const workoutKeywords = [
     'workout', 'gym', 'exercise', 'training', 'fitness',
     'run', 'running', 'jog', 'jogging',

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
-import { setGoogleToken } from '../../../_store/db';
+import { setGoogleToken } from '@/lib/supabase-db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
@@ -35,24 +35,22 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Token exchange failed', details: token }, { status: 500 });
     }
 
-    // Compute expiry in ms epoch
     const expires_in = Number(token.expires_in || 0);
     const expiry_date = Date.now() + expires_in * 1000;
     const stored = {
       access_token: token.access_token,
-      refresh_token: token.refresh_token, // may be undefined if not first consent
+      refresh_token: token.refresh_token,
       scope: token.scope,
       token_type: token.token_type,
       expiry_date,
     };
-    setGoogleToken(state, stored);
+    await setGoogleToken(state, stored);
 
-    // Redirect back to app
     const redirectBack = new URL('/', request.url);
     redirectBack.searchParams.set('google', 'connected');
     return NextResponse.redirect(redirectBack.toString());
   } catch (e) {
+    console.error('Google callback error:', e);
     return NextResponse.json({ error: 'Callback error' }, { status: 500 });
   }
-  });
 }

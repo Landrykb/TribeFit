@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { runWithStore } from '@/app/api/_store/db';
 import { google } from 'googleapis';
+
+export const dynamic = 'force-dynamic';
 
 // Google Calendar API Integration
 // You'll need to add these to your .env.local file:
@@ -8,8 +9,38 @@ import { google } from 'googleapis';
 // GOOGLE_CLIENT_SECRET=your_google_client_secret
 // GOOGLE_REDIRECT_URI=http://localhost:3000/api/calendar/google/callback
 
+function calculateDuration(start, end) {
+  const startTime = new Date(start);
+  const endTime = new Date(end);
+  const diffMs = endTime - startTime;
+  const diffMins = Math.round(diffMs / 60000);
+  return diffMins > 0 ? diffMins : 45;
+}
+
+function getDateString(daysFromNow) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+}
+
+function fallbackCalendarData() {
+  const mockWorkouts = [
+    { name: 'Morning Run', date: getDateString(1), time: '06:00', duration: 30, description: 'Easy 5K run', source: 'google' },
+    { name: 'Gym Session - Upper Body', date: getDateString(2), time: '18:00', duration: 60, description: 'Chest and back workout', source: 'google' },
+    { name: 'Yoga Class', date: getDateString(3), time: '17:30', duration: 45, description: 'Vinyasa flow', source: 'google' },
+    { name: 'HIIT Training', date: getDateString(4), time: '07:00', duration: 30, description: 'High intensity intervals', source: 'google' },
+  ];
+
+  return NextResponse.json({
+    success: true,
+    workouts: mockWorkouts,
+    count: mockWorkouts.length,
+    fallback: true,
+    message: 'Using sample data - configure Google Calendar API for real data'
+  });
+}
+
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const { accessToken } = await request.json();
 
@@ -17,7 +48,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Access token required' }, { status: 400 });
     }
 
-    // Check if Google credentials are configured
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -26,7 +56,6 @@ export async function POST(request) {
       return fallbackCalendarData();
     }
 
-    // Initialize OAuth2 client
     const oauth2Client = new google.auth.OAuth2(
       clientId,
       clientSecret,
@@ -35,10 +64,8 @@ export async function POST(request) {
 
     oauth2Client.setCredentials({ access_token: accessToken });
 
-    // Get Calendar API
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // Fetch events for the next 30 days
     const now = new Date();
     const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
@@ -52,22 +79,10 @@ export async function POST(request) {
 
     const events = response.data.items || [];
 
-    // Filter and transform workout-related events
     const workouts = events
       .filter(event => {
         const summary = (event.summary || '').toLowerCase();
-        return (
-          summary.includes('workout') ||
-          summary.includes('gym') ||
-          summary.includes('exercise') ||
-          summary.includes('training') ||
-          summary.includes('fitness') ||
-          summary.includes('run') ||
-          summary.includes('yoga') ||
-          summary.includes('pilates') ||
-          summary.includes('cardio') ||
-          summary.includes('lift')
-        );
+        return ['workout','gym','exercise','training','fitness','run','yoga','pilates','cardio','lift'].some(k => summary.includes(k));
       })
       .map(event => {
         const start = event.start.dateTime || event.start.date;
@@ -93,24 +108,20 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Google Calendar API Error:', error);
-    
-    // Fallback to mock data if API fails
     console.log('⚠️ Google Calendar API failed, using fallback data');
     return fallbackCalendarData();
   }
-  });
 }
 
 // OAuth URL generation
 export async function GET(request) {
-  return runWithStore(async () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
   if (!clientId) {
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Google Calendar not configured',
-      fallback: true 
+      fallback: true
     }, { status: 400 });
   }
 
@@ -128,64 +139,4 @@ export async function GET(request) {
   });
 
   return NextResponse.json({ authUrl: url });
-  });
-}
-
-function calculateDuration(start, end) {
-  const startTime = new Date(start);
-  const endTime = new Date(end);
-  const diffMs = endTime - startTime;
-  const diffMins = Math.round(diffMs / 60000);
-  return diffMins > 0 ? diffMins : 45;
-}
-
-function fallbackCalendarData() {
-  const mockWorkouts = [
-    {
-      name: 'Morning Run',
-      date: getDateString(1),
-      time: '06:00',
-      duration: 30,
-      description: 'Easy 5K run',
-      source: 'google',
-    },
-    {
-      name: 'Gym Session - Upper Body',
-      date: getDateString(2),
-      time: '18:00',
-      duration: 60,
-      description: 'Chest and back workout',
-      source: 'google',
-    },
-    {
-      name: 'Yoga Class',
-      date: getDateString(3),
-      time: '17:30',
-      duration: 45,
-      description: 'Vinyasa flow',
-      source: 'google',
-    },
-    {
-      name: 'HIIT Training',
-      date: getDateString(4),
-      time: '07:00',
-      duration: 30,
-      description: 'High intensity intervals',
-      source: 'google',
-    },
-  ];
-
-  return NextResponse.json({
-    success: true,
-    workouts: mockWorkouts,
-    count: mockWorkouts.length,
-    fallback: true,
-    message: 'Using sample data - configure Google Calendar API for real data'
-  });
-}
-
-function getDateString(daysFromNow) {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
-  return date.toISOString().split('T')[0];
 }
