@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Flame, Meh, BatteryLow, Tv, Sparkles } from 'lucide-react';
 import { FlatChibi } from './FlatChibi';
 
@@ -107,7 +108,7 @@ function StageDecor({ stage, skin }) {
 export function MoodPill({ mood = 'steady', streak = 0 }) {
   const m = MOOD_META[mood] || MOOD_META.steady;
   return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full truncate ${m.pill}`}>
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full min-w-0 truncate ${m.pill}`}>
       <m.Icon size={12} className="flex-shrink-0" />
       <span className="truncate">{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
     </div>
@@ -172,6 +173,7 @@ export function Tribeling({
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.15, Math.max(0.6, energy));
+  const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}`;
 
   // User-built layered avatar from extracted sheet parts
   if (parts && Object.values(parts).some(v => v > 0)) {
@@ -185,14 +187,14 @@ export function Tribeling({
       : null;
     return (
       <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
-        <div className="relative inline-block" style={{ width: size * scale }}>
-          {base && <img src={base.src} alt="" className="block h-auto w-full" draggable={false} />}
-          {head && <img src={head.src} alt="" className="absolute top-0 left-0 w-full h-auto z-10" draggable={false} />}
+        <div className="relative inline-block" style={{ width: size * scale, transition: 'width 0.35s cubic-bezier(.34,1.56,.64,1)' }}>
+          {base && <motion.img key={`${stateKey}-${base.key}`} src={base.src} alt="" className="block h-auto w-full" initial={{ opacity: 0.6, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} draggable={false} />}
+          {head && <motion.img key={`${stateKey}-${head.key}`} src={head.src} alt="" className="absolute top-0 left-0 w-full h-auto z-10" initial={{ opacity: 0.6, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} draggable={false} />}
         </div>
         {showLabel && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full min-w-0 truncate ${m.pill}`}>
             <m.Icon size={12} />
-            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+            <span className="truncate">{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
           </div>
         )}
       </div>
@@ -208,9 +210,9 @@ export function Tribeling({
           <FlatChibi {...custom} mood={mood} size={size * scale} />
         </div>
         {showLabel && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm max-w-full min-w-0 truncate ${m.pill}`}>
             <m.Icon size={12} />
-            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+            <span className="truncate">{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
           </div>
         )}
       </div>
@@ -219,32 +221,44 @@ export function Tribeling({
 
   const stageArt = STAGE_ART[stage];
   const layers = (
-    <div className="relative" style={{ width: size * scale, height: size * scale }}>
+    <div className="relative" style={{ width: size * scale, height: size * scale, transition: 'width 0.35s cubic-bezier(.34,1.56,.64,1), height 0.35s cubic-bezier(.34,1.56,.64,1)' }}>
       {aura && (
         <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />
       )}
       {stageArt ? (
-        <img
+        <motion.img
+          key={stateKey}
           src={stageArt}
           alt="Tribeling"
           className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', filter, display: 'block' }}
+          initial={{ opacity: 0.6, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', filter, display: 'block', transition: 'filter 0.35s ease' }}
           draggable={false}
         />
       ) : (
         <>
-          <img
+          <motion.img
+            key={`${stateKey}-body`}
             src={`/avatar/body-${body}.svg`}
             alt="Tribeling"
             className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
-            style={{ width: '100%', height: '100%', filter, display: 'block' }}
+            initial={{ opacity: 0.6, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            style={{ width: '100%', height: '100%', filter, display: 'block', transition: 'filter 0.35s ease' }}
             draggable={false}
           />
-          <img
+          <motion.img
+            key={`${stateKey}-face`}
             src={`/avatar/face-${face}.svg`}
             alt=""
             aria-hidden="true"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter, pointerEvents: 'none' }}
+            initial={{ opacity: 0.6, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter, pointerEvents: 'none', transition: 'filter 0.35s ease' }}
             draggable={false}
           />
         </>

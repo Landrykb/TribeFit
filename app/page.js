@@ -3117,10 +3117,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       {/* Hero Section */}
       <div className="card relative overflow-hidden">
         <BlobBackground />
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
             {tribeling && (
-              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} title="Open Avatar Studio">
+              <motion.button whileTap={{ scale: 0.85, scaleY: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 15 }} onClick={() => setShowAvatarStudio(true)} className="shrink-0 w-28 flex flex-col items-center" title="Open Avatar Studio">
                 <StreakRing streak={tribeling.streak} goal={7} size={104} active={tribeling.mood === 'pumped'}>
                   <Tribeling
                     mood={tribeling.mood}
@@ -3136,25 +3136,25 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     showLabel={false}
                   />
                 </StreakRing>
-                <div className="mt-1.5"><MoodPill mood={tribeling.mood} streak={tribeling.streak} /></div>
+                <div className="w-full min-w-0 mt-1.5"><MoodPill mood={tribeling.mood} streak={tribeling.streak} /></div>
               </motion.button>
             )}
-            <div>
-              <h2 className="text-2xl font-bold text-surface-50">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-surface-50 break-words">
                 {t('welcome_back', { name: effectiveUserName })}
               </h2>
-              <p className="text-surface-300 mt-1">{t('ready_goals')}</p>
+              <p className="text-surface-300 mt-1 text-sm sm:text-base break-words">{t('ready_goals')}</p>
             </div>
           </div>
-          <div className="text-right">
-            <div>
-              <div className="text-3xl font-bold number-display text-primary flex items-center gap-2 justify-end">
-                <Coins size={24} className="text-accent" />
-                {walletBalance}
+          <div className="text-right min-w-0 w-full sm:w-auto">
+            <div className="flex flex-col items-end">
+              <div className="text-2xl sm:text-3xl font-bold number-display text-primary flex items-center gap-2 justify-end min-w-0">
+                <Coins size={24} className="text-accent flex-shrink-0" />
+                <span className="truncate">{walletBalance}</span>
               </div>
               <div className="text-sm text-surface-400">{t('tribecoins')}</div>
               {snatchedBalance > 0 && (
-                <div className="text-xs text-accent font-medium mt-1">
+                <div className="text-xs text-accent font-medium mt-1 break-words max-w-[12rem]">
                   <Crosshair size={11} className="inline -mt-0.5" /> +{snatchedBalance.toFixed(1)} Snatched TC
                 </div>
               )}

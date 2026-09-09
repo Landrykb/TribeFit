@@ -272,81 +272,88 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </div>
         </div>
 
-        {/* Calendar Grid - Scrollable */}
-        <div className="border border-surface-700 light:border-gray-200 rounded-lg overflow-hidden">
+        {/* Calendar Grid - Artistic & Responsive */}
+        <div className="rounded-3xl p-2 bg-surface-800/40 light:bg-white/60 border-2 border-surface-700 light:border-gray-200 shadow-toon overflow-hidden">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 bg-surface-800 light:bg-gray-100">
+          <div className="grid grid-cols-7 gap-1 mb-1">
             {dayNames.map(day => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-surface-300 light:text-gray-700 border-r border-surface-700 light:border-gray-200 last:border-r-0">
+              <div key={day} className="py-2 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-surface-400 light:text-gray-500">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Calendar Days */}
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 gap-1">
             {getDaysInMonth(currentDate).map((date, index) => {
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const isToday = formatDate(date) === formatDate(new Date());
+              const isSelected = selectedDate === formatDate(date);
               const workouts = getWorkoutsForDate(date);
-              const hasWorkouts = workouts.length > 0;
 
               return (
                 <div
                   key={index}
-                  className={`relative h-24 border-r border-b border-surface-700 light:border-gray-200 last:border-r-0 ${
-                    isCurrentMonth ? 'bg-surface-900 light:bg-white' : 'bg-surface-800/50 light:bg-gray-50'
-                  } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${selectedDate === formatDate(date) ? 'outline outline-2 outline-primary/60' : ''}`}
+                  onClick={() => isCurrentMonth && setSelectedDate(formatDate(date))}
+                  className={`relative min-h-[4.5rem] sm:min-h-[6.5rem] rounded-xl p-1.5 flex flex-col transition-all duration-200 cursor-pointer ${
+                    isCurrentMonth
+                      ? 'bg-surface-900/80 light:bg-white hover:bg-surface-800/80 light:hover:bg-gray-50'
+                      : 'bg-surface-800/30 light:bg-gray-100/60 text-surface-500 light:text-gray-400'
+                  } ${isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-surface-800 light:ring-offset-white z-10' : ''} ${
+                    isSelected ? 'outline outline-2 outline-primary/60' : ''
+                  }`}
                 >
-                  <div className="p-1 h-full flex flex-col">
-                    <div className="flex justify-between items-start">
-                      <span className={`text-xs ${
-                        isCurrentMonth ? 'text-surface-200 light:text-gray-800' : 'text-surface-500 light:text-gray-500'
-                      } ${isToday ? 'font-bold text-primary' : ''}`}>
-                        {date.getDate()}
-                      </span>
-                      {isCurrentMonth && (
-                        <button
-                          onClick={() => {
-                            setSelectedDate(formatDate(date));
-                            setShowScheduler(true);
-                          }}
-                          className="p-1 hover:bg-surface-700 light:hover:bg-gray-200 rounded text-primary hover:text-primary-400 transition-colors"
-                          title="Schedule workout"
-                        >
-                          <Plus size={10} />
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Enhanced workout indicators - Shows more workouts */}
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      {showTribeWorkouts && workouts.slice(0, 3).map((workout, i) => (
-                        <div
-                          key={workout.id || i}
-                          className={`text-xs p-1 mb-1 rounded truncate ${
-                            workout.shared 
-                              ? 'bg-primary/20 text-primary border border-primary/30' 
-                              : 'bg-surface-700 text-surface-300 light:bg-gray-200 light:text-gray-700'
-                          }`}
-                          title={`${workout.user_name || workout.user || 'User'} - ${workout.workout} at ${workout.time} (${workout.duration})`}
-                          onClick={() => openEdit(formatDate(date), workout)}
-                        >
-                          <div className="flex items-center space-x-1">
-                            {workout.shared && <Users size={6} />}
-                            <span className="truncate font-medium">{workout.time}</span>
-                          </div>
-                          <div className="truncate text-[10px] opacity-75">
-                            {workout.workout}
-                          </div>
+                  <div className="flex items-start justify-between gap-1">
+                    <span className={`text-xs sm:text-sm font-medium ${
+                      isCurrentMonth ? 'text-surface-200 light:text-gray-800' : 'text-surface-500 light:text-gray-400'
+                    } ${isToday ? 'font-bold text-primary' : ''}`}>
+                      {date.getDate()}
+                    </span>
+                    {isCurrentMonth && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDate(formatDate(date));
+                          setShowScheduler(true);
+                        }}
+                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-surface-700/50 light:bg-gray-200 hover:bg-primary/20 light:hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
+                        title="Schedule workout"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Workout chips */}
+                  <div className="flex-1 min-w-0 mt-1 space-y-1 overflow-hidden">
+                    {showTribeWorkouts && workouts.slice(0, 3).map((workout, i) => (
+                      <div
+                        key={workout.id || i}
+                        className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-lg border shadow-sm truncate w-full ${
+                          workout.shared
+                            ? 'bg-gradient-to-r from-primary/25 to-primary/10 border-primary/30 text-primary'
+                            : 'bg-surface-700/70 light:bg-gray-200 text-surface-200 light:text-gray-700 border-surface-600/40 light:border-gray-300'
+                        }`}
+                        title={`${workout.user_name || workout.user || 'User'} - ${workout.workout} at ${workout.time} (${workout.duration})`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(formatDate(date), workout);
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          {workout.shared && <Users size={8} />}
+                          <span className="truncate font-medium">{workout.time}</span>
                         </div>
-                      ))}
-                      {workouts.length > 3 && (
-                        <div className="text-xs text-surface-400 light:text-gray-600 text-center">
-                          +{workouts.length - 3} more
+                        <div className="truncate text-[10px] opacity-80">
+                          {workout.workout}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
+                    {workouts.length > 3 && (
+                      <div className="text-[9px] sm:text-[10px] text-surface-400 light:text-gray-500 text-center font-medium">
+                        +{workouts.length - 3} more
+                      </div>
+                    )}
                   </div>
                 </div>
               );
