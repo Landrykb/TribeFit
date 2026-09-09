@@ -161,8 +161,18 @@ export function Tribeling({
   showLabel = true,
   custom = null,
   preset = null,
+  parts = null,
 }) {
   const chosenPreset = PRESETS[preset];
+
+  const PART_SRC = {
+    body: (i) => `/avatar/sheet/body-${i}.png`,
+    outfit: (i) => `/avatar/sheet/outfit-${i}.png`,
+    face: (i) => i <= 6 ? `/avatar/sheet/face_t-${i}.png` : `/avatar/sheet/face_b-${i - 6}.png`,
+    hair: (i) => `/avatar/sheet/hair-${i}.png`,
+    accessory: (i) => i <= 6 ? `/avatar/sheet/acc_t-${i}.png` : `/avatar/sheet/acc_m-1.png`,
+    aura: (i) => `/avatar/sheet/aura-${i}.png`,
+  };
 
   const body = SKIN_BODY[skinId] || 'lime';
   const face = MOOD_FACE[mood] || 'neutral';
@@ -170,6 +180,28 @@ export function Tribeling({
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.3, Math.max(0.6, energy));
+
+  // User-built layered avatar from extracted sheet parts
+  if (parts && Object.values(parts).some(v => v > 0)) {
+    return (
+      <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
+        <div className="relative inline-block">
+          {parts.aura && <img src={PART_SRC.aura(parts.aura)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-0" draggable={false} />}
+          {(!parts.outfit && parts.body) && <img src={PART_SRC.body(parts.body)} alt="" className="block w-full h-auto" style={{ width: size * scale }} draggable={false} />}
+          {parts.outfit && <img src={PART_SRC.outfit(parts.outfit)} alt="" className="block w-full h-auto" style={{ width: size * scale }} draggable={false} />}
+          {parts.face && <img src={PART_SRC.face(parts.face)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-30" style={{ width: size * scale }} draggable={false} />}
+          {parts.hair && <img src={PART_SRC.hair(parts.hair)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-40" style={{ width: size * scale }} draggable={false} />}
+          {parts.accessory && <img src={PART_SRC.accessory(parts.accessory)} alt="" className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-auto z-50" style={{ width: size * scale }} draggable={false} />}
+        </div>
+        {showLabel && (
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+            <m.Icon size={12} />
+            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // User-selected vector preset art
   if (chosenPreset) {

@@ -97,6 +97,22 @@ export async function POST(request) {
         return respond();
       }
 
+      case 'set_part': {
+        const { part, idx } = body;
+        if (!part || typeof idx !== 'number') return NextResponse.json({ error: 'part and idx required' }, { status: 400 });
+        user.avatar_parts = { ...(user.avatar_parts || {}), [part]: idx };
+        saveDB(db);
+        return respond();
+      }
+
+      case 'clear_part': {
+        const { part } = body;
+        if (!part) return NextResponse.json({ error: 'part required' }, { status: 400 });
+        if (user.avatar_parts) delete user.avatar_parts[part];
+        saveDB(db);
+        return respond();
+      }
+
       case 'set_preset': {
         const p = body.preset;
         if (typeof p !== 'number' && typeof p !== 'string') return NextResponse.json({ error: 'preset required' }, { status: 400 });

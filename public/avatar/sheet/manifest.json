@@ -1,0 +1,222 @@
+[
+  {
+    "prefix": "body",
+    "idx": 1,
+    "file": "public/avatar/sheet/body-1.png"
+  },
+  {
+    "prefix": "body",
+    "idx": 2,
+    "file": "public/avatar/sheet/body-2.png"
+  },
+  {
+    "prefix": "body",
+    "idx": 3,
+    "file": "public/avatar/sheet/body-3.png"
+  },
+  {
+    "prefix": "body",
+    "idx": 4,
+    "file": "public/avatar/sheet/body-4.png"
+  },
+  {
+    "prefix": "body",
+    "idx": 5,
+    "file": "public/avatar/sheet/body-5.png"
+  },
+  {
+    "prefix": "body",
+    "idx": 6,
+    "file": "public/avatar/sheet/body-6.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 1,
+    "file": "public/avatar/sheet/face_t-1.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 2,
+    "file": "public/avatar/sheet/face_t-2.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 3,
+    "file": "public/avatar/sheet/face_t-3.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 4,
+    "file": "public/avatar/sheet/face_t-4.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 5,
+    "file": "public/avatar/sheet/face_t-5.png"
+  },
+  {
+    "prefix": "face_t",
+    "idx": 6,
+    "file": "public/avatar/sheet/face_t-6.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 1,
+    "file": "public/avatar/sheet/face_b-1.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 2,
+    "file": "public/avatar/sheet/face_b-2.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 3,
+    "file": "public/avatar/sheet/face_b-3.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 4,
+    "file": "public/avatar/sheet/face_b-4.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 5,
+    "file": "public/avatar/sheet/face_b-5.png"
+  },
+  {
+    "prefix": "face_b",
+    "idx": 6,
+    "file": "public/avatar/sheet/face_b-6.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 1,
+    "file": "public/avatar/sheet/hair-1.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 2,
+    "file": "public/avatar/sheet/hair-2.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 3,
+    "file": "public/avatar/sheet/hair-3.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 4,
+    "file": "public/avatar/sheet/hair-4.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 5,
+    "file": "public/avatar/sheet/hair-5.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 6,
+    "file": "public/avatar/sheet/hair-6.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 7,
+    "file": "public/avatar/sheet/hair-7.png"
+  },
+  {
+    "prefix": "hair",
+    "idx": 8,
+    "file": "public/avatar/sheet/hair-8.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 1,
+    "file": "public/avatar/sheet/outfit-1.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 2,
+    "file": "public/avatar/sheet/outfit-2.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 3,
+    "file": "public/avatar/sheet/outfit-3.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 4,
+    "file": "public/avatar/sheet/outfit-4.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 5,
+    "file": "public/avatar/sheet/outfit-5.png"
+  },
+  {
+    "prefix": "outfit",
+    "idx": 6,
+    "file": "public/avatar/sheet/outfit-6.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 1,
+    "file": "public/avatar/sheet/acc_t-1.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 2,
+    "file": "public/avatar/sheet/acc_t-2.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 3,
+    "file": "public/avatar/sheet/acc_t-3.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 4,
+    "file": "public/avatar/sheet/acc_t-4.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 5,
+    "file": "public/avatar/sheet/acc_t-5.png"
+  },
+  {
+    "prefix": "acc_t",
+    "idx": 6,
+    "file": "public/avatar/sheet/acc_t-6.png"
+  },
+  {
+    "prefix": "acc_m",
+    "idx": 1,
+    "file": "public/avatar/sheet/acc_m-1.png"
+  },
+  {
+    "prefix": "aura",
+    "idx": 1,
+    "file": "public/avatar/sheet/aura-1.png"
+  },
+  {
+    "prefix": "aura",
+    "idx": 2,
+    "file": "public/avatar/sheet/aura-2.png"
+  },
+  {
+    "prefix": "aura",
+    "idx": 3,
+    "file": "public/avatar/sheet/aura-3.png"
+  },
+  {
+    "prefix": "aura",
+    "idx": 4,
+    "file": "public/avatar/sheet/aura-4.png"
+  },
+  {
+    "prefix": "aura",
+    "idx": 5,
+    "file": "public/avatar/sheet/aura-5.png"
+  }
+]

@@ -19,6 +19,7 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const [previewAccessory, setPreviewAccessory] = useState(null);
   const [previewCustom, setPreviewCustom] = useState(null);
   const [previewPreset, setPreviewPreset] = useState(null);
+  const [previewParts, setPreviewParts] = useState(null);
 
   const PRESET_IDS = [1, 2];
 
@@ -95,6 +96,7 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
               accessory={curAccessory}
               custom={previewCustom || a.custom}
               preset={previewPreset || a.preset}
+              parts={previewParts || a.parts}
               size={140}
             />
           </div>
@@ -141,6 +143,41 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
                 Use evolution art
               </button>
             )}
+          </div>
+
+          {/* Layer builder from extracted sheet */}
+          <div>
+            <div className="text-sm font-bold text-surface-100 mb-2 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-primary" /> Builder
+            </div>
+            {[
+              { key: 'body', label: 'Body', count: 6 },
+              { key: 'outfit', label: 'Outfit', count: 6 },
+              { key: 'face', label: 'Face', count: 12 },
+              { key: 'hair', label: 'Hair', count: 8 },
+              { key: 'accessory', label: 'Accessory', count: 7 },
+              { key: 'aura', label: 'Aura', count: 5 },
+            ].map(({ key, label, count }) => (
+              <div key={key} className="mb-2">
+                <label className="block text-xs text-surface-400 mb-1">{label}</label>
+                <select
+                  className="w-full text-sm rounded-lg bg-surface-800 border border-surface-700 px-3 py-2 text-surface-100"
+                  value={previewParts?.[key] ?? a.parts?.[key] ?? 0}
+                  disabled={!!busy}
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    const next = { ...(previewParts || a.parts || {}), [key]: idx };
+                    setPreviewParts(next);
+                    act({ action: 'set_part', part: key, idx }, `part_${key}`);
+                  }}
+                >
+                  <option value={0}>None</option>
+                  {Array.from({ length: count }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>{label} {i + 1}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
           </div>
 
           {/* Custom look — flat avatar maker (hidden until flat art assets exist) */}
