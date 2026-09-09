@@ -7,9 +7,10 @@ import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { Skeleton } from './ui/skeleton';
 import { WorkoutScheduler } from './WorkoutScheduler';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, ChevronLeft, ChevronRight, Plus, 
-  Users, Clock, Eye, EyeOff, ArrowLeft, Save, Trash2, Pencil
+  Users, Clock, Eye, EyeOff, ArrowLeft, Save, Trash2, Pencil, X, Dumbbell
 } from 'lucide-react';
 
 export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, customWorkouts = [] }) {
@@ -184,10 +185,10 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
     }
   };
 
-  const deleteItem = async () => {
-    if (!editItem) return;
+  const deleteItem = async (target = editItem) => {
+    if (!target) return;
     try {
-      const promise = fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&id=${encodeURIComponent(editItem.id)}`, {
+      const promise = fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&id=${encodeURIComponent(target.id)}`, {
         method: 'DELETE'
       }).then(async (res) => {
         const json = await res.json().catch(() => ({}));
@@ -201,7 +202,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
         const nextSchedule = {};
         let removed = false;
         for (const [d, list] of Object.entries(schedule)) {
-          const nextList = list.filter(w => w.id !== editItem.id);
+          const nextList = list.filter(w => w.id !== target.id);
           nextSchedule[d] = nextList;
           if (nextList.length !== list.length) removed = true;
         }
@@ -361,35 +362,116 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </div>
         </div>
 
-        {/* Day Details + Legend */}
-        {selectedDate && (
-          <div className="mt-2 rounded-lg border border-surface-700 light:border-gray-200 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-bold text-surface-50 light:text-gray-900">{selectedDate} • Workouts</div>
-              <Button size="sm" variant="ghost" onClick={() => { setSelectedDate(null); }}>
-                Close
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {(workoutSchedule[selectedDate] || []).map((w) => (
-                <div key={w.id} className="flex items-center justify-between p-2 rounded bg-surface-800 light:bg-gray-100 border border-surface-700 light:border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium">{w.time}</span>
-                    <span className="text-sm text-surface-300 light:text-gray-700">{w.workout}</span>
+        {/* Selected Day Detail — expanded sheet */}
+        <AnimatePresence>
+          {selectedDate && (
+            <motion.div
+              key={selectedDate}
+              initial={{ opacity: 0, y: 16, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -16, height: 0 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 rounded-3xl border-2 border-surface-700/60 light:border-gray-200 bg-surface-800/60 light:bg-white/80 shadow-toon p-4">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-black text-surface-50 light:text-gray-900 leading-tight">
+                      {(() => {
+                        const [y, m, d] = selectedDate.split('-').map(Number);
+                        const dateObj = new Date(y, m - 1, d);
+                        return dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                      })()}
+                    </h4>
+                    <p className="text-xs text-surface-400 light:text-gray-500 mt-0.5">
+                      {workoutSchedule[selectedDate]?.length || 0} workout{(workoutSchedule[selectedDate]?.length || 0) === 1 ? '' : 's'} planned
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="xs" variant="ghost" onClick={() => openEdit(selectedDate, w)}><Pencil size={14} /> Edit</Button>
-                  </div>
+                  <Button size="xs" variant="ghost" onClick={() => setSelectedDate(null)} className="rounded-full h-8 w-8 p-0 flex items-center justify-center">
+                    <X size={16} />
+                  </Button>
                 </div>
-              ))}
-              <div className="pt-2">
-                <Button size="sm" variant="primary" onClick={() => setShowScheduler(true)}>
-                  <Plus size={14} /> Add another
-                </Button>
+
+                <div className="space-y-2">
+                  <AnimatePresence mode="popLayout">
+                    {(workoutSchedule[selectedDate] || []).map((w, i) => (
+                      <motion.div
+                        key={w.id || i}
+                        layout
+                        initial={{ opacity: 0, x: -12, scale: 0.98 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: i * 0.05 }}
+                        onClick={() => openEdit(selectedDate, w)}
+                        className="group relative rounded-2xl border border-surface-700/40 light:border-gray-200 bg-surface-900/50 light:bg-white p-3 cursor-pointer hover:bg-surface-800/70 light:hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-primary/15 text-primary border border-primary/30">
+                                <Clock size={10} /> {w.time}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border ${w.shared ? 'bg-primary/10 text-primary border-primary/30' : 'bg-surface-700/40 light:bg-gray-200 text-surface-300 light:text-gray-600 border-surface-600/40 light:border-gray-300'}`}>
+                                {w.shared ? <Users size={10} /> : <Clock size={10} />}
+                                {w.shared ? 'Tribe' : 'Solo'}
+                              </span>
+                            </div>
+                            <div className="font-bold text-sm text-surface-100 light:text-gray-900 truncate">{w.workout}</div>
+                            <div className="text-xs text-surface-400 light:text-gray-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                              <span>{w.duration || '45 min'}</span>
+                              {w.user_name && <span>· {w.user_name}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={(e) => { e.stopPropagation(); openEdit(selectedDate, w); }}
+                              className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 text-primary"
+                              title="Edit workout"
+                            >
+                              <Pencil size={14} />
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={(e) => { e.stopPropagation(); deleteItem(w); }}
+                              className="h-8 w-8 p-0 rounded-full hover:bg-danger/10 text-danger"
+                              title="Delete workout"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {(!workoutSchedule[selectedDate] || workoutSchedule[selectedDate].length === 0) && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-6 rounded-2xl border border-dashed border-surface-700/40 light:border-gray-300 bg-surface-900/30 light:bg-gray-100/50"
+                    >
+                      <Dumbbell size={28} className="mx-auto text-surface-500 light:text-gray-400 mb-2" />
+                      <p className="text-sm text-surface-300 light:text-gray-600 font-medium">No workouts yet</p>
+                      <p className="text-xs text-surface-500 light:text-gray-500 mt-0.5">Tap + to add one</p>
+                    </motion.div>
+                  )}
+
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowScheduler(true)}
+                    className="w-full h-11 mt-2 shadow-lg shadow-primary/20"
+                  >
+                    <Plus size={18} /> Add Workout
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Legend */}
         <div className="flex items-center justify-between text-sm">
