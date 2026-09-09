@@ -586,6 +586,162 @@ alter table public.gyms enable row level security;
 create policy "Public can read gyms" on public.gyms
   for select using (true);
 
+-- Legacy file-store features (migrated from app/api/_store/db.js)
+-- These tables replace the per-user/per-group JSON blobs.
+
+-- Extend users with legacy file-store fields
+alter table public.users
+  add column if not exists snatched_balance_tc numeric(12,2) not null default 0 check (snatched_balance_tc >= 0),
+  add column if not exists streak int not null default 0,
+  add column if not exists total_workouts int not null default 0,
+  add column if not exists group_id uuid references public.tribes(id) on delete set null,
+  add column if not exists group_type text default null,
+  add column if not exists owned_skins text[] default '{}'::text[],
+  add column if not exists owned_accessories text[] default '{}'::text[],
+  add column if not exists avatar_icon text,
+  add column if not exists ads_week_key text,
+  add column if not exists avatar_state jsonb default '{}'::jsonb;
+
+-- Extend tribes with legacy group fields
+alter table public.tribes
+  add column if not exists group_type text default 'squad',
+  add column if not exists streak_days int not null default 0,
+  add column if not exists participation_rate numeric(5,2) not null default 0 check (participation_rate between 0 and 100);
+
+-- User schedules (legacy schedulesByUser)
+create table if not exists public.user_schedules (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  group_id uuid references public.tribes(id) on delete set null,
+  title text not null,
+  start_at timestamptz not null,
+  duration_min int not null default 30,
+  created_at timestamptz not null default now()
+);
+
+-- Google Calendar tokens (legacy googleTokensByUser)
+create table if not exists public.user_google_tokens (
+  user_id uuid primary key references public.users(id) on delete cascade,
+  access_token text not null,
+  refresh_token text,
+  expiry_date bigint,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Calendar settings per user (legacy calendarSettingsByUser)
+create table if not exists public.user_calendar_settings (
+  user_id uuid primary key references public.users(id) on delete cascade,
+  calendars text[] default '{}'::text[],
+  keywords text default '',
+  ics_url text,
+  updated_at timestamptz not null default now()
+);
+
+-- Calendar events (legacy calendarByUser)
+create table if not exists public.calendar_events (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  date date not null,
+  time text,
+  workout text not null,
+  type text not null default 'general',
+  shared boolean not null default false,
+  duration text default '45 min',
+  ai_plan jsonb,
+  user_name text,
+  created_at timestamptz not null default now()
+);
+
+-- Missed workouts (legacy missedWorkoutsByUser)
+create table if not exists public.missed_workouts (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  date date not null,
+  title text not null,
+  type text,
+  ai_plan jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- Catch-up credits (legacy creditsByUser)
+create table if not exists public.catch_up_credits (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz
+);
+
+-- User inventory (legacy itemsByUser)
+create table if not exists public.user_items (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  item_id text not null,
+  count int not null default 1 check (count >= 0),
+  created_at timestamptz not null default now(),
+  unique (user_id, item_id)
+);
+
+-- Active user effects (legacy effectsByUser)
+create table if not exists public.user_effects (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  key text not null,
+  value jsonb not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, key)
+);
+
+-- Group mode votes (legacy votesByGroup)
+create table if not exists public.group_mode_votes (
+  id uuid primary key default uuid_generate_v4(),
+  group_id uuid references public.tribes(id) on delete cascade,
+  proposer_id uuid references public.users(id) on delete set null,
+  target_mode text not null,
+  votes jsonb not null default '{}'::jsonb,
+  started_at timestamptz not null default now(),
+  ends_at timestamptz not null,
+  status text not null default 'active' check (status in ('active', 'passed', 'failed')),
+  result_mode text
+);
+
+-- Daily versus standings (legacy versusByGroup)
+create table if not exists public.daily_versus (
+  id uuid primary key default uuid_generate_v4(),
+  group_id uuid references public.tribes(id) on delete cascade,
+  date date not null default now(),
+  pot_tc int not null default 0,
+  winner_id uuid references public.users(id) on delete set null,
+  standings jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  unique (group_id, date)
+);
+
+-- Monthly usage counters (legacy usageByUser)
+create table if not exists public.user_usage (
+  user_id uuid references public.users(id) on delete cascade,
+  year int not null,
+  month int not null,
+  opens int not null default 0,
+  sessions int not null default 0,
+  streak_shield_used int not null default 0,
+  primary key (user_id, year, month)
+);
+
+-- Coach sessions (legacy coachSessions)
+create table if not exists public.coach_sessions (
+  id uuid primary key default uuid_generate_v4(),
+  hire_id uuid references public.coach_hires(id) on delete cascade,
+  coach_id uuid references public.users(id) on delete cascade,
+  client_id uuid references public.users(id) on delete cascade,
+  price_tc numeric(12,2) not null default 0,
+  status text not null default 'scheduled' check (status in ('scheduled', 'completed', 'cancelled')),
+  scheduled_at timestamptz,
+  completed_at timestamptz,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 -- =====================================================================================
 -- STORAGE BUCKETS
 -- =====================================================================================
@@ -717,6 +873,39 @@ $$ language plpgsql;
 
 create trigger update_likes_count after insert or delete on public.post_likes
   for each row execute function public.update_like_counts();
+
+-- RLS for new legacy-migration tables
+alter table public.user_schedules enable row level security;
+alter table public.user_google_tokens enable row level security;
+alter table public.user_calendar_settings enable row level security;
+alter table public.calendar_events enable row level security;
+alter table public.missed_workouts enable row level security;
+alter table public.catch_up_credits enable row level security;
+alter table public.user_items enable row level security;
+alter table public.user_effects enable row level security;
+alter table public.group_mode_votes enable row level security;
+alter table public.daily_versus enable row level security;
+alter table public.user_usage enable row level security;
+alter table public.coach_sessions enable row level security;
+
+create policy "Users can manage own schedules" on public.user_schedules for all using (auth.uid() = user_id);
+create policy "Users can manage own google tokens" on public.user_google_tokens for all using (auth.uid() = user_id);
+create policy "Users can manage own calendar settings" on public.user_calendar_settings for all using (auth.uid() = user_id);
+create policy "Users can manage own calendar events" on public.calendar_events for all using (auth.uid() = user_id);
+create policy "Users can manage own missed workouts" on public.missed_workouts for all using (auth.uid() = user_id);
+create policy "Users can manage own credits" on public.catch_up_credits for all using (auth.uid() = user_id);
+create policy "Users can manage own items" on public.user_items for all using (auth.uid() = user_id);
+create policy "Users can manage own effects" on public.user_effects for all using (auth.uid() = user_id);
+create policy "Users can manage own usage" on public.user_usage for all using (auth.uid() = user_id);
+create policy "Tribe members can manage group votes" on public.group_mode_votes for all using (
+  exists (select 1 from public.tribe_members tm where tm.tribe_id = group_mode_votes.group_id and tm.user_id = auth.uid())
+);
+create policy "Tribe members can read daily versus" on public.daily_versus for select using (
+  exists (select 1 from public.tribe_members tm where tm.tribe_id = daily_versus.group_id and tm.user_id = auth.uid())
+);
+create policy "Users can manage coach sessions" on public.coach_sessions for all using (
+  auth.uid() = coach_id or auth.uid() = client_id
+);
 
 -- =====================================================================================
 -- SEED DATA (Optional - for testing)
