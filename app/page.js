@@ -3065,6 +3065,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     skin={tribeling.skin}
                     accessory={tribeling.accessory}
                     custom={tribeling.custom}
+                    preset={tribeling.preset}
                     size={84}
                     showLabel={false}
                   />

@@ -116,6 +116,11 @@ export function MoodPill({ mood = 'steady', streak = 0 }) {
 
 // Layered-image avatar — composites body + face assets from /public/avatar.
 // Full-character stage artwork (preferred when present)
+const PRESETS = {
+  1: '/avatar/presets/preset-1.svg',
+  2: '/avatar/presets/preset-2.svg',
+};
+
 const STAGE_ART = {
   sprout: '/avatar/stage-sprout.png',
   rookie: '/avatar/stage-rookie.png',
@@ -155,13 +160,40 @@ export function Tribeling({
   size = 96,
   showLabel = true,
   custom = null,
+  preset = null,
 }) {
+  const chosenPreset = PRESETS[preset];
+
   const body = SKIN_BODY[skinId] || 'lime';
   const face = MOOD_FACE[mood] || 'neutral';
   const filter = MOOD_FILTER[mood] || 'none';
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.3, Math.max(0.6, energy));
+
+  // User-selected vector preset art
+  if (chosenPreset) {
+    return (
+      <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
+        <div className="relative" style={{ width: size * scale, height: size * scale }}>
+          {aura && <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />}
+          <img
+            src={chosenPreset}
+            alt="Tribeling"
+            className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+            draggable={false}
+          />
+        </div>
+        {showLabel && (
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+            <m.Icon size={12} />
+            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Custom flat avatar (avatar-maker mode)
   if (custom?.enabled) {

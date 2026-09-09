@@ -97,6 +97,20 @@ export async function POST(request) {
         return respond();
       }
 
+      case 'set_preset': {
+        const p = body.preset;
+        if (typeof p !== 'number' && typeof p !== 'string') return NextResponse.json({ error: 'preset required' }, { status: 400 });
+        user.avatar_preset = p;
+        saveDB(db);
+        return respond();
+      }
+
+      case 'clear_preset': {
+        user.avatar_preset = null;
+        saveDB(db);
+        return respond();
+      }
+
       case 'toggle_custom': {
         if (!user.avatar_custom) {
           user.avatar_custom = {

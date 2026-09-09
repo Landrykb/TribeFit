@@ -18,6 +18,9 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const [previewSkin, setPreviewSkin] = useState(null);
   const [previewAccessory, setPreviewAccessory] = useState(null);
   const [previewCustom, setPreviewCustom] = useState(null);
+  const [previewPreset, setPreviewPreset] = useState(null);
+
+  const PRESET_IDS = [1, 2];
 
   const CUSTOM_COLORS = {
     body: ['#A3E635', '#FF9F1C', '#2EC4B6', '#4CC9F0', '#FF5436', '#4A4A63'],
@@ -91,8 +94,53 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
               skin={curSkin}
               accessory={curAccessory}
               custom={previewCustom || a.custom}
+              preset={previewPreset || a.preset}
               size={140}
             />
+          </div>
+
+          {/* Vector art presets */}
+          <div>
+            <div className="text-sm font-bold text-surface-100 mb-2 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-primary" /> Style
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {PRESET_IDS.map((id) => {
+                const selected = (previewPreset || a.preset) === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      setPreviewPreset(id);
+                      act({ action: 'set_preset', preset: id }, `preset_${id}`);
+                    }}
+                    disabled={!!busy}
+                    className={`rounded-xl border-2 p-2 transition-all aspect-square flex items-center justify-center ${
+                      selected ? 'border-primary bg-primary/15' : 'border-surface-600 bg-surface-800 hover:border-surface-500'
+                    }`}
+                  >
+                    <img
+                      src={`/avatar/presets/preset-${id}.svg`}
+                      alt={`Style ${id}`}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            {a.preset && (
+              <button
+                onClick={() => {
+                  setPreviewPreset(null);
+                  act({ action: 'clear_preset' }, 'clear_preset');
+                }}
+                disabled={!!busy}
+                className="mt-2 text-xs text-surface-400 hover:text-surface-200 underline"
+              >
+                Use evolution art
+              </button>
+            )}
           </div>
 
           {/* Custom look — flat avatar maker (hidden until flat art assets exist) */}
