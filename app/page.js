@@ -3146,30 +3146,44 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               <p className="text-surface-300 mt-1 text-sm sm:text-base break-words">{t('ready_goals')}</p>
             </div>
           </div>
-          <div className="text-right min-w-0 w-full sm:w-auto">
-            <div className="flex flex-col items-end">
-              <div className="text-2xl sm:text-3xl font-bold number-display text-primary flex items-center gap-2 justify-end min-w-0">
-                <Coins size={24} className="text-accent flex-shrink-0" />
-                <span className="truncate">{walletBalance}</span>
-              </div>
-              <div className="text-sm text-surface-400">{t('tribecoins')}</div>
-              {snatchedBalance > 0 && (
-                <div className="text-xs text-accent font-medium mt-1 break-words max-w-[12rem]">
-                  <Crosshair size={11} className="inline -mt-0.5" /> +{snatchedBalance.toFixed(1)} Snatched TC
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            onClick={() => setShowTopUpModal(true)}
+            className="shrink-0 w-full sm:w-auto text-left self-start group"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-surface-800/80 to-accent/10 border border-primary/30 light:border-primary/40 px-4 py-3 shadow-lg hover:shadow-primary/25 transition-all min-w-0">
+              <div className="absolute -right-4 -top-4 w-20 h-20 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-colors" />
+              <div className="relative flex items-center gap-3 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                    <Coins size={22} className="text-surface-950 drop-shadow-sm" />
+                  </div>
+                  {snatchedBalance > 0 && (
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0 rounded-full bg-accent border-2 border-surface-800 light:border-white text-[8px] font-black text-surface-950">
+                      +{Math.round(snatchedBalance)}
+                    </span>
+                  )}
                 </div>
-              )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-2xl sm:text-3xl font-black number-display text-surface-50 light:text-gray-900 leading-none truncate">
+                    {walletBalance}
+                  </div>
+                  <div className="text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">
+                    {t('tribecoins')}
+                  </div>
+                  {snatchedBalance > 0 && (
+                    <div className="text-[10px] text-accent light:text-orange-600 font-semibold mt-0.5 flex items-center gap-0.5">
+                      <Crosshair size={9} /> +{snatchedBalance.toFixed(1)} Snatched
+                    </div>
+                  )}
+                </div>
+                <div className="ml-auto w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-surface-950 transition-colors shrink-0">
+                  <Plus size={18} />
+                </div>
+              </div>
             </div>
-            <div className="mt-2">
-              <Button
-                onClick={() => setShowTopUpModal(true)}
-                variant="ghost"
-                size="sm"
-                className="h-8 px-3 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-primary"
-              >
-                Top up
-              </Button>
-            </div>
-          </div>
+          </motion.button>
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-4">
