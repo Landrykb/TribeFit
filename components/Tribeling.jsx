@@ -113,7 +113,85 @@ export function MoodPill({ mood = 'steady', streak = 0 }) {
   );
 }
 
+// Layered-image avatar — composites body + face assets from /public/avatar.
+const SKIN_BODY = {
+  ember: 'lime', solar: 'orange', venom: 'teal', frost: 'blue',
+  magma: 'coral', midnight: 'dark',
+};
+const MOOD_FACE = {
+  pumped: 'determined', steady: 'neutral', deflated: 'neutral', couch: 'wink',
+};
+const MOOD_FILTER = {
+  pumped: 'none',
+  steady: 'none',
+  deflated: 'saturate(0.55) brightness(0.92)',
+  couch: 'saturate(0.3) brightness(0.8)',
+};
+const STAGE_AURA = {
+  sprout: null,
+  rookie: null,
+  athlete: '0 0 18px rgba(163,230,53,0.35)',
+  beast: '0 0 22px rgba(255,84,54,0.4)',
+  legend: '0 0 26px rgba(255,209,102,0.55)',
+};
+
 export function Tribeling({
+  mood = 'steady',
+  energy = 0.8,
+  streak = 0,
+  stage = 'rookie',
+  skin: skinId = 'ember',
+  accessory = 'none',
+  size = 96,
+  showLabel = true,
+}) {
+  const body = SKIN_BODY[skinId] || 'lime';
+  const face = MOOD_FACE[mood] || 'neutral';
+  const filter = MOOD_FILTER[mood] || 'none';
+  const aura = STAGE_AURA[stage];
+  const m = MOOD_META[mood] || MOOD_META.steady;
+  const scale = Math.min(1.3, Math.max(0.6, energy));
+
+  const layers = (
+    <div className="relative" style={{ width: size * scale, height: size * scale }}>
+      {aura && (
+        <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />
+      )}
+      <img
+        src={`/avatar/body-${body}.svg`}
+        alt="Tribeling"
+        className={mood === 'pumped' ? 'animate-bounce-soft' : 'animate-wiggle-slow'}
+        style={{ width: '100%', height: '100%', filter, display: 'block' }}
+        draggable={false}
+      />
+      <img
+        src={`/avatar/face-${face}.svg`}
+        alt=""
+        aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter, pointerEvents: 'none' }}
+        draggable={false}
+      />
+      {mood === 'couch' && (
+        <span className="absolute -top-1 -right-1 text-surface-400 font-bold" style={{ fontSize: size * 0.16 }}>z z</span>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
+      {layers}
+      {showLabel && (
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+          <m.Icon size={12} />
+          <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* eslint-disable-next-line */
+function TribelingLegacy({
   mood = 'steady',
   energy = 0.8,
   streak = 0,
