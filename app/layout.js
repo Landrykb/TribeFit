@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { ApiProvider } from './providers';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -36,7 +37,9 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body suppressHydrationWarning className={`${inter.className} ${inter.variable} antialiased bg-surface-950 text-surface-50 min-h-screen`}>
-        {children}
+        <ApiProvider>
+          {children}
+        </ApiProvider>
       </body>
     </html>
   );

@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useApi, optimisticMutate } from '../../lib/api';
 import { Button } from './button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from './skeleton';
 import { X, Smile } from 'lucide-react';
 import { useTranslation } from '../../lib/i18n-hooks';
 import { Features } from '../../lib/feature-flags';
@@ -30,32 +32,29 @@ export function ReactionsPanel({
   const [sending, setSending] = useState(false);
   const [recentReactions, setRecentReactions] = useState([]);
 
-  useEffect(() => {
-    if (isOpen && targetUser && Features.REACTIONS) {
-      loadRecentReactions();
-    }
-  }, [isOpen, targetUser]);
+  const reactionsUrl = isOpen && targetUser && Features.REACTIONS
+    ? `/api/reactions?tribe_id=${encodeURIComponent(tribeId)}&to_user=${encodeURIComponent(targetUser.id)}&limit=5`
+    : null;
+  const { data: reactionsData, loading: reactionsLoading } = useApi(reactionsUrl);
 
-  const loadRecentReactions = async () => {
-    try {
-      const response = await fetch(
-        `/api/reactions?tribe_id=${tribeId}&to_user=${targetUser.id}&limit=5`
-      );
-      const data = await response.json();
-      if (data.success) {
-        setRecentReactions(data.reactions || []);
-      }
-    } catch (error) {
-      console.error('Failed to load reactions:', error);
-    }
-  };
+  // Paint from cache first, then revalidate
+  useEffect(() => {
+    if (reactionsData?.success) setRecentReactions(reactionsData.reactions || []);
+  }, [reactionsData]);
 
   const handleSendReaction = async (reactionType) => {
-    if (sending) return;
-
+    if (sending || !targetUser) return;
     setSending(true);
+
+    const newReaction = {
+      type: reactionType,
+      emoji: REACTION_STICKERS.find(r => r.type === reactionType)?.emoji,
+      from_user_name: currentUser?.name || 'You',
+      created_at: new Date().toISOString()
+    };
+
     try {
-      const response = await fetch('/api/reactions', {
+      const promise = fetch('/api/reactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,35 +67,24 @@ export function ReactionsPanel({
             timestamp: new Date().toISOString()
           }
         })
+      }).then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.success) throw new Error(json.error || 'Failed to send reaction');
+        return json;
       });
 
-      const data = await response.json();
-      if (data.success) {
-        // Add to recent reactions
-        const newReaction = {
-          type: reactionType,
-          emoji: REACTION_STICKERS.find(r => r.type === reactionType)?.emoji,
-          from_user_name: currentUser?.name || 'You',
-          created_at: new Date().toISOString()
-        };
-        
-        setRecentReactions(prev => [newReaction, ...prev.slice(0, 4)]);
-        
-        if (onReactionSent) {
-          onReactionSent(newReaction);
-        }
+      await optimisticMutate(reactionsUrl, (current) => {
+        if (!current) return current;
+        const list = current.reactions || [];
+        return { ...current, reactions: [newReaction, ...list.slice(0, 4)] };
+      }, promise);
 
-        // Show success feedback
-        const reactionEmoji = REACTION_STICKERS.find(r => r.type === reactionType)?.emoji;
-        alert(`${reactionEmoji} Reaction sent to ${targetUser.name}!`);
-        
-        // Auto-close after sending
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-      } else {
-        alert('Failed to send reaction');
-      }
+      setRecentReactions(prev => [newReaction, ...prev.slice(0, 4)]);
+      onReactionSent?.(newReaction);
+
+      const reactionEmoji = REACTION_STICKERS.find(r => r.type === reactionType)?.emoji;
+      alert(`${reactionEmoji} Reaction sent to ${targetUser.name}!`);
+      setTimeout(() => onClose(), 1000);
     } catch (error) {
       console.error('Failed to send reaction:', error);
       alert('Failed to send reaction');
@@ -160,7 +148,13 @@ export function ReactionsPanel({
           </div>
 
           {/* Recent Reactions */}
-          {recentReactions.length > 0 && (
+          {reactionsLoading ? (
+            <div className="border-t border-surface-700 pt-4 space-y-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ) : recentReactions.length > 0 && (
             <div className="border-t border-surface-700 pt-4">
               <div className="text-surface-400 text-xs uppercase tracking-wide mb-3">
                 Recent Reactions

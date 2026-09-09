@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useApi, optimisticMutate } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar, Users, Trophy, TrendingUp, Zap, Bell, Settings, 
@@ -145,7 +146,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   const [skipMode, setSkipMode] = useState('teammate_boost');
   const [catchUpCredits, setCatchUpCredits] = useState(0);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const [creditsLoading, setCreditsLoading] = useState(false);
   const [missedWorkouts, setMissedWorkouts] = useState([]);
   const [modeVote, setModeVote] = useState(null);
   const [modeVoteTotals, setModeVoteTotals] = useState(null);
@@ -266,19 +266,17 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   // ---- Catch-Up Credits (persistent) ----
-  const fetchCreditsData = async () => {
-    try {
-      setCreditsLoading(true);
-      const uid = effectiveUserId || devUserId || 'dev_user';
-      const res = await fetch(`/api/credits?userId=${encodeURIComponent(uid)}`);
-      const js = await res.json().catch(() => ({}));
-      if (res.ok) {
-        if (typeof js.count === 'number') setCatchUpCredits(js.count);
-        if (Array.isArray(js.missed)) setMissedWorkouts(js.missed);
-      } else {
-        try { toast.error(js.error || 'Failed to load Catch-Up Credits'); } catch (_) {}
-      }
-    } catch (_) {} finally { setCreditsLoading(false); }
+  const creditsUrl = effectiveUserId ? `/api/credits?userId=${encodeURIComponent(effectiveUserId)}` : null;
+  const { data: creditsData, loading: creditsLoading, mutate: refreshCredits } = useApi(creditsUrl);
+
+  useEffect(() => {
+    if (!creditsData) return;
+    if (typeof creditsData.count === 'number') setCatchUpCredits(creditsData.count);
+    if (Array.isArray(creditsData.missed)) setMissedWorkouts(creditsData.missed);
+  }, [creditsData]);
+
+  const fetchCreditsData = () => {
+    if (effectiveUserId) refreshCredits();
   };
 
   const openCreditsModal = (e) => {
@@ -341,8 +339,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       toast.error('Failed to use credit');
     }
   };
-
-  useEffect(() => { fetchCreditsData(); }, [effectiveUserId]);
 
   // Removed URL-param catch-up handler; modal flow only
 
@@ -583,17 +579,15 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   }, []);
 
   // Load Tribeling avatar state (streak/mood/stage/skin) for the home hero + profile
-  const refreshAvatar = () => {
-    if (!effectiveUserId) return;
-    fetch(`/api/avatar?userId=${encodeURIComponent(effectiveUserId)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d?.avatar) setTribeling(d.avatar); })
-      .catch(() => {});
-  };
+  const avatarUrl = effectiveUserId ? `/api/avatar?userId=${encodeURIComponent(effectiveUserId)}` : null;
+  const { data: avatarData, mutate: refreshAvatarMutate } = useApi(avatarUrl);
   useEffect(() => {
-    if (!isAuthenticated) return;
-    refreshAvatar();
-  }, [effectiveUserId, isAuthenticated]);
+    if (avatarData?.avatar) setTribeling(avatarData.avatar);
+  }, [avatarData]);
+
+  const refreshAvatar = () => {
+    if (effectiveUserId) refreshAvatarMutate();
+  };
 
   // Create Stripe PaymentIntent or mock top-up
   const handleCreateTopUpCheckout = async ({ amount, currency, estimatedTc }) => {
@@ -672,16 +666,17 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     }
   };
 
-  const checkGoogleConnected = async () => {
-    try {
-      const uid = effectiveUserId || devUserId || 'dev_user';
-      const res = await fetch(`/api/calendar/google/connected?userId=${encodeURIComponent(uid)}`);
-      if (!res.ok) throw new Error('failed');
-      const data = await res.json();
-      setGoogleConnected(!!data?.connected);
-    } catch (_) {
-      setGoogleConnected(false);
-    }
+  const googleConnectedUrl = effectiveUserId
+    ? `/api/calendar/google/connected?userId=${encodeURIComponent(effectiveUserId)}`
+    : null;
+  const { data: googleConnectedData, mutate: refreshGoogleConnected } = useApi(googleConnectedUrl);
+
+  useEffect(() => {
+    if (googleConnectedData) setGoogleConnected(!!googleConnectedData.connected);
+  }, [googleConnectedData]);
+
+  const checkGoogleConnected = () => {
+    if (effectiveUserId) refreshGoogleConnected();
   };
 
   const ensureNotificationPermission = async () => {
@@ -1039,6 +1034,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   // Load initial groups, balances, donors, and persisted notifications
   const loadInitialData = async () => {
+    setLoading(true);
     try {
       // 1) Load groups
       const gRes = await fetch('/api/groups');
@@ -1073,49 +1069,52 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         }
       }
 
-      // 2) Load balances for current user/group
-      if (effectiveUserId && selectedTribe) {
-        await refreshBalances();
-      }
+      // 2) Balances/donors now revalidate automatically via useApi when user/tribe changes.
 
-      // 3) Load donors list
-      await refreshDonors();
-
-      // 4) Load notifications from localStorage
+      // 3) Load notifications from localStorage
       loadPersistedNotifications();
-    } catch (_) {}
-  };
-
-  const refreshBalances = async () => {
-    try {
-      // Only load vault if we have a valid selectedTribe
-      if (!selectedTribe) {
-        return;
-      }
-      
-      const bRes = await fetch(`/api/wallet/balances?userId=${encodeURIComponent(effectiveUserId || 'anon')}&groupId=${encodeURIComponent(selectedTribe)}`);
-      if (bRes.ok) {
-        const bData = await bRes.json();
-        const b = bData?.balances || {};
-        if (typeof b.wallet === 'number') setWalletBalance(b.wallet);
-        if (typeof b.snatched === 'number') setSnatchedBalance(b.snatched);
-        if (typeof b.pact === 'number') {
-          setPactBalance(b.pact);
-        }
-      }
-    } catch (err) {
-      console.error('Balance refresh error:', err);
+    } catch (_) {} finally {
+      setLoading(false);
     }
   };
 
-  const refreshDonors = async () => {
-    try {
-      const res = await fetch(`/api/wallet/snatched-contributors?groupId=${encodeURIComponent(selectedTribe || '')}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSnatchedContributors(Array.isArray(data?.contributors) ? data.contributors : []);
-      }
-    } catch (_) {}
+  // Balances cache: paint from saved first, revalidate when user/tribe changes
+  const balancesUrl = (effectiveUserId && selectedTribe)
+    ? `/api/wallet/balances?userId=${encodeURIComponent(effectiveUserId)}&groupId=${encodeURIComponent(selectedTribe)}`
+    : null;
+  const { data: balancesData, mutate: refreshBalancesMutate } = useApi(balancesUrl);
+
+  useEffect(() => {
+    const b = balancesData?.balances || {};
+    if (typeof b.wallet === 'number') setWalletBalance(b.wallet);
+    if (typeof b.snatched === 'number') setSnatchedBalance(b.snatched);
+    if (typeof b.pact === 'number') setPactBalance(b.pact);
+  }, [balancesData]);
+
+  const refreshBalances = () => {
+    if (effectiveUserId && selectedTribe) return refreshBalancesMutate();
+  };
+
+  // Donors cache: paint from saved first, revalidate when tribe changes
+  const donorsUrl = selectedTribe
+    ? `/api/wallet/snatched-contributors?groupId=${encodeURIComponent(selectedTribe)}`
+    : null;
+  const { data: donorsData, error: donorsError, mutate: refreshDonorsMutate } = useApi(donorsUrl);
+
+  useEffect(() => {
+    if (donorsData?.contributors) {
+      setSnatchedContributors(donorsData.contributors);
+    } else if (donorsError) {
+      setSnatchedContributors([
+        { id: 'u1', name: 'Alex', amount_tc: 20 },
+        { id: 'u2', name: 'Maya', amount_tc: 15 },
+        { id: 'u3', name: 'Kenji', amount_tc: 12 },
+      ]);
+    }
+  }, [donorsData, donorsError]);
+
+  const refreshDonors = () => {
+    if (selectedTribe) return refreshDonorsMutate();
   };
 
   const notificationsKey = () => `tribefit_notifications_${effectiveUserId || 'anon'}_${selectedTribe || 'default'}`;
@@ -1130,21 +1129,18 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   useEffect(() => {
-    // When user or group changes, reload balances, donors, and notifications
-    (async () => {
-      if (!effectiveUserId || !selectedTribe) return;
-      await refreshBalances();
-      await refreshDonors();
-      loadPersistedNotifications();
-      await fetchProgressHistory();
-      
-      // Sync vault balance from squads array
-      const currentTribe = squads.find(s => s.id === selectedTribe);
-      if (currentTribe) {
-        const vaultBalance = currentTribe.pact_balance_tc ?? currentTribe.pact_balance ?? 0;
-        setPactBalance(vaultBalance);
-      }
-    })();
+    // When user or group changes, reload notifications and sync vault.
+    // Balances/donors/progress now revalidate automatically via useApi.
+    if (!effectiveUserId || !selectedTribe) return;
+    loadPersistedNotifications();
+    if (activeTab === 'progress') fetchProgressHistory();
+
+    // Sync vault balance from squads array
+    const currentTribe = squads.find(s => s.id === selectedTribe);
+    if (currentTribe) {
+      const vaultBalance = currentTribe.pact_balance_tc ?? currentTribe.pact_balance ?? 0;
+      setPactBalance(vaultBalance);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveUserId, selectedTribe]);
 
@@ -1386,39 +1382,47 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       return { title: targetMinutes ? `${title} (${durationMin} min)` : title, durationMin, exercises: ex };
     } catch { return null; }
   };
-  const fetchCalendarToday = async () => {
-    try {
-      const uid = effectiveUserId || devUserId || 'dev_user';
-      const dateStr = localDateStr();
-      const res = await fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&date=${encodeURIComponent(dateStr)}`);
-      if (!res.ok) throw new Error('failed');
-      const data = await res.json();
-      const list = Array.isArray(data?.workouts) ? data.workouts : [];
-      setCalendarToday(list);
-      scheduleCalendarTimersFromList(list);
-    } catch (_) {}
+  const calendarUrl = effectiveUserId
+    ? `/api/calendar?user_id=${encodeURIComponent(effectiveUserId)}&date=${encodeURIComponent(localDateStr())}`
+    : null;
+  const { data: calendarData, mutate: refreshCalendar } = useApi(calendarUrl);
+
+  useEffect(() => {
+    const list = Array.isArray(calendarData?.workouts) ? calendarData.workouts : [];
+    setCalendarToday(list);
+    scheduleCalendarTimersFromList(list);
+  }, [calendarData]);
+
+  const fetchCalendarToday = () => {
+    if (effectiveUserId) refreshCalendar();
   };
 
   // Progress history (moved out of useMemo)
-  const fetchProgressHistory = async () => {
-    try {
-      const uid = effectiveUserId || devUserId || 'dev_user';
-      const res = await fetch(`/api/progress?user_id=${encodeURIComponent(uid)}&limit=30`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setProgressHistory(Array.isArray(data?.progress) ? data.progress : []);
-    } catch (_) {}
+  const progressUrl = effectiveUserId
+    ? `/api/progress?user_id=${encodeURIComponent(effectiveUserId)}&limit=30`
+    : null;
+  const { data: progressData, mutate: refreshProgress } = useApi(progressUrl);
+
+  useEffect(() => {
+    if (progressData?.progress) setProgressHistory(progressData.progress);
+  }, [progressData]);
+
+  const fetchProgressHistory = () => {
+    if (effectiveUserId) refreshProgress();
   };
 
   // Fetch custom workouts
-  const fetchCustomWorkouts = async () => {
-    try {
-      const uid = effectiveUserId || devUserId || 'dev_user';
-      const res = await fetch(`/api/workouts/my?userId=${encodeURIComponent(uid)}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setCustomWorkouts(Array.isArray(data?.workouts) ? data.workouts : []);
-    } catch (_) {}
+  const myWorkoutsUrl = effectiveUserId
+    ? `/api/workouts/my?userId=${encodeURIComponent(effectiveUserId)}`
+    : null;
+  const { data: myWorkoutsData, mutate: refreshMyWorkouts } = useApi(myWorkoutsUrl);
+
+  useEffect(() => {
+    if (myWorkoutsData?.workouts) setCustomWorkouts(myWorkoutsData.workouts);
+  }, [myWorkoutsData]);
+
+  const fetchCustomWorkouts = () => {
+    if (effectiveUserId) refreshMyWorkouts();
   };
 
   const clearTimers = (id) => {
@@ -1465,11 +1469,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   };
 
   useEffect(() => {
-    // Fetch calendar when user/group changes
-    fetchCalendarToday();
-    fetchProgressHistory();
-    fetchCustomWorkouts();
-    checkGoogleConnected();
+    // Calendar/progress/workouts/google-connected now load from SWR cache first, then revalidate automatically.
     // Periodic clock tick to refresh ongoing/upcoming status
     const iv = setInterval(() => setClockTick((c) => c + 1), 5000);
     // Poll schedules to capture changes made elsewhere (calendar UI, other tabs)
@@ -1494,30 +1494,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   
 
-  // Load sources that fueled your Snatched TCs (who paid to skip)
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchContributors() {
-      try {
-        const res = await fetch(`/api/wallet/snatched-contributors?groupId=${encodeURIComponent(selectedTribe || '')}`);
-        if (!res.ok) throw new Error('failed');
-        const data = await res.json();
-        if (!cancelled) setSnatchedContributors(Array.isArray(data?.contributors) ? data.contributors : []);
-      } catch (_) {
-        if (!cancelled) {
-          // Graceful fallback demo data
-          setSnatchedContributors([
-            { id: 'u1', name: 'Alex', amount_tc: 20 },
-            { id: 'u2', name: 'Maya', amount_tc: 15 },
-            { id: 'u3', name: 'Kenji', amount_tc: 12 },
-          ]);
-        }
-      }
-    }
-    fetchContributors();
-    return () => { cancelled = true; };
-  }, [selectedTribe]);
-
+  // Snatched contributors now paint from the donors cache above.
 
   const loadTribesAndLeaderboard = async () => {
     // Enhanced mock tribe and squad data with progression system
@@ -2365,6 +2342,20 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       ]
     };
     
+    const previousRequests = pendingRequests;
+    // Optimistic UI: apply vote immediately, then sync with server
+    setPendingRequests(prev => prev.map(req => {
+      if (req.id !== requestId) return req;
+      return {
+        ...req,
+        votes: {
+          approve: req.votes?.approve ?? 0,
+          reject: req.votes?.reject ?? 0,
+          [vote]: (req.votes?.[vote] ?? 0) + 1
+        }
+      };
+    }));
+
     try {
       const response = await fetch('/api/pact/vote', {
         method: 'POST',
@@ -2379,7 +2370,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       if (response.ok) {
         const data = await response.json();
         
-        // Update local state
+        // Sync with server response
         setPendingRequests(prev => prev.map(req => {
           if (req.id === requestId) {
             return {
@@ -2421,6 +2412,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
         toast.error(error.error || t('failed_vote'));
       }
     } catch (error) {
+      setPendingRequests(previousRequests);
       console.error('Vote failed:', error);
       toast.error(t('failed_vote') + ': ' + error.message);
     }

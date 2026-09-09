@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useApi } from '../lib/api';
 import { Swords, Coins, Crown, Timer, Medal } from 'lucide-react';
 import { Tribeling } from './Tribeling';
 import { Skeleton } from './ui/skeleton';
@@ -8,24 +9,12 @@ import { useTranslation } from '../lib/i18n-hooks';
 // Winner at midnight takes the TC pot.
 export function DailyVersus({ groupId, userId }) {
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState('');
 
-  const load = async () => {
-    if (!groupId) { setLoading(false); return; }
-    try {
-      const res = await fetch(`/api/versus?groupId=${encodeURIComponent(groupId)}${userId ? `&userId=${encodeURIComponent(userId)}` : ''}`);
-      if (res.ok) setData(await res.json());
-    } catch (_) {}
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
-    const iv = setInterval(load, 60000);
-    return () => clearInterval(iv);
-  }, [groupId, userId]);
+  const versusUrl = groupId
+    ? `/api/versus?groupId=${encodeURIComponent(groupId)}${userId ? `&userId=${encodeURIComponent(userId)}` : ''}`
+    : null;
+  const { data, loading } = useApi(versusUrl, { refreshInterval: 60000 });
 
   // Countdown to midnight
   useEffect(() => {

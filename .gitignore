@@ -15,6 +15,12 @@
 # production
 /build
 
+# runtime data
+/.data/
+
+# lockfile - project uses yarn
+package-lock.json
+
 # misc
 .DS_Store
 *.pem

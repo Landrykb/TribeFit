@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useApi } from '../../lib/api';
+import { Skeleton } from './skeleton';
 import { X, Dumbbell, Link, CircleDot, Circle, Layout, Hand, CupSoda, Zap, Shield, Activity, ShoppingCart, Coins } from 'lucide-react';
 
 // Icon mapping for catalog items
@@ -20,32 +22,24 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedSpecs, setSelectedSpecs] = useState({});
   const [customAmount, setCustomAmount] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [remainingMode, setRemainingMode] = useState(false);
   const mode = onPurchase ? 'purchase' : 'request';
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchCatalogItems();
-    }
-  }, [isOpen]);
+  const { data: catalogData, loading: catalogLoading } = useApi(isOpen ? '/api/catalog' : null);
 
-  const fetchCatalogItems = async () => {
-    try {
-      const response = await fetch('/api/catalog');
-      const data = await response.json();
-      const raw = data.items || [];
-      const mapped = raw.map((it) => ({
-        ...it,
-        title: it.title || it.name,
-        slug: it.slug || it.id,
-      }));
-      setItems(mapped);
-    } catch (error) {
-      console.error('Failed to fetch catalog:', error);
-    }
-  };
+  // Paint from cache first, then revalidate
+  useEffect(() => {
+    if (!catalogData) return;
+    const raw = catalogData.items || [];
+    const mapped = raw.map((it) => ({
+      ...it,
+      title: it.title || it.name,
+      slug: it.slug || it.id,
+    }));
+    setItems(mapped);
+  }, [catalogData]);
 
   const handleItemSelect = (item) => {
     setSelectedItem(item);
@@ -93,7 +87,7 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
   const handleSubmit = async () => {
     if (!selectedItem || !customAmount) return;
 
-    setLoading(true);
+    setSubmitting(true);
     try {
       const amount = parseFloat(customAmount);
       if (mode === 'purchase' && onPurchase) {
@@ -124,7 +118,7 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
     } catch (error) {
       console.error('Failed to submit request:', error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -176,8 +170,15 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
 
         <div className="p-6 max-h-96 overflow-y-auto">
           {!selectedItem ? (
-            <div className="grid grid-cols-2 gap-3">
-              {items.map((item) => {
+            catalogLoading ? (
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-28 rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {items.map((item) => {
                 const IconComponent = CatalogIcon[item.icon] || Dumbbell;
                 const isHighlighted = highlightTitle && item.title === highlightTitle;
                 return (
@@ -200,6 +201,7 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
                 );
               })}
             </div>
+          )
           ) : (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -324,10 +326,10 @@ export function EquipmentCatalog({ isOpen, onClose, onSubmitRequest, onPurchase,
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={!customAmount || loading}
+                  disabled={!customAmount || submitting}
                   className="flex-1 bg-gradient-to-br from-accent to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-surface-600 disabled:to-surface-700 disabled:cursor-not-allowed text-white rounded-xl px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-2 font-bold shadow-lg hover:shadow-accent/25"
                 >
-                  {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>}
+                  {submitting && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>}
                   <span>{mode === 'purchase' ? 'Purchase Now' : 'Submit Request'}</span>
                 </button>
               </div>

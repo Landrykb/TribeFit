@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useApi, optimisticMutate } from '../lib/api';
 import { Lock, Check, Coins, Tv, Dumbbell, Sparkles } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
@@ -12,14 +13,15 @@ import { useTranslation } from '../lib/i18n-hooks';
 export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const toast = useToast();
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
   const [previewSkin, setPreviewSkin] = useState(null);
   const [previewAccessory, setPreviewAccessory] = useState(null);
   const [previewCustom, setPreviewCustom] = useState(null);
   const [previewPreset, setPreviewPreset] = useState(null);
   const [previewParts, setPreviewParts] = useState(null);
+
+  const avatarUrl = userId ? `/api/avatar?userId=${encodeURIComponent(userId)}` : null;
+  const { data, loading, mutate } = useApi(avatarUrl);
 
   const PRESET_IDS = [1, 2];
 
@@ -37,34 +39,83 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
     act({ action: 'set_custom', custom: next }, `custom_${key}`);
   };
 
-  const load = async () => {
-    if (!userId) { setLoading(false); return; }
-    try {
-      const res = await fetch(`/api/avatar?userId=${encodeURIComponent(userId)}`);
-      if (res.ok) setData(await res.json());
-    } catch (_) {}
-    setLoading(false);
+  const buildOptimisticAvatar = (payload, current) => {
+    const avatar = current?.avatar || {};
+    const wallet = current?.wallet_balance_tc || 0;
+    switch (payload.action) {
+      case 'set_skin':
+        return { skin: payload.skin };
+      case 'buy_skin': {
+        const def = current?.skins?.[payload.skin];
+        return {
+          skin: payload.skin,
+          owned_skins: Array.from(new Set([...(avatar.owned_skins || []), payload.skin])),
+          wallet_balance_tc: wallet - (def?.price_tc || 0),
+        };
+      }
+      case 'select_accessory':
+        return { accessory: payload.accessory };
+      case 'buy_accessory': {
+        const def = current?.accessories?.[payload.accessory];
+        return {
+          accessory: payload.accessory,
+          owned_accessories: Array.from(new Set([...(avatar.owned_accessories || []), payload.accessory])),
+          wallet_balance_tc: wallet - (def?.price_tc || 0),
+        };
+      }
+      case 'set_preset':
+        return { preset: payload.preset };
+      case 'clear_preset':
+        return { preset: null };
+      case 'set_part': {
+        const parts = { ...(avatar.parts || {}), [payload.part]: payload.idx };
+        return { parts };
+      }
+      case 'clear_part': {
+        const parts = { ...(avatar.parts || {}) };
+        parts[payload.part] = 0;
+        return { parts };
+      }
+      case 'set_custom':
+        return { custom: payload.custom };
+      case 'toggle_custom':
+        return { custom: { ...(avatar.custom || {}), enabled: payload.enabled !== false } };
+      default:
+        return {};
+    }
   };
-
-  useEffect(() => { if (isOpen) { setLoading(true); load(); } }, [isOpen, userId]);
 
   const act = async (payload, busyKey) => {
     setBusy(busyKey);
     try {
-      const res = await fetch('/api/avatar', {
+      const promise = fetch('/api/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, ...payload }),
+      }).then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Failed');
+        return json;
       });
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error || 'Failed');
-        return;
-      }
+      const json = await optimisticMutate(avatarUrl, (current) => {
+        if (!current) return current;
+        const optimisticAvatar = buildOptimisticAvatar(payload, current);
+        const { wallet_balance_tc: nextWallet, ...avatarUpdates } = optimisticAvatar;
+        return {
+          ...current,
+          avatar: { ...current.avatar, ...avatarUpdates },
+          wallet_balance_tc: nextWallet ?? current.wallet_balance_tc,
+        };
+      }, promise);
       if (typeof json.wallet_balance_tc === 'number') onWalletChange?.(json.wallet_balance_tc);
       if (json.unlocked) toast.success(`${json.unlocked.name} unlocked!`);
-      setData(prev => ({ ...prev, avatar: json.avatar }));
     } catch (e) {
+      // Rollback previews to server state on error
+      setPreviewSkin(null);
+      setPreviewAccessory(null);
+      setPreviewCustom(null);
+      setPreviewPreset(null);
+      setPreviewParts(null);
       toast.error(e.message);
     } finally {
       setBusy('');

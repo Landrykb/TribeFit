@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
+const isVercel = !!process.env.VERCEL;
+
 const nextConfig = {
-  // Enable static exports for better deployment compatibility
-  output: 'standalone',
+  // Use standalone output for Docker/self-hosted builds; default output for Vercel
+  output: isVercel ? undefined : 'standalone',
   
   // Optimize images
   images: {

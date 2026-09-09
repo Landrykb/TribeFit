@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useApi, optimisticMutate } from '../../lib/api';
 import { Button } from './button';
 import { Card } from '@/components/ui/card';
+import { SkeletonList } from './skeleton';
 import { 
   Plus, ShoppingCart, Target, Users, Crown, 
   Package, Zap, Gift, TrendingUp, Check, X, Heart
@@ -18,129 +20,108 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
   const [showSpendModal, setShowSpendModal] = useState(false);
   const [selectedWishlistItem, setSelectedWishlistItem] = useState(null);
   const [pledgeAmount, setPledgeAmount] = useState('');
-  const [loading, setLoading] = useState(false);
+
+  const wishlistUrl = tribeId && Features.WISHLIST ? `/api/wishlist?tribe_id=${encodeURIComponent(tribeId)}` : null;
+  const catalogUrl = Features.WISHLIST ? '/api/catalog' : null;
+
+  const { data: wishlistData, loading: wishlistLoading } = useApi(wishlistUrl);
+  const { data: catalogData, loading: catalogLoading } = useApi(catalogUrl);
+
+  // Paint from cache first
+  useEffect(() => {
+    if (wishlistData?.success) setWishlist(wishlistData.wishlist);
+  }, [wishlistData]);
 
   useEffect(() => {
-    if (tribeId && Features.WISHLIST) {
-      loadWishlist();
-      loadCatalog();
-    }
-  }, [tribeId]);
+    if (catalogData?.success) setCatalogItems(catalogData.items || []);
+  }, [catalogData]);
 
-  const loadWishlist = async () => {
-    try {
-      const response = await fetch(`/api/wishlist?tribe_id=${tribeId}`);
-      const data = await response.json();
-      if (data.success) {
-        setWishlist(data.wishlist);
-      }
-    } catch (error) {
-      console.error('Failed to load wishlist:', error);
-    }
-  };
+  const loading = wishlistLoading || catalogLoading;
 
-  const loadCatalog = async () => {
-    try {
-      const response = await fetch('/api/catalog');
-      const data = await response.json();
-      if (data.success) {
-        setCatalogItems(data.items || []);
-      }
-    } catch (error) {
-      console.error('Failed to load catalog:', error);
-    }
-  };
+  const postJson = (url, body) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(async (res) => {
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.success) throw new Error(json.error || 'Request failed');
+    return json;
+  });
 
   const handleAddToWishlist = async (catalogItem, specs = {}, targetTc = null) => {
-    setLoading(true);
+    const tempId = `tmp_${Date.now()}`;
+    const newItem = {
+      id: tempId,
+      label: catalogItem.name,
+      target_tc: targetTc || catalogItem.price_tc,
+      pledged_tc: 0,
+      catalog_items: catalogItem,
+      specs,
+    };
     try {
-      const response = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tribe_id: tribeId,
-          catalog_item_id: catalogItem.id,
-          specs,
-          target_tc: targetTc || catalogItem.price_tc,
-          user_id: user?.id
-        })
+      const promise = postJson('/api/wishlist', {
+        tribe_id: tribeId,
+        catalog_item_id: catalogItem.id,
+        specs,
+        target_tc: targetTc || catalogItem.price_tc,
+        user_id: user?.id
       });
-
-      const data = await response.json();
-      if (data.success) {
-        await loadWishlist();
-        setShowAddModal(false);
-        setSelectedItem(null);
-      }
+      await optimisticMutate(wishlistUrl, (current) => {
+        if (!current?.wishlist?.wishlist_items) return current;
+        const items = [newItem, ...current.wishlist.wishlist_items];
+        return { ...current, wishlist: { ...current.wishlist, wishlist_items: items } };
+      }, promise);
+      setShowAddModal(false);
+      setSelectedItem(null);
     } catch (error) {
       console.error('Failed to add to wishlist:', error);
     }
-    setLoading(false);
   };
 
   const handlePledge = async (wishlistItemId, amount) => {
-    setLoading(true);
+    const parsed = parseFloat(amount);
+    if (!Number.isFinite(parsed) || parsed <= 0) return;
     try {
-      const response = await fetch('/api/wishlist/pledge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wishlist_item_id: wishlistItemId,
-          pledge_amount: parseFloat(amount),
-          user_id: user?.id
-        })
+      const promise = postJson('/api/wishlist/pledge', {
+        wishlist_item_id: wishlistItemId,
+        pledge_amount: parsed,
+        user_id: user?.id
       });
-
-      const data = await response.json();
-      if (data.success) {
-        await loadWishlist();
-        // Update user balance locally
-        if (onBuyWithBalance) {
-          onBuyWithBalance(-parseFloat(amount));
-        }
-      }
+      await optimisticMutate(wishlistUrl, (current) => {
+        if (!current?.wishlist?.wishlist_items) return current;
+        const items = current.wishlist.wishlist_items.map((item) =>
+          item.id === wishlistItemId ? { ...item, pledged_tc: (item.pledged_tc || 0) + parsed } : item
+        );
+        return { ...current, wishlist: { ...current.wishlist, wishlist_items: items } };
+      }, promise);
+      onBuyWithBalance?.(-parsed);
     } catch (error) {
+      onBuyWithBalance?.(parsed);
       console.error('Failed to pledge:', error);
     }
-    setLoading(false);
   };
 
   const handleDirectBuy = async (catalogItem, specs = {}) => {
     const confirmBuy = window.confirm(
       `Buy ${catalogItem.name} for ${catalogItem.price_tc} TC using your balance?`
     );
-    
     if (!confirmBuy) return;
-
-    setLoading(true);
+    const price = catalogItem.price_tc;
+    onBuyWithBalance?.(-price);
     try {
-      const response = await fetch('/api/catalog/buy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user?.id,
-          catalog_item_id: catalogItem.id,
-          specs,
-          price_tc: catalogItem.price_tc,
-          tribe_id: tribeId
-        })
+      await postJson('/api/catalog/buy', {
+        user_id: user?.id,
+        catalog_item_id: catalogItem.id,
+        specs,
+        price_tc: price,
+        tribe_id: tribeId
       });
-
-      const data = await response.json();
-      if (data.success) {
-        // Update user balance
-        if (onBuyWithBalance) {
-          onBuyWithBalance(-catalogItem.price_tc);
-        }
-        alert(`✅ Successfully purchased ${catalogItem.name}!`);
-      } else {
-        alert(`❌ Purchase failed: ${data.error}`);
-      }
+      alert(`✅ Successfully purchased ${catalogItem.name}!`);
     } catch (error) {
+      onBuyWithBalance?.(price);
       console.error('Failed to buy item:', error);
-      alert('❌ Purchase failed');
+      alert(`❌ Purchase failed: ${error.message || 'unknown'}`);
     }
-    setLoading(false);
   };
 
   if (!Features.WISHLIST) {
@@ -172,7 +153,9 @@ export function WishlistManager({ tribeId, user, onBuyWithBalance }) {
 
 
       {/* Wishlist Items */}
-      {wishlistItems.length > 0 ? (
+      {loading ? (
+        <SkeletonList count={2} />
+      ) : wishlistItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {wishlistItems.map((item) => {
             const progressPct = (item.pledged_tc / item.target_tc) * 100;

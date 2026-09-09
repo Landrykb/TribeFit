@@ -1,33 +1,44 @@
 import React, { useEffect, useState } from 'react';
+import { useApi } from '../lib/api';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
+import { Skeleton } from './ui/skeleton';
 import { Calendar as CalIcon, Link, CheckCircle2, CloudDownload, Settings, Apple, CalendarClock } from 'lucide-react';
 
 export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOpenSettings }) {
   const toast = useToast();
   const [googleConnected, setGoogleConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [appleIcsUrl, setAppleIcsUrl] = useState('');
   const [savingApple, setSavingApple] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  const uid = userId || 'dev_user';
+  const googleUrl = isOpen ? `/api/calendar/google/connected?userId=${encodeURIComponent(uid)}` : null;
+  const appleUrl = isOpen ? `/api/calendar/apple/settings?userId=${encodeURIComponent(uid)}` : null;
+
+  const { data: googleData, loading: googleLoading } = useApi(googleUrl);
+  const { data: appleData, loading: appleLoading } = useApi(appleUrl);
+
+  const loading = googleLoading || appleLoading;
+
+  if (loading) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} title="Connect Calendar" size="lg">
+        <div className="space-y-4">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+      </Modal>
+    );
+  }
+
+  // Paint from cache first, then revalidate in background
   useEffect(() => {
     if (!isOpen) return;
-    (async () => {
-      try {
-        const uid = userId || 'dev_user';
-        const [gRes, aRes] = await Promise.all([
-          fetch(`/api/calendar/google/connected?userId=${encodeURIComponent(uid)}`),
-          fetch(`/api/calendar/apple/settings?userId=${encodeURIComponent(uid)}`)
-        ]);
-        const gJson = await gRes.json().catch(() => ({}));
-        const aJson = await aRes.json().catch(() => ({}));
-        setGoogleConnected(!!gJson.connected);
-        if (aJson && typeof aJson.apple_ics_url === 'string') setAppleIcsUrl(aJson.apple_ics_url);
-      } catch {}
-    })();
-  }, [isOpen, userId]);
+    if (googleData) setGoogleConnected(!!googleData.connected);
+    if (appleData && typeof appleData.apple_ics_url === 'string') setAppleIcsUrl(appleData.apple_ics_url);
+  }, [isOpen, googleData, appleData]);
 
   const authGoogle = () => {
     const uid = userId || 'dev_user';
@@ -51,6 +62,7 @@ export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOp
   };
 
   const saveAppleIcs = async () => {
+    const previousUrl = appleIcsUrl;
     try {
       setSavingApple(true);
       const uid = userId || 'dev_user';
@@ -62,6 +74,7 @@ export function CalendarConnectModal({ isOpen, onClose, userId, onImported, onOp
       if (!res.ok) throw new Error(data?.error || 'Save failed');
       toast.success('Apple ICS URL saved');
     } catch (e) {
+      setAppleIcsUrl(previousUrl);
       toast.error(e.message || 'Failed to save Apple ICS');
     } finally {
       setSavingApple(false);

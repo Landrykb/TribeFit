@@ -37,8 +37,13 @@ export function ProfileCustomization({ isOpen, onClose, userId, currentName, cur
       toast.error('Display name is required');
       return;
     }
+    const previousName = currentName || user?.name || '';
+    const previousIcon = currentIcon || user?.avatar_icon || 'zap';
     setSaving(true);
     try {
+      // Optimistic UI: apply immediately, roll back if the request fails
+      updateUser({ name, avatar_icon: selectedIcon });
+      onSaved?.({ name, avatar_icon: selectedIcon });
       if (userId) {
         const res = await fetch('/api/avatar', {
           method: 'POST',
@@ -47,11 +52,12 @@ export function ProfileCustomization({ isOpen, onClose, userId, currentName, cur
         });
         if (!res.ok) throw new Error('Save failed');
       }
-      updateUser({ name, avatar_icon: selectedIcon });
-      onSaved?.({ name, avatar_icon: selectedIcon });
       toast.success('Profile updated!');
       onClose();
     } catch (e) {
+      // Rollback
+      updateUser({ name: previousName, avatar_icon: previousIcon });
+      onSaved?.({ name: previousName, avatar_icon: previousIcon });
       toast.error('Could not save: ' + e.message);
     } finally {
       setSaving(false);

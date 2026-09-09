@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useApi, optimisticMutate } from '../lib/api';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
+import { Skeleton } from './ui/skeleton';
 import { WorkoutScheduler } from './WorkoutScheduler';
 import { 
   Calendar, ChevronLeft, ChevronRight, Plus, 
@@ -19,7 +21,6 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   
   // Server-backed calendar schedule: { [YYYY-MM-DD]: [ { id, user_id, user_name, time, workout, type, shared, duration, ai_plan } ] }
   const [workoutSchedule, setWorkoutSchedule] = useState({});
-  const [loading, setLoading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDate, setEditDate] = useState('');
   const [editItem, setEditItem] = useState(null); // full item from calendar
@@ -56,26 +57,15 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   };
 
   const uid = userId || user?.id || 'dev_user';
+  const scheduleUrl = isOpen ? `/api/calendar?user_id=${encodeURIComponent(uid)}` : null;
+  const { data: scheduleData, loading, mutate } = useApi(scheduleUrl);
 
-  const refreshFromServer = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'failed');
-      const schedule = data?.schedule && typeof data.schedule === 'object' ? data.schedule : {};
-      setWorkoutSchedule(schedule);
-    } catch (e) {
-      // keep last known
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Paint from cache first, then revalidate in background
   useEffect(() => {
-    if (isOpen) refreshFromServer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+    if (scheduleData?.schedule) {
+      setWorkoutSchedule(scheduleData.schedule);
+    }
+  }, [scheduleData]);
 
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
@@ -91,34 +81,48 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const handleScheduleWorkout = async (scheduleData) => {
     try {
       // Ensure required user_id
-      if (!scheduleData.user_id) scheduleData.user_id = uid;
+      const payload = { ...scheduleData, user_id: scheduleData.user_id || uid };
       // Conflict check: same date/time
-      const dateKey = scheduleData.date;
-      const timeKey = scheduleData.time;
+      const dateKey = payload.date;
+      const timeKey = payload.time;
       const conflicts = Array.isArray(workoutSchedule[dateKey]) && workoutSchedule[dateKey].some(w => w.time === timeKey);
       if (conflicts) {
         toast.error('Time conflict: there is already a workout at that time');
         return false; // keep scheduler open
       }
-      const response = await fetch('/api/calendar', {
+      const tempItem = {
+        id: `tmp_${Date.now()}`,
+        ...payload,
+        workout: payload.workout_name,
+        type: payload.workout_type || 'general',
+        user_name: user?.name || 'User',
+      };
+      const promise = fetch('/api/calendar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scheduleData)
+        body: JSON.stringify(payload)
+      }).then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Failed to schedule workout');
+        return json;
       });
 
-      if (response.ok) {
-        await refreshFromServer();
-        toast.success(`Workout scheduled for ${scheduleData.date}! 📅`);
-        setShowScheduler(false);
-        try { onChanged && onChanged(); } catch {}
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to schedule workout');
-        return false;
-      }
+      await optimisticMutate(scheduleUrl, (current) => {
+        if (!current) return current;
+        const schedule = { ...(current.schedule || {}) };
+        const list = schedule[dateKey] ? [...schedule[dateKey]] : [];
+        if (list.some(w => w.time === timeKey)) return current;
+        schedule[dateKey] = [...list, tempItem];
+        return { ...current, schedule };
+      }, promise);
+
+      toast.success(`Workout scheduled for ${payload.date}!`);
+      setShowScheduler(false);
+      try { onChanged && onChanged(); } catch {}
+      return true;
     } catch (error) {
       console.error('Schedule workout failed:', error);
-      toast.error('Failed to schedule workout');
+      toast.error(error.message || 'Failed to schedule workout');
       return false;
     }
   };
@@ -136,24 +140,44 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const saveEdit = async () => {
     if (!editItem) return;
     try {
-      const res = await fetch('/api/calendar', {
+      const payload = {
+        user_id: uid,
+        id: editItem.id,
+        date: editDate,
+        time: editTime,
+        workout_name: editTitle,
+        duration: editDuration,
+        shared: editShared,
+      };
+      const promise = fetch('/api/calendar', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: uid,
-          id: editItem.id,
-          date: editDate,
-          time: editTime,
-          workout_name: editTitle,
-          duration: editDuration,
-          shared: editShared,
-        })
+        body: JSON.stringify(payload)
+      }).then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || 'update failed');
+        return json;
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'update failed');
+
+      await optimisticMutate(scheduleUrl, (current) => {
+        if (!current) return current;
+        const schedule = { ...(current.schedule || {}) };
+        const nextSchedule = {};
+        for (const [d, list] of Object.entries(schedule)) {
+          nextSchedule[d] = [...list];
+        }
+        // Remove from old date lists
+        for (const d of Object.keys(nextSchedule)) {
+          nextSchedule[d] = nextSchedule[d].filter(w => w.id !== editItem.id);
+        }
+        // Add updated item to target date
+        const updated = { ...editItem, date: editDate, time: editTime, workout: editTitle, duration: editDuration, shared: editShared };
+        nextSchedule[editDate] = [...(nextSchedule[editDate] || []), updated];
+        return { ...current, schedule: nextSchedule };
+      }, promise);
+
       toast.success('Workout updated');
       setEditOpen(false);
-      await refreshFromServer();
       try { onChanged && onChanged(); } catch {}
     } catch (e) {
       toast.error(e.message || 'Failed to update');
@@ -163,14 +187,29 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
   const deleteItem = async () => {
     if (!editItem) return;
     try {
-      const res = await fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&id=${encodeURIComponent(editItem.id)}`, {
+      const promise = fetch(`/api/calendar?user_id=${encodeURIComponent(uid)}&id=${encodeURIComponent(editItem.id)}`, {
         method: 'DELETE'
+      }).then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json?.error || 'delete failed');
+        return json;
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || 'delete failed');
+
+      await optimisticMutate(scheduleUrl, (current) => {
+        if (!current) return current;
+        const schedule = { ...(current.schedule || {}) };
+        const nextSchedule = {};
+        let removed = false;
+        for (const [d, list] of Object.entries(schedule)) {
+          const nextList = list.filter(w => w.id !== editItem.id);
+          nextSchedule[d] = nextList;
+          if (nextList.length !== list.length) removed = true;
+        }
+        return removed ? { ...current, schedule: nextSchedule } : current;
+      }, promise);
+
       toast.success('Workout deleted');
       setEditOpen(false);
-      await refreshFromServer();
       try { onChanged && onChanged(); } catch {}
     } catch (e) {
       toast.error(e.message || 'Failed to delete');
@@ -186,7 +225,14 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Tribe Workout Calendar" size="2xl">
-      <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+      {loading ? (
+        <div className="space-y-4 max-h-[80vh] overflow-y-auto p-1">
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      ) : (
+        <div className="space-y-4 max-h-[80vh] overflow-y-auto">
         {/* Calendar Header - Fixed at top */}
         <div className="sticky top-0 bg-surface-900 light:bg-gray-50 z-10 pb-4">
           <div className="flex items-center justify-between">
@@ -355,6 +401,7 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
           </div>
         </div>
       </div>
+      )}
 
       {/* Fixed Action Buttons at Bottom */}
       <div className="sticky bottom-0 bg-surface-900 light:bg-gray-50 pt-4 border-t border-surface-700 light:border-gray-200">

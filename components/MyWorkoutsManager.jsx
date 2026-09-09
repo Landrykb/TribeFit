@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useApi, optimisticMutate } from '../lib/api';
 import { Button } from './ui/button';
 import { Modal } from './ui/Modal';
+import { SkeletonList } from './ui/skeleton';
 import { 
   Plus, Edit, Trash2, Copy, Star, Play, Clock, 
   Zap, TrendingUp, Check, X, Search, Filter,
@@ -41,49 +43,45 @@ export function MyWorkoutsManager({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBodyPart, setFilterBodyPart] = useState('all');
   const [filterDifficulty, setFilterDifficulty] = useState('all');
-  
-  // Load user's custom workouts
-  useEffect(() => {
-    if (userId) {
-      loadMyWorkouts();
-    }
-  }, [userId]);
 
-  const loadMyWorkouts = async () => {
-    try {
-      const res = await fetch(`/api/workouts/my?userId=${encodeURIComponent(userId)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMyWorkouts(Array.isArray(data.workouts) ? data.workouts : []);
-      }
-    } catch (err) {
-      console.error('Failed to load workouts:', err);
+  const myWorkoutsUrl = userId ? `/api/workouts/my?userId=${encodeURIComponent(userId)}` : null;
+  const { data: workoutsData, loading: workoutsLoading, mutate } = useApi(myWorkoutsUrl);
+
+  // Hydrate from cache first, then revalidate in background
+  useEffect(() => {
+    if (workoutsData?.workouts) {
+      setMyWorkouts(Array.isArray(workoutsData.workouts) ? workoutsData.workouts : []);
     }
-  };
+  }, [workoutsData]);
+
+  const getWorkoutsPromise = (url, body) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(async (res) => {
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed');
+    return res.json();
+  });
 
   const handleSaveWorkout = async (workout) => {
+    if (!userId) {
+      toast.error('No user ID found. Please refresh the page.');
+      return;
+    }
     try {
-      if (!userId) {
-        toast.error('No user ID found. Please refresh the page.');
-        return;
-      }
-      
-      const res = await fetch('/api/workouts/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, workout })
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        await loadMyWorkouts();
-        setShowEditor(false);
-        setSelectedWorkout(null);
-        toast.success(data.message || '💪 Workout saved successfully!');
-      } else {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to save');
-      }
+      const promise = getWorkoutsPromise('/api/workouts/save', { userId, workout });
+      await optimisticMutate(myWorkoutsUrl, (current) => {
+        if (!current) return current;
+        const list = Array.isArray(current.workouts) ? current.workouts : [];
+        const idx = list.findIndex(w => w.id === workout.id);
+        const nextList = idx >= 0
+          ? [...list.slice(0, idx), workout, ...list.slice(idx + 1)]
+          : [workout, ...list];
+        return { ...current, workouts: nextList };
+      }, promise);
+      setShowEditor(false);
+      setSelectedWorkout(null);
+      toast.success('Workout saved successfully!');
     } catch (err) {
       console.error('Failed to save workout:', err);
       toast.error(`Failed to save workout: ${err.message}`);
@@ -92,20 +90,15 @@ export function MyWorkoutsManager({
 
   const handleDeleteWorkout = async (workoutId) => {
     if (!confirm('Delete this workout?')) return;
-    
+    if (!userId) return;
     try {
-      const res = await fetch('/api/workouts/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, workoutId })
-      });
-      
-      if (res.ok) {
-        await loadMyWorkouts();
-        toast.success('🗑️ Workout deleted');
-      } else {
-        throw new Error('Failed to delete');
-      }
+      const promise = getWorkoutsPromise('/api/workouts/delete', { userId, workoutId });
+      await optimisticMutate(myWorkoutsUrl, (current) => {
+        if (!current) return current;
+        const list = Array.isArray(current.workouts) ? current.workouts : [];
+        return { ...current, workouts: list.filter(w => w.id !== workoutId) };
+      }, promise);
+      toast.success('Workout deleted');
     } catch (err) {
       console.error('Failed to delete workout:', err);
       toast.error('Failed to delete workout');
@@ -291,7 +284,9 @@ export function MyWorkoutsManager({
 
         {/* Workouts List */}
         <div className="max-h-[50vh] overflow-y-auto space-y-2">
-          {!showTemplates ? (
+          {workoutsLoading && !showTemplates ? (
+            <SkeletonList count={3} />
+          ) : !showTemplates ? (
             // My Custom Workouts
             filteredWorkouts.length > 0 ? (
               filteredWorkouts.map(workout => (

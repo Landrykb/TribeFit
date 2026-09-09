@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useApi, optimisticMutate } from '../lib/api';
 import { Zap, Shield, Rocket, Package, Loader2, Coins, Crosshair, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
@@ -24,39 +25,33 @@ const RARITY_LABELS = { common: 'Common', rare: 'Rare', epic: 'Epic' };
 export function PowerUps({ userId, onWalletChange }) {
   const toast = useToast();
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
   const [reveal, setReveal] = useState(null);
   const [selected, setSelected] = useState(null); // magnified item detail
   const [snatchTarget, setSnatchTarget] = useState('');
 
-  const load = async () => {
-    if (!userId) { setLoading(false); return; }
-    try {
-      const res = await fetch(`/api/items?userId=${encodeURIComponent(userId)}`);
-      if (res.ok) setData(await res.json());
-    } catch (_) {}
-    setLoading(false);
-  };
+  const itemsUrl = userId ? `/api/items?userId=${encodeURIComponent(userId)}` : null;
+  const { data, loading, mutate } = useApi(itemsUrl);
 
-  useEffect(() => { load(); }, [userId]);
+  const postItems = (payload) => fetch('/api/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, ...payload }),
+  }).then(async (res) => {
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || 'Failed');
+    return json;
+  });
 
-  const act = async (payload, busyKey) => {
+  const act = async (payload, busyKey, optimisticUpdater) => {
     setBusy(busyKey);
     try {
-      const res = await fetch('/api/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...payload }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error || 'Failed');
-        return null;
-      }
-      if (typeof json.wallet_balance_tc === 'number') onWalletChange?.(json.wallet_balance_tc);
-      await load();
+      const promise = postItems(payload);
+      const json = optimisticUpdater
+        ? await optimisticMutate(itemsUrl, optimisticUpdater, promise)
+        : await promise;
+      if (typeof json?.wallet_balance_tc === 'number') onWalletChange?.(json.wallet_balance_tc);
+      if (!optimisticUpdater) await mutate(); // refresh from server
       return json;
     } catch (e) {
       toast.error(e.message);
@@ -80,7 +75,13 @@ export function PowerUps({ userId, onWalletChange }) {
       if (!snatchTarget) { toast.error('Pick a rival to snatch first'); return; }
       payload.targetUserId = snatchTarget;
     }
-    const json = await act(payload, `use_${type}`);
+    const json = await act(payload, `use_${type}`, (current) => {
+      if (!current) return current;
+      const nextCounts = { ...current.counts, [type]: Math.max(0, (current.counts?.[type] || 0) - 1) };
+      const nextEffects = { ...current.effects };
+      if (type !== 'snatch') nextEffects[type] = true;
+      return { ...current, counts: nextCounts, effects: nextEffects };
+    });
     if (json?.message) { toast.success(json.message); setSelected(null); }
     if (type === 'snatch') setSnatchTarget('');
   };
@@ -213,7 +214,16 @@ export function PowerUps({ userId, onWalletChange }) {
                   variant="ghost"
                   size="sm"
                   disabled={!!busy}
-                  onClick={() => act({ action: 'buy_item', item: selected.id }, `buy_${selected.id}`)}
+                  onClick={() => act({ action: 'buy_item', item: selected.id }, `buy_${selected.id}`, (current) => {
+                    if (!current) return current;
+                    const item = current.catalog?.[selected.id];
+                    const price = item?.price_tc || selected.price_tc || 0;
+                    return {
+                      ...current,
+                      counts: { ...current.counts, [selected.id]: (current.counts?.[selected.id] || 0) + 1 },
+                      wallet_balance_tc: (current.wallet_balance_tc || 0) - price,
+                    };
+                  })}
                 >
                   <Coins size={13} className="text-accent" /> {t('buy_for', { price: selected.price_tc })}
                 </Button>

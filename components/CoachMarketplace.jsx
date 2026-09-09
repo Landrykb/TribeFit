@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useApi } from '../lib/api';
 import { X, Star, Award, Flame, TrendingUp, Users, CheckCircle, Lock, AlertCircle, Coins, MessageCircle, Calendar, Target } from 'lucide-react';
 import { Button } from './ui/button';
 import { StarDisplay } from './ui/CoachRating';
@@ -21,7 +22,6 @@ export function CoachMarketplace({
   const [activeTab, setActiveTab] = useState('marketplace'); // marketplace, eligibility, myCoaching
   const [coaches, setCoaches] = useState([]);
   const [eligibility, setEligibility] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [filterTribe, setFilterTribe] = useState('all'); // all, tribe, external
 
@@ -33,48 +33,32 @@ export function CoachMarketplace({
     platformFeePercent: 10 // 10% platform fee
   };
 
+  const coachesUrl = isOpen ? '/api/coach/list' : null;
+  const eligibilityUrl = isOpen && userId ? `/api/coach/eligibility?userId=${encodeURIComponent(userId)}` : null;
+
+  const { data: coachesData, loading: coachesLoading, mutate: refreshCoaches } = useApi(coachesUrl);
+  const { data: eligibilityData, mutate: refreshEligibility } = useApi(eligibilityUrl);
+
+  // Paint from cache first, refresh in background
   useEffect(() => {
-    if (isOpen) {
-      loadCoaches();
-      checkEligibility();
-    }
-  }, [isOpen, userId]);
+    if (coachesData?.coaches) setCoaches(coachesData.coaches);
+  }, [coachesData]);
 
-  const checkEligibility = async () => {
-    try {
-      const res = await fetch(`/api/coach/eligibility?userId=${userId}`);
-      const data = await res.json();
-      setEligibility(data);
-    } catch (error) {
-      console.error('Failed to check eligibility:', error);
-    }
-  };
+  useEffect(() => {
+    if (eligibilityData) setEligibility(eligibilityData);
+  }, [eligibilityData]);
 
-  const loadCoaches = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/coach/list');
-      const data = await res.json();
-      setCoaches(data.coaches || []);
-    } catch (error) {
-      console.error('Failed to load coaches:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = coachesLoading;
 
   const handleApplyAsCoach = async () => {
-    setLoading(true);
     try {
       await onBecomeCoach();
-      await checkEligibility();
       setActiveTab('marketplace');
-      await loadCoaches(); // Reload coaches to see yourself
+      refreshEligibility();
+      refreshCoaches();
     } catch (error) {
       console.error('Failed to apply:', error);
       // Error is already handled in onBecomeCoach
-    } finally {
-      setLoading(false);
     }
   };
 
