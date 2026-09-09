@@ -1,5 +1,6 @@
 import React from 'react';
 import { Flame, Meh, BatteryLow, Tv, Sparkles } from 'lucide-react';
+import { FlatChibi } from './FlatChibi';
 
 // Tribeling: the user's creature avatar (Stompers-style).
 // Evolution stage grows with lifetime workouts; mood reacts to daily activity;
@@ -153,6 +154,7 @@ export function Tribeling({
   accessory = 'none',
   size = 96,
   showLabel = true,
+  custom = null,
 }) {
   const body = SKIN_BODY[skinId] || 'lime';
   const face = MOOD_FACE[mood] || 'neutral';
@@ -160,6 +162,24 @@ export function Tribeling({
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.3, Math.max(0.6, energy));
+
+  // Custom flat avatar (avatar-maker mode)
+  if (custom?.enabled) {
+    return (
+      <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
+        <div className="relative">
+          {aura && <div className="absolute inset-[-8%] rounded-full" style={{ boxShadow: aura }} />}
+          <FlatChibi {...custom} mood={mood} size={size * scale} />
+        </div>
+        {showLabel && (
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm ${m.pill}`}>
+            <m.Icon size={12} />
+            <span>{m.label}{streak > 0 ? ` · ${streak}d` : ''}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const stageArt = STAGE_ART[stage];
   const layers = (

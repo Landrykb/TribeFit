@@ -83,6 +83,27 @@ export async function POST(request) {
         return respond();
       }
 
+      case 'set_custom': {
+        // Save a flat customizable-avatar config and enable it
+        const c = body.custom;
+        if (!c || typeof c !== 'object') return NextResponse.json({ error: 'custom required' }, { status: 400 });
+        const clean = {};
+        for (const k of ['body', 'hair', 'hairStyle', 'shirt', 'shorts', 'shoes', 'cheek']) {
+          if (typeof c[k] === 'string') clean[k] = c[k].slice(0, 40);
+        }
+        clean.enabled = c.enabled !== false;
+        user.avatar_custom = clean;
+        saveDB(db);
+        return respond();
+      }
+
+      case 'toggle_custom': {
+        if (!user.avatar_custom) return NextResponse.json({ error: 'No custom avatar' }, { status: 400 });
+        user.avatar_custom.enabled = body.enabled !== false;
+        saveDB(db);
+        return respond();
+      }
+
       case 'ad_watched': {
         const count = recordAdWatch(userId);
         return respond({ ads_this_week: count });

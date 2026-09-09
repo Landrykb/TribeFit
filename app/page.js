@@ -3064,6 +3064,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     stage={tribeling.stage?.id}
                     skin={tribeling.skin}
                     accessory={tribeling.accessory}
+                    custom={tribeling.custom}
                     size={84}
                     showLabel={false}
                   />

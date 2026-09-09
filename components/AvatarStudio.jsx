@@ -4,6 +4,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
 import { Tribeling } from './Tribeling';
+import { HAIR_STYLES } from './FlatChibi';
 import { Skeleton } from './ui/skeleton';
 import { useTranslation } from '../lib/i18n-hooks';
 
@@ -16,6 +17,21 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const [busy, setBusy] = useState('');
   const [previewSkin, setPreviewSkin] = useState(null);
   const [previewAccessory, setPreviewAccessory] = useState(null);
+  const [previewCustom, setPreviewCustom] = useState(null);
+
+  const CUSTOM_COLORS = {
+    body: ['#A3E635', '#FF9F1C', '#2EC4B6', '#4CC9F0', '#FF5436', '#4A4A63'],
+    hair: ['#2EC4B6', '#1A1A24', '#FF5436', '#FFD166', '#4CC9F0', '#8A63D2'],
+    shirt: ['#FFFFFF', '#1A1A24', '#FF9F1C', '#4CC9F0', '#FF5436', '#A3E635'],
+    shorts: ['#2B3A55', '#1A1A24', '#8B5E34', '#4CC9F0'],
+    shoes: ['#2EC4B6', '#FF5436', '#1A1A24', '#FFD166'],
+  };
+
+  const updateCustom = (key, value) => {
+    const next = { ...(previewCustom || a?.custom || {}), [key]: value, enabled: true };
+    setPreviewCustom(next);
+    act({ action: 'set_custom', custom: next }, `custom_${key}`);
+  };
 
   const load = async () => {
     if (!userId) { setLoading(false); return; }
@@ -74,8 +90,67 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
               stage={a.stage?.id}
               skin={curSkin}
               accessory={curAccessory}
+              custom={previewCustom || a.custom}
               size={140}
             />
+          </div>
+
+          {/* Custom look — flat avatar maker */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-surface-100 flex items-center gap-1.5">
+                <Sparkles size={14} className="text-primary" /> Custom Look
+              </span>
+              <button
+                onClick={() => act({ action: 'toggle_custom', enabled: !(previewCustom?.enabled ?? a.custom?.enabled) }, 'toggle_custom')}
+                className={`text-xs px-3 py-1.5 rounded-full border font-semibold transition-all ${
+                  (previewCustom?.enabled ?? a.custom?.enabled)
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'bg-surface-800 border-surface-600 text-surface-300'
+                }`}
+              >
+                {(previewCustom?.enabled ?? a.custom?.enabled) ? 'On' : 'Off'}
+              </button>
+            </div>
+            {(previewCustom?.enabled ?? a.custom?.enabled) && (
+              <div className="space-y-2.5 bg-surface-800/50 rounded-2xl border border-surface-700 p-3">
+                {Object.entries({ body: 'Body', hair: 'Hair', shirt: 'Shirt', shorts: 'Shorts', shoes: 'Shoes' }).map(([key, label]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="text-[11px] text-surface-400 w-12">{label}</span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {CUSTOM_COLORS[key].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => updateCustom(key, c)}
+                          className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                            (previewCustom?.[key] || a.custom?.[key]) === c ? 'border-white scale-110' : 'border-surface-600'
+                          }`}
+                          style={{ background: c }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[11px] text-surface-400 w-12">Style</span>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {HAIR_STYLES.map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => updateCustom('hairStyle', h)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border-2 transition-all capitalize ${
+                          (previewCustom?.hairStyle || a.custom?.hairStyle) === h
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-surface-600 bg-surface-800 text-surface-300'
+                        }`}
+                      >
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Evolution track */}
