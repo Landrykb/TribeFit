@@ -1,27 +1,24 @@
 import { NextResponse } from 'next/server';
-import { createTestUser, updateUserStats, listAllUsers, getUser } from '../../_store/db';
-import { runWithStore } from '@/app/api/_store/db';
+import { getUser, listAllUsers, createTestUser, updateUserStats } from '@/lib/supabase-db';
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
-    const users = listAllUsers();
+    const users = await listAllUsers();
     return NextResponse.json({ success: true, users });
   } catch (error) {
     console.error('Failed to list users:', error);
     return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });
   }
-  });
 }
 
 export async function POST(request) {
-  return runWithStore(async () => {
   try {
     const body = await request.json();
-    const { action, userId, name, updates, initialData } = body;
+    const { action, userId, name, email, updates, initialData } = body;
 
     if (action === 'create') {
-      const user = createTestUser(name, userId, initialData);
+      const merged = { ...initialData, ...(email ? { email } : {}) };
+      const user = await createTestUser(name, userId, merged);
       return NextResponse.json({ success: true, user });
     }
 
@@ -29,7 +26,7 @@ export async function POST(request) {
       if (!userId) {
         return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
       }
-      const user = updateUserStats(userId, updates || {});
+      const user = await updateUserStats(userId, updates || {});
       return NextResponse.json({ success: true, user });
     }
 
@@ -37,14 +34,13 @@ export async function POST(request) {
       if (!userId) {
         return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
       }
-      const user = getUser(userId);
+      const user = await getUser(userId);
       return NextResponse.json({ success: true, user });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('User operation failed:', error);
-    return NextResponse.json({ error: 'Operation failed' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Operation failed' }, { status: 500 });
   }
-  });
 }

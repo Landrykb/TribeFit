@@ -36,26 +36,40 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // Simulate login API call
-      if (email && password) {
-        const userData = {
+      if (!email || !password) throw new Error('Invalid credentials');
+
+      const name = email.split('@')[0];
+      const res = await fetch('/api/dev/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', name, email })
+      });
+
+      let userData;
+      if (res.ok) {
+        const data = await res.json();
+        userData = data.user;
+      } else {
+        // Fallback for local/offline login
+        userData = {
           id: `user-${Date.now()}`,
           email,
-          name: email.split('@')[0],
-          avatar: null,
-          tribe_id: '10000000-0000-0000-0000-000000000001',
+          name,
+          avatar_url: null,
           wallet_balance_tc: 500,
-          streak_days: 7,
+          snatched_balance_tc: 0,
+          streak: 0,
+          total_workouts: 0,
+          group_id: null,
+          group_type: null,
           created_at: new Date().toISOString()
         };
-        
-        localStorage.setItem('tribefit_user', JSON.stringify(userData));
-        setUser(userData);
-        toast.success('Welcome to TribeFit! 🎉');
-        return { success: true };
-      } else {
-        throw new Error('Invalid credentials');
       }
+
+      localStorage.setItem('tribefit_user', JSON.stringify(userData));
+      setUser(userData);
+      toast.success('Welcome to TribeFit! 🎉');
+      return { success: true };
     } catch (error) {
       toast.error(error.message || 'Login failed');
       return { success: false, error: error.message };

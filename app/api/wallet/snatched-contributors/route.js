@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getDonors } from '../../_store/db';
-import { runWithStore } from '@/app/api/_store/db';
+import { getDonors } from '@/lib/supabase-db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId') || 'default';
-    const contributors = getDonors(groupId) || [];
+    const contributors = await getDonors(groupId);
     return NextResponse.json({ groupId, contributors });
   } catch (e) {
+    console.error('Snatched contributors error:', e);
     return NextResponse.json({ contributors: [] });
   }
-  });
 }

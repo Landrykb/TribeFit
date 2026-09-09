@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getUser } from '../../_store/db';
-import { runWithStore } from '@/app/api/_store/db';
+import { getUser } from '@/lib/supabase-db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  return runWithStore(async () => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'anon';
-    const user = getUser(userId);
-    return NextResponse.json({ balance_tc: user.snatched_balance_tc });
+    const user = await getUser(userId);
+    return NextResponse.json({ balance_tc: user?.snatched_balance_tc || 0 });
   } catch (e) {
+    console.error('Snatched balance error:', e);
     return NextResponse.json({ balance_tc: 0 });
   }
-  });
 }
