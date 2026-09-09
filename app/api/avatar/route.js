@@ -98,7 +98,13 @@ export async function POST(request) {
       }
 
       case 'toggle_custom': {
-        if (!user.avatar_custom) return NextResponse.json({ error: 'No custom avatar' }, { status: 400 });
+        if (!user.avatar_custom) {
+          user.avatar_custom = {
+            body: '#A3E635', hair: '#2EC4B6', hairStyle: 'leaf',
+            shirt: '#FFFFFF', shorts: '#2B3A55', shoes: '#2EC4B6',
+            cheek: '#FF8A75', enabled: false,
+          };
+        }
         user.avatar_custom.enabled = body.enabled !== false;
         saveDB(db);
         return respond();
