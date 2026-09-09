@@ -477,28 +477,14 @@ export function WorkoutCalendar({ isOpen, onClose, user, userId, onChanged, cust
 
       {/* Bottom action bar */}
       <div className="shrink-0 px-6 py-3 border-t border-surface-700/50 light:border-gray-200">
-        <div className="flex space-x-3">
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            className="flex-1 min-w-0"
-          >
-            <ArrowLeft size={16} />
-            Close
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              const today = new Date();
-              setSelectedDate(formatDate(today));
-              setShowScheduler(true);
-            }}
-            className="flex-1 min-w-0"
-          >
-            <Calendar size={16} />
-            Schedule Today
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          className="w-full"
+        >
+          <ArrowLeft size={16} />
+          Close
+        </Button>
       </div>
       </div>
       )}
