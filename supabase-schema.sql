@@ -254,6 +254,8 @@ create table if not exists public.coach_profiles (
   refund_rate numeric(5,2) default 0 check (refund_rate between 0 and 100),
   total_clients int default 0,
   active_clients int default 0,
+  total_sessions int default 0,
+  total_earnings_tc numeric(12,2) default 0,
   verified_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
