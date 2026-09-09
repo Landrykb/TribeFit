@@ -184,7 +184,7 @@ Try the live demo: [TribeFit Demo](https://social-fitness-6.preview.emergentagen
 
 Env keys (development):
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (point to `/api/calendar/google/callback`).
-- Stripe keys for real payments: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- Stripe keys for real payments: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
 
 ### Security
 - Row Level Security (RLS) on all tables

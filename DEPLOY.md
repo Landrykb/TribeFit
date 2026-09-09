@@ -49,7 +49,9 @@ Files already configured:
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side admin writes |
 | `NEXT_PUBLIC_BASE_URL` | Your Vercel domain |
 | `OPENROUTER_API_KEY` | AI coach features (optional) |
-| `STRIPE_PUBLISHABLE_KEY` / `STRIPE_SECRET_KEY` | Real payments (optional) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the client-side payment form (optional) |
+| `STRIPE_SECRET_KEY` | Stripe secret key for server-side PaymentIntents (optional) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook secret for `/api/stripe/webhook` (optional) |
 
 > Without `SUPABASE_URL` the app falls back to mock/file-DB mode. **On Vercel the filesystem is read-only for serverless functions**, so mock mode will not persist across requests. Use Supabase for production.
 

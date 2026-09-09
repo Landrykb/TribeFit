@@ -73,8 +73,9 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-service-key
 # 3. Go to Developers → API Keys
 # 4. Copy to your .env:
 
-STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
 STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 ```
 
 #### 4. Emergent LLM (For AI Features)

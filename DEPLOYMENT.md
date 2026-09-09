@@ -26,8 +26,9 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-service-key
 
 # Stripe (Get from https://dashboard.stripe.com/apikeys)
-STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key_here
 STRIPE_SECRET_KEY=sk_live_your_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 
 # Security
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
@@ -81,8 +82,9 @@ FEATURE_COACH_MARKETPLACE=true
    ```bash
    # Go to Developers → API Keys
    # Copy:
-   # - Publishable key (STRIPE_PUBLISHABLE_KEY)
+   # - Publishable key (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
    # - Secret key (STRIPE_SECRET_KEY)
+   # - Webhook secret (STRIPE_WEBHOOK_SECRET)
    ```
 
 ### Step 3: Deploy to Vercel (Recommended)
