@@ -3872,15 +3872,6 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                 <Sparkles size={16} className="text-primary mr-1" />
                 <span className="text-primary text-sm">Avatar</span>
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-9 px-3 bg-surface-700/50 border-surface-600 hover:bg-surface-700 whitespace-nowrap"
-                onClick={() => setShowProfileCustomization(true)}
-              >
-                <Settings size={16} className="text-surface-300 mr-1" />
-                <span className="text-surface-200 text-sm">{t('customize')}</span>
-              </Button>
             </div>
           </div>
         </div>
