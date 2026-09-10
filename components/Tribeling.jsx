@@ -169,6 +169,7 @@ export function Tribeling({
   showLabel = true,
   custom = null,
   parts = null,
+  preset = null,
 }) {
   const PART_SRC = {
     body: (i) => `/avatar/sheet/body-${i}.png`,
@@ -185,7 +186,7 @@ export function Tribeling({
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.15, Math.max(0.6, energy));
-  const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}`;
+  const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}-${preset || ''}`;
 
   // User-built layered avatar from extracted sheet parts
   if (parts && Object.values(parts).some(v => v > 0)) {
@@ -231,7 +232,7 @@ export function Tribeling({
     );
   }
 
-  const stageArt = STAGE_ART[stage];
+  const stageArt = preset ? `/avatar/presets/${preset}` : STAGE_ART[stage];
   const layers = (
     <div className="relative" style={{ width: size * scale, height: size * scale, transition: 'width 0.35s cubic-bezier(.34,1.56,.64,1), height 0.35s cubic-bezier(.34,1.56,.64,1)' }}>
       {aura && (

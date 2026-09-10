@@ -30,6 +30,17 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
     shoes: ['#2EC4B6', '#FF5436', '#1A1A24', '#FFD166'],
   };
 
+  const PRESETS = [
+    { id: 'preset-1.svg', name: 'Sprout' },
+    { id: 'preset-2.svg', name: 'Rookie' },
+    { id: 'preset-3.png', name: 'Hoodie' },
+    { id: 'preset-4.png', name: 'Ponytail' },
+    { id: 'preset-5.png', name: 'Adventurer' },
+    { id: 'preset-6.svg', name: 'Vector One' },
+    { id: 'preset-7.svg', name: 'Vector Two' },
+    { id: 'preset-8.svg', name: 'Vector Three' },
+  ];
+
   const updateCustom = (key, value) => {
     const next = { ...(previewCustom || a?.custom || {}), [key]: value, enabled: true };
     setPreviewCustom(next);
@@ -69,6 +80,10 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
         parts[payload.part] = 0;
         return { parts };
       }
+      case 'set_preset':
+        return { preset: payload.preset, parts: {}, custom: { ...(avatar.custom || {}), enabled: false } };
+      case 'clear_preset':
+        return { preset: null };
       case 'set_custom':
         return { custom: payload.custom };
       case 'toggle_custom':
@@ -139,8 +154,45 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
               accessory={curAccessory}
               custom={previewCustom || a.custom}
               parts={previewParts || a.parts}
+              preset={a.preset}
               size={140}
             />
+          </div>
+
+          {/* Presets */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-bold text-surface-100 flex items-center gap-1.5">
+                <Sparkles size={14} className="text-primary" /> {t('presets') || 'Presets'}
+              </div>
+              {a.preset && (
+                <button
+                  onClick={() => act({ action: 'clear_preset' }, 'clear_preset')}
+                  className="text-[10px] px-2 py-1 rounded-full border border-surface-600 text-surface-300 hover:border-surface-500 hover:text-surface-100"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {PRESETS.map((p) => {
+                const selected = a.preset === p.id;
+                const busyKey = `preset_${p.id}`;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => act({ action: 'set_preset', preset: p.id }, busyKey)}
+                    disabled={!!busy}
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all ${
+                      selected ? 'border-primary bg-primary/15' : 'border-surface-600 bg-surface-800 hover:border-surface-500'
+                    }`}
+                    title={p.name}
+                  >
+                    <img src={`/avatar/presets/${p.id}`} alt={p.name} className="w-full h-full object-contain p-1" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Layer builder from extracted sheet */}
