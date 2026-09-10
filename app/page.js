@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { animate, stagger } from 'animejs';
+import dynamic from 'next/dynamic';
 import { useApi, optimisticMutate } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -13,7 +14,7 @@ import {
   Feather as FeatherIcon, Crosshair, Footprints, Bike, MonitorPlay, Waves
 } from 'lucide-react';
 
-// Import new components
+// Static imports — keep only what the shell + home need in the initial bundle
 import { ToastProvider, useToast } from '../components/ui/Toast';
 import { AuthProvider, useAuth } from '../components/auth/AuthProvider';
 import { LoginModal } from '../components/auth/LoginModal';
@@ -22,41 +23,45 @@ import { Skeleton, SkeletonCard, SkeletonList, SkeletonStats } from '../componen
 import { Tribeling, MoodPill } from '../components/Tribeling';
 import { PowerUps } from '../components/PowerUps';
 import { Modal } from '../components/ui/Modal';
-// Removed Link/Router; using in-page modal for Catch-Up Credits
-import { WorkoutGenerator, WorkoutPlanModal } from '../components/WorkoutGenerator';
-import { MyWorkoutsManager } from '../components/MyWorkoutsManager';
-import { EnhancedWorkoutGenerator } from '../components/EnhancedWorkoutGenerator';
-import { WorkoutSession } from '../components/WorkoutSession';
-import { ShrinkWorkoutModal } from '../components/ShrinkWorkoutModal';
-import { WorkoutCalendar } from '../components/WorkoutCalendar';
-import { WorkoutScheduler } from '../components/WorkoutScheduler';
-import { EquipmentCatalog } from '../components/ui/EquipmentCatalog';
-import { DonationModal } from '../components/ui/DonationModal';
-import { TopUpModal } from '../components/ui/TopUpModal';
-import { CoachRating, StarDisplay } from '../components/ui/CoachRating';
-import { TipModal } from '../components/ui/TipModal';
-import { VotingModal } from '../components/ui/VotingModal';
 import { SquadCard } from '../components/ui/SquadCard';
-import { SquadUpgradeModal } from '../components/ui/SquadUpgradeModal';
-import { SquadLeaderboards } from '../components/ui/SquadLeaderboards';
-import { SquadCreationModal } from '../components/ui/SquadCreationModal';
-import { SquadDetailsModal } from '../components/ui/SquadDetailsModal';
-import { ReactionsPanel } from '../components/ui/ReactionsPanel';
-import { ProfileCustomization, ProfileIcons } from '../components/ProfileCustomization';
-import { AvatarStudio } from '../components/AvatarStudio';
 import { DailyVersus } from '../components/DailyVersus';
 import { ReactionGlyph } from '../components/ReactionIcons';
 import { REACTION_TYPES } from '../components/ReactionTypes';
 import { BigReactionOverlay } from '../components/BigReactionOverlay';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { StreakRing } from '../components/StreakRing';
-import { CoachMarketplace } from '../components/CoachMarketplace';
 import { DevControls } from '../components/DevControls';
 import { StatusBadgeWithProgress } from '../components/StatusBadge';
-import { GroupSettingsModal } from '../components/GroupSettingsModal';
 import { useTranslation } from '../lib/i18n-hooks';
 import { Features } from '../lib/feature-flags';
 import { SquadProgression } from '../lib/squad-progression';
+
+// Dynamic imports — lazy-load modals and secondary tabs to reduce initial bundle
+const WorkoutGenerator = dynamic(() => import('../components/WorkoutGenerator').then(m => ({ default: m.WorkoutGenerator })), { loading: () => <SkeletonCard /> });
+const WorkoutPlanModal = dynamic(() => import('../components/WorkoutGenerator').then(m => ({ default: m.WorkoutPlanModal })), { loading: () => <SkeletonCard /> });
+const MyWorkoutsManager = dynamic(() => import('../components/MyWorkoutsManager').then(m => ({ default: m.MyWorkoutsManager })), { loading: () => <SkeletonCard /> });
+const EnhancedWorkoutGenerator = dynamic(() => import('../components/EnhancedWorkoutGenerator').then(m => ({ default: m.EnhancedWorkoutGenerator })), { loading: () => <SkeletonCard /> });
+const WorkoutSession = dynamic(() => import('../components/WorkoutSession').then(m => ({ default: m.WorkoutSession })), { loading: () => <SkeletonCard /> });
+const ShrinkWorkoutModal = dynamic(() => import('../components/ShrinkWorkoutModal').then(m => ({ default: m.ShrinkWorkoutModal })), { loading: () => <SkeletonCard /> });
+const WorkoutCalendar = dynamic(() => import('../components/WorkoutCalendar').then(m => ({ default: m.WorkoutCalendar })), { loading: () => <SkeletonCard /> });
+const WorkoutScheduler = dynamic(() => import('../components/WorkoutScheduler').then(m => ({ default: m.WorkoutScheduler })), { loading: () => <SkeletonCard /> });
+const EquipmentCatalog = dynamic(() => import('../components/ui/EquipmentCatalog').then(m => ({ default: m.EquipmentCatalog })), { loading: () => <SkeletonCard /> });
+const DonationModal = dynamic(() => import('../components/ui/DonationModal').then(m => ({ default: m.DonationModal })), { loading: () => <SkeletonCard /> });
+const TopUpModal = dynamic(() => import('../components/ui/TopUpModal').then(m => ({ default: m.TopUpModal })), { loading: () => <SkeletonCard /> });
+const CoachRating = dynamic(() => import('../components/ui/CoachRating').then(m => ({ default: m.CoachRating })), { loading: () => <SkeletonCard /> });
+const StarDisplay = dynamic(() => import('../components/ui/CoachRating').then(m => ({ default: m.StarDisplay })), { loading: () => <SkeletonCard /> });
+const TipModal = dynamic(() => import('../components/ui/TipModal').then(m => ({ default: m.TipModal })), { loading: () => <SkeletonCard /> });
+const VotingModal = dynamic(() => import('../components/ui/VotingModal').then(m => ({ default: m.VotingModal })), { loading: () => <SkeletonCard /> });
+const SquadUpgradeModal = dynamic(() => import('../components/ui/SquadUpgradeModal').then(m => ({ default: m.SquadUpgradeModal })), { loading: () => <SkeletonCard /> });
+const SquadLeaderboards = dynamic(() => import('../components/ui/SquadLeaderboards').then(m => ({ default: m.SquadLeaderboards })), { loading: () => <SkeletonCard /> });
+const SquadCreationModal = dynamic(() => import('../components/ui/SquadCreationModal').then(m => ({ default: m.SquadCreationModal })), { loading: () => <SkeletonCard /> });
+const SquadDetailsModal = dynamic(() => import('../components/ui/SquadDetailsModal').then(m => ({ default: m.SquadDetailsModal })), { loading: () => <SkeletonCard /> });
+const ReactionsPanel = dynamic(() => import('../components/ui/ReactionsPanel').then(m => ({ default: m.ReactionsPanel })), { loading: () => <SkeletonCard /> });
+const ProfileCustomization = dynamic(() => import('../components/ProfileCustomization').then(m => ({ default: m.ProfileCustomization })), { loading: () => <SkeletonCard /> });
+const ProfileIcons = dynamic(() => import('../components/ProfileCustomization').then(m => ({ default: m.ProfileIcons })), { loading: () => <SkeletonCard /> });
+const AvatarStudio = dynamic(() => import('../components/AvatarStudio').then(m => ({ default: m.AvatarStudio })), { loading: () => <SkeletonCard /> });
+const CoachMarketplace = dynamic(() => import('../components/CoachMarketplace').then(m => ({ default: m.CoachMarketplace })), { loading: () => <SkeletonCard /> });
+const GroupSettingsModal = dynamic(() => import('../components/GroupSettingsModal').then(m => ({ default: m.GroupSettingsModal })), { loading: () => <SkeletonCard /> });
 import { CalendarConnectModal } from '../components/CalendarConnectModal';
 
 function TribeFitApp({ isDarkMode, setIsDarkMode }) {
