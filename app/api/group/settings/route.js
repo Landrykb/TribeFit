@@ -7,8 +7,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId') || 'default';
     const group = await getGroup(groupId);
-    const settings = group ? await getGroupSettings(groupId) : { require_vote_for_mode_change: false, allow_snatched_for_top_ups: true, public_workouts: true };
-    return NextResponse.json({ success: true, group: group ? { id: group.id, name: group.name, type: group.type } : { id: groupId, name: 'Default', type: 'squad' }, settings });
+    if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+    const settings = await getGroupSettings(groupId);
+    return NextResponse.json({ success: true, group: { id: group.id, name: group.name, type: group.type }, settings });
   } catch (e) {
     console.error('group/settings GET error', e);
     return NextResponse.json({ error: 'Failed to get settings' }, { status: 500 });

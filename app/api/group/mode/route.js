@@ -7,10 +7,11 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId') || 'default';
     const group = await getGroup(groupId);
-    const skipMode = group ? await getGroupSkipMode(groupId) : 'teammate_boost';
+    if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+    const skipMode = await getGroupSkipMode(groupId);
     return NextResponse.json({
       success: true,
-      group: group ? { id: group.id, name: group.name, type: group.type } : { id: groupId, name: 'Default', type: 'squad' },
+      group: { id: group.id, name: group.name, type: group.type },
       skipMode
     });
   } catch (e) {

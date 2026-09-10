@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   Flame, Dumbbell, Hand, Laugh, Zap, Heart, Smile, HelpCircle,
   ThumbsUp, Eye, Skull, MoonStar, Feather, Annoyed, Drama, Bot,
@@ -26,14 +25,5 @@ export function getReactionMeta(type) {
 export function ReactionGlyph({ type, size = 16, className = '' }) {
   const meta = getReactionMeta(type);
   if (!meta) return null;
-  return (
-    <motion.span
-      className={`inline-flex ${meta.color} ${className}`}
-      whileHover={{ scale: 1.25, rotate: [0, -8, 8, 0] }}
-      whileTap={{ scale: 0.85 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-    >
-      <meta.Icon size={size} />
-    </motion.span>
-  );
+  return <meta.Icon size={size} className={`${meta.color} ${className}`} />;
 }

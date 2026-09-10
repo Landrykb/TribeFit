@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getUser, listAllUsers, createTestUser, updateUserStats } from '@/lib/supabase-db';
-import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request) {
   try {
@@ -19,22 +18,8 @@ export async function POST(request) {
 
     if (action === 'create') {
       const merged = { ...initialData, ...(email ? { email } : {}) };
-      try {
-        const user = await createTestUser(name, userId, merged);
-        return NextResponse.json({ success: true, user });
-      } catch (createError) {
-        // If email already exists, return the existing record so the client
-        // can adopt the real user id/name.
-        if (createError.code === '23505' && email) {
-          const { data: existing } = await supabaseAdmin
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-          if (existing) return NextResponse.json({ success: true, user: existing });
-        }
-        throw createError;
-      }
+      const user = await createTestUser(name, userId, merged);
+      return NextResponse.json({ success: true, user });
     }
 
     if (action === 'update') {

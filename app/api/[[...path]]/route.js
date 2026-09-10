@@ -478,42 +478,6 @@ export async function GET(request, { params }) {
 
         return NextResponse.json({ items: catalogItems || [] });
 
-      case 'health': {
-        const checks = {
-          mock: isUsingMockData,
-          env: {
-            SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
-            SUPABASE_ANON_KEY: Boolean(process.env.SUPABASE_ANON_KEY),
-            SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-          },
-          adminClient: { ok: false, error: null },
-          anonClient: { ok: false, error: null },
-        };
-
-        try {
-          const { data, error } = await (supabaseAdmin || supabase).from('users').select('id');
-          checks.adminClient = {
-            ok: !error,
-            tables: Array.isArray(data) ? ['users'] : null,
-            error: error ? { message: error.message, code: error.code, details: error.details } : null,
-          };
-        } catch (err) {
-          checks.adminClient = { ok: false, error: { message: err.message, code: err.code } };
-        }
-
-        try {
-          const { data, error } = await supabase.from('users').select('id');
-          checks.anonClient = {
-            ok: !error,
-            error: error ? { message: error.message, code: error.code } : null,
-          };
-        } catch (err) {
-          checks.anonClient = { ok: false, error: { message: err.message, code: err.code } };
-        }
-
-        return NextResponse.json(checks);
-      }
-
       default:
         return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }

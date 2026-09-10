@@ -39,12 +39,7 @@ export function SquadCard({ squad, onJoin, onUpgrade, onView, isOwner = false })
   };
 
   return (
-    <Card
-      className="card hover-elevate"
-      whileHover={{ y: -4, scale: 1.01, boxShadow: '0 18px 40px rgba(0,0,0,0.35)' }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-    >
+    <Card className="card hover-elevate">
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between">

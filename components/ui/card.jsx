@@ -1,10 +1,9 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { motion } from 'framer-motion';
 
 const Card = React.forwardRef(({ className, ...props }, ref) => (
-  <motion.div
+  <div
     ref={ref}
     className={cn("rounded-[22px] border-2 border-surface-700 bg-surface-800 text-surface-50 shadow-toon hover-elevate transition-all duration-200", className)}
     {...props} />
