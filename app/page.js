@@ -47,7 +47,6 @@ import { DailyVersus } from '../components/DailyVersus';
 import { ReactionGlyph } from '../components/ReactionIcons';
 import { REACTION_TYPES } from '../components/ReactionTypes';
 import { BigReactionOverlay } from '../components/BigReactionOverlay';
-import { BlobBackground } from '../components/BlobBackground';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { StreakRing } from '../components/StreakRing';
 import { CoachMarketplace } from '../components/CoachMarketplace';
@@ -3324,7 +3323,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
     </div>
   );
   const renderFeed = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       {/* Composer */}
       <div className="card relative overflow-hidden">
         <div className="flex gap-3 items-start relative z-10">
@@ -3364,7 +3363,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
       {posts.length === 0 ? (
         <div className="text-center py-12 card relative overflow-hidden">
-          <BlobBackground opacity={0.25} />
+          <AnimatedBackground variant="dots" color="primary" opacity={0.18} />
           <div className="relative z-10">
             <Camera size={64} className="text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-surface-100 mb-2">{t('no_posts')}</h3>
@@ -3393,7 +3392,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
             {post.media_url && (
               <div className="bg-surface-800/60 border border-surface-700/60 rounded-2xl h-52 mb-4 flex items-center justify-center relative overflow-hidden">
-                <BlobBackground opacity={0.2} />
+                <AnimatedBackground variant="dots" color="accent" opacity={0.14} />
                 <div className="relative z-10 flex flex-col items-center text-surface-400">
                   <Camera size={28} className="text-primary mb-2" />
                   <span className="text-sm font-medium">{t('workout_photo')}</span>
@@ -3427,7 +3426,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   );
 
   const renderTribe = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       {/* Enhanced Tribe/Squad Header */}
       <div className="card">
         <div className="flex items-center space-x-4 mb-2">
@@ -3855,9 +3854,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   );
 
   const renderCoach = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       <div className="card relative overflow-hidden">
-        <BlobBackground opacity={0.35} />
+        <AnimatedBackground variant="aurora" color="purple" opacity={0.45} />
         <div className="relative z-10 text-center py-10">
           <div className="w-16 h-16 bg-primary/15 border-2 border-primary/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Award size={32} className="text-primary" />
@@ -3897,7 +3896,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   );
 
   const renderProfile = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       <div className="card">
         <div className="flex items-start space-x-4 mb-6">
           <div className="flex flex-col items-center flex-shrink-0 w-32 min-w-0">
@@ -4043,7 +4042,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
   );
 
   const renderNotifications = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       <div className="card">
         <h2 className="text-2xl font-bold text-surface-50 flex items-center space-x-3">
           <Bell size={28} className="text-primary" />
