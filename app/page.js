@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { animate, stagger } from 'animejs';
 import { useApi, optimisticMutate } from '../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -267,6 +268,28 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
       }, intervalMs);
     } catch (_) {}
   };
+
+  // ---- Anime.js hero entrance ----
+  useEffect(() => {
+    if (activeTab !== 'home') return;
+    let raf;
+    const timer = setTimeout(() => {
+      raf = requestAnimationFrame(() => {
+        animate('.home-anime > *', {
+          opacity: [0, 1],
+          y: [18, 0],
+          scale: [0.98, 1],
+          delay: stagger(70, { start: 100 }),
+          duration: 900,
+          ease: 'outExpo',
+        });
+      });
+    }, 60);
+    return () => {
+      clearTimeout(timer);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [activeTab]);
 
   // ---- Catch-Up Credits (persistent) ----
   const creditsUrl = effectiveUserId ? `/api/credits?userId=${encodeURIComponent(effectiveUserId)}` : null;
@@ -3113,7 +3136,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   // Main App Render Functions
   const renderHome = () => (
-    <div className="space-y-4 stagger-fade-in">
+    <div className="space-y-4 home-anime">
       {/* Hero Section */}
       <div className="card relative overflow-hidden">
         <AnimatedBackground variant="mesh" opacity={0.55} />
@@ -3401,7 +3424,9 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
             )}
 
             <div className="flex items-center gap-3 pt-3 border-t border-surface-700/50">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.88 }}
                 onClick={() => handleLikePost(post.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                   post.liked ? 'bg-red-500/15 text-red-400 border border-red-400/30' : 'bg-surface-700 light:bg-gray-100 text-surface-300 light:text-gray-600 border border-surface-600 light:border-gray-200 hover:text-red-400'
@@ -3409,15 +3434,25 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
               >
                 <Heart size={16} className={post.liked ? 'fill-current' : ''} />
                 {post.likes_count || 0}
-              </button>
-              <button onClick={() => handleSharePost(t('sharing_awesome_workout'))} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-surface-700 light:bg-gray-100 text-surface-300 light:text-gray-600 border border-surface-600 light:border-gray-200 hover:text-primary">
-                <Share2 size={16} />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.88 }}
+                onClick={() => handleSharePost(t('sharing_awesome_workout'))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-surface-700 light:bg-gray-100 text-surface-300 light:text-gray-600 border border-surface-600 light:border-gray-200 hover:text-primary"
+              >
+                <Share size={16} />
                 {t('share')}
-              </button>
-              <button onClick={() => { setSelectedPost({ ...post, post_id: post.id }); setShowTipModal(true); }} className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-accent/15 text-accent border border-accent/30">
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.88 }}
+                onClick={() => { setSelectedPost({ ...post, post_id: post.id }); setShowTipModal(true); }}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-accent/15 text-accent border border-accent/30"
+              >
                 <Coins size={14} />
                 {t('tip_tc')}
-              </button>
+              </motion.button>
             </div>
           </div>
         ))
