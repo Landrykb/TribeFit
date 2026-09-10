@@ -24,7 +24,13 @@ function ApiProvider({ children }) {
         revalidateOnReconnect: true,
         refreshInterval: 0,
         dedupingInterval: 2000,
-        errorRetryCount: 2,
+        errorRetryCount: 3,
+        onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+          if (retryCount >= 3) return;
+          if (error?.status >= 500) return;
+          const delay = Math.min(5000, 1000 * (retryCount + 1));
+          setTimeout(() => revalidate({ retryCount }), delay);
+        },
         onError: (err, key) => {
           console.error('SWR error for', key, {
             status: err.status,
