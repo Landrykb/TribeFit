@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { v4 as uuidv4, validate as isUuid } from 'uuid';
 import { useToast } from '../ui/Toast';
 
 const AuthContext = createContext();
@@ -22,10 +23,24 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      // Check if user is logged in (check localStorage for demo)
       const savedUser = localStorage.getItem('tribefit_user');
       if (savedUser) {
-        setUser(JSON.parse(savedUser));
+        let userData = JSON.parse(savedUser);
+        if (!isUuid(userData?.id)) {
+          const newId = uuidv4();
+          userData = {
+            ...userData,
+            id: newId,
+            name: userData?.name || 'Guest',
+            email: userData?.email || `${newId}@tribefit.app`,
+            wallet_balance_tc: userData?.wallet_balance_tc ?? 500,
+            snatched_balance_tc: userData?.snatched_balance_tc ?? 0,
+            streak: userData?.streak ?? 0,
+            total_workouts: userData?.total_workouts ?? 0,
+          };
+          localStorage.setItem('tribefit_user', JSON.stringify(userData));
+        }
+        setUser(userData);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -39,10 +54,16 @@ export const AuthProvider = ({ children }) => {
       if (!email || !password) throw new Error('Invalid credentials');
 
       const name = email.split('@')[0];
+      const userId = uuidv4();
       const res = await fetch('/api/dev/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', name, email })
+        body: JSON.stringify({
+          action: 'create',
+          name,
+          userId,
+          initialData: { email }
+        })
       });
 
       let userData;
@@ -52,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         // Fallback for local/offline login
         userData = {
-          id: `user-${Date.now()}`,
+          id: userId,
           email,
           name,
           avatar_url: null,
@@ -80,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Simulate signup API call
       if (email && password && name) {
-        const userId = `user_${Date.now()}`;
+        const userId = uuidv4();
         const userData = {
           id: userId,
           email,
