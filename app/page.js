@@ -48,6 +48,7 @@ import { ReactionGlyph } from '../components/ReactionIcons';
 import { REACTION_TYPES } from '../components/ReactionTypes';
 import { BigReactionOverlay } from '../components/BigReactionOverlay';
 import { BlobBackground } from '../components/BlobBackground';
+import { AnimatedBackground } from '../components/AnimatedBackground';
 import { StreakRing } from '../components/StreakRing';
 import { CoachMarketplace } from '../components/CoachMarketplace';
 import { DevControls } from '../components/DevControls';
@@ -3113,10 +3114,10 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
 
   // Main App Render Functions
   const renderHome = () => (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 stagger-fade-in">
       {/* Hero Section */}
       <div className="card relative overflow-hidden">
-        <BlobBackground />
+        <AnimatedBackground variant="mesh" opacity={0.55} />
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4 relative z-10">
           <div className="flex items-start gap-3 min-w-0 w-full sm:w-auto">
             {tribeling && (
