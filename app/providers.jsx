@@ -25,8 +25,12 @@ function ApiProvider({ children }) {
         refreshInterval: 0,
         dedupingInterval: 2000,
         errorRetryCount: 2,
-        onError: (err) => {
-          console.error('SWR error:', err);
+        onError: (err, key) => {
+          console.error('SWR error for', key, {
+            status: err.status,
+            message: err.message,
+            info: err.info,
+          });
         },
       }}
     >
