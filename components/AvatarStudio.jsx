@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApi, optimisticMutate } from '../lib/api';
-import { Lock, Check, Coins, Tv, Dumbbell, Sparkles } from 'lucide-react';
+import { Lock, Check, Coins, Tv, Dumbbell, Sparkles, ChevronLeft, ChevronRight, Wand2, RotateCcw } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
@@ -29,17 +30,6 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
     shorts: ['#2B3A55', '#1A1A24', '#8B5E34', '#4CC9F0'],
     shoes: ['#2EC4B6', '#FF5436', '#1A1A24', '#FFD166'],
   };
-
-  const PRESETS = [
-    { id: 'preset-1.svg', name: 'Sprout' },
-    { id: 'preset-2.svg', name: 'Rookie' },
-    { id: 'preset-3.png', name: 'Hoodie' },
-    { id: 'preset-4.png', name: 'Ponytail' },
-    { id: 'preset-5.png', name: 'Adventurer' },
-    { id: 'preset-6.svg', name: 'Vector One' },
-    { id: 'preset-7.svg', name: 'Vector Two' },
-    { id: 'preset-8.svg', name: 'Vector Three' },
-  ];
 
   const updateCustom = (key, value) => {
     const next = { ...(previewCustom || a?.custom || {}), [key]: value, enabled: true };
@@ -80,8 +70,25 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
         parts[payload.part] = 0;
         return { parts };
       }
-      case 'set_preset':
-        return { preset: payload.preset, parts: {}, custom: { ...(avatar.custom || {}), enabled: false } };
+      case 'select_look': {
+        const budget = avatar.look_budget || {};
+        const charge = budget.remaining > 0 ? 0 : (budget.fee_tc || 0);
+        return {
+          preset: payload.look,
+          parts: {},
+          look_budget: { ...budget, used: (budget.used || 0) + 1, remaining: Math.max(0, (budget.remaining || 0) - 1) },
+          wallet_balance_tc: wallet - charge,
+        };
+      }
+      case 'buy_look': {
+        const def = current?.looks?.[payload.look];
+        return {
+          preset: payload.look,
+          parts: {},
+          owned_looks: Array.from(new Set([...(avatar.owned_looks || []), payload.look])),
+          wallet_balance_tc: wallet - (def?.price_tc || 0),
+        };
+      }
       case 'clear_preset':
         return { preset: null };
       case 'set_custom':
@@ -133,6 +140,43 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const curSkin = previewSkin || a?.skin || 'ember';
   const curAccessory = previewAccessory !== null ? previewAccessory : (a?.accessory || 'none');
 
+  // ---- Look try-on experience ----
+  // `browsing` is the look the user is inspecting in the big preview. It is only
+  // persisted once they hit "Wear it" / "Unlock", so browsing is always free.
+  const looks = useMemo(() => Object.values(data?.looks || {}), [data]);
+  const families = useMemo(() => {
+    const out = [];
+    for (const l of looks) {
+      let group = out.find(g => g.name === l.family);
+      if (!group) { group = { name: l.family, items: [] }; out.push(group); }
+      group.items.push(l);
+    }
+    return out;
+  }, [looks]);
+
+  const [browsing, setBrowsing] = useState(null);
+  useEffect(() => {
+    if (isOpen) setBrowsing(a?.preset || null);
+  }, [isOpen, a?.preset]);
+
+  const budget = a?.look_budget || { remaining: 0, allowance: 0, fee_tc: data?.restyle_fee_tc || 0 };
+  const ownedLooks = a?.owned_looks || [];
+  const browsingDef = browsing ? data?.looks?.[browsing] : null;
+  const browsingOwned = browsing ? ownedLooks.includes(browsing) : true;
+  const stageReached = (id) => {
+    const order = ['sprout', 'rookie', 'athlete', 'beast', 'legend'];
+    return order.indexOf(a?.stage?.id) >= order.indexOf(id);
+  };
+  const browsingStageOk = browsingDef ? stageReached(browsingDef.stage) : true;
+  const isEquipped = (a?.preset || null) === browsing;
+
+  const step = (dir) => {
+    if (!looks.length) return;
+    const ids = [null, ...looks.map(l => l.id)];
+    const i = ids.indexOf(browsing);
+    setBrowsing(ids[(i + dir + ids.length) % ids.length]);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('avatar_studio')} size="lg">
       {loading || !a ? (
@@ -143,89 +187,201 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
         </div>
       ) : (
         <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
-          {/* Live preview */}
-          <div className="flex flex-col items-center py-3 bg-surface-800/50 rounded-2xl border border-surface-700">
-            <Tribeling
-              mood={a.mood}
-              energy={a.energy}
-              streak={a.streak}
-              stage={a.stage?.id}
-              skin={curSkin}
-              accessory={curAccessory}
-              custom={previewCustom || a.custom}
-              parts={previewParts || a.parts}
-              preset={a.preset}
-              size={140}
-            />
+          {/* Status strip: stage, wallet, remaining free restyles */}
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary font-bold">
+              {a.stage?.name}
+            </span>
+            <span className="px-2.5 py-1 rounded-full bg-surface-800 border border-surface-700 text-surface-200 flex items-center gap-1">
+              <Coins size={11} className="text-accent" />{data.wallet_balance_tc ?? 0} TC
+            </span>
+            <span className={`px-2.5 py-1 rounded-full border flex items-center gap-1 ${
+              budget.remaining > 0
+                ? 'bg-success/10 border-success/30 text-success'
+                : 'bg-surface-800 border-surface-700 text-surface-400'
+            }`}>
+              <Wand2 size={11} />
+              {budget.remaining > 0 ? `${budget.remaining} free change${budget.remaining === 1 ? '' : 's'}` : `${budget.fee_tc} TC / change`}
+            </span>
           </div>
 
-          {/* Presets */}
+          {/* Big try-on stage: browse looks without committing */}
+          <div className="relative flex flex-col items-center py-5 bg-gradient-to-b from-surface-800/70 to-surface-900/40 rounded-3xl border border-surface-700 overflow-hidden">
+            <div className="absolute inset-x-8 top-6 h-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+
+            <button
+              onClick={() => step(-1)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-surface-800/90 border border-surface-600 text-surface-200 flex items-center justify-center hover:border-primary hover:text-primary transition-colors"
+              aria-label="Previous look"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => step(1)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-surface-800/90 border border-surface-600 text-surface-200 flex items-center justify-center hover:border-primary hover:text-primary transition-colors"
+              aria-label="Next look"
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={browsing || 'evolution'}
+                initial={{ opacity: 0, scale: 0.82, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+                className={browsingOwned && browsingStageOk ? '' : 'opacity-90'}
+              >
+                <div style={{ filter: browsingStageOk ? 'none' : 'grayscale(0.85)' }}>
+                  <Tribeling
+                    mood={a.mood}
+                    energy={a.energy}
+                    streak={a.streak}
+                    stage={a.stage?.id}
+                    skin={curSkin}
+                    accessory={curAccessory}
+                    custom={previewCustom || a.custom}
+                    parts={browsing ? null : (previewParts || a.parts)}
+                    preset={browsing}
+                    size={210}
+                    showLabel={false}
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-3 text-center px-10">
+              <div className="text-base font-bold text-surface-100">
+                {browsingDef ? browsingDef.name : `${a.stage?.name} (Evolution)`}
+              </div>
+              <div className="text-[11px] text-surface-400 mt-0.5">
+                {!browsingDef
+                  ? 'Your natural look — grows as you evolve'
+                  : !browsingStageOk
+                    ? `Locked until ${browsingDef.stage}`
+                    : browsingOwned ? 'Unlocked' : `${browsingDef.price_tc} TC to unlock`}
+              </div>
+            </div>
+
+            {/* Commit action */}
+            <div className="mt-3 px-4 w-full flex flex-col items-center gap-1.5">
+              {isEquipped ? (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-success">
+                  <Check size={14} /> Currently worn
+                </div>
+              ) : !browsingStageOk ? (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-surface-400">
+                  <Lock size={14} /> Keep training to unlock
+                </div>
+              ) : !browsingOwned ? (
+                <Button
+                  size="sm"
+                  disabled={!!busy}
+                  onClick={() => act({ action: 'buy_look', look: browsing }, `buy_${browsing}`)}
+                  className="gap-1.5"
+                >
+                  <Coins size={14} /> Unlock for {browsingDef.price_tc} TC
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={!!busy}
+                  onClick={() => act(
+                    browsing ? { action: 'select_look', look: browsing } : { action: 'clear_preset' },
+                    `wear_${browsing || 'evolution'}`,
+                  )}
+                  className="gap-1.5"
+                >
+                  <Wand2 size={14} /> Wear it
+                </Button>
+              )}
+              {browsing && browsingOwned && browsingStageOk && !isEquipped && (
+                <div className="text-[10px] text-surface-400">
+                  {budget.remaining > 0
+                    ? `${budget.remaining} free change${budget.remaining === 1 ? '' : 's'} left`
+                    : `Costs ${budget.fee_tc} TC — evolve for more free changes`}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Look picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm font-bold text-surface-100 flex items-center gap-1.5">
-                <Sparkles size={14} className="text-primary" /> {t('presets') || 'Presets'}
+                <Sparkles size={14} className="text-primary" /> Looks
               </div>
               {a.preset && (
                 <button
-                  onClick={() => act({ action: 'clear_preset' }, 'clear_preset')}
-                  className="text-[10px] px-2 py-1 rounded-full border border-surface-600 text-surface-300 hover:border-surface-500 hover:text-surface-100"
+                  onClick={() => { setBrowsing(null); act({ action: 'clear_preset' }, 'clear_preset'); }}
+                  className="text-[10px] px-2 py-1 rounded-full border border-surface-600 text-surface-300 flex items-center gap-1 hover:border-surface-500 hover:text-surface-100"
                 >
-                  Clear
+                  <RotateCcw size={10} /> Reset to evolution
                 </button>
               )}
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {PRESETS.map((p) => {
-                const selected = a.preset === p.id;
-                const busyKey = `preset_${p.id}`;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => act({ action: 'set_preset', preset: p.id }, busyKey)}
-                    disabled={!!busy}
-                    className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all ${
-                      selected ? 'border-primary bg-primary/15' : 'border-surface-600 bg-surface-800 hover:border-surface-500'
-                    }`}
-                    title={p.name}
-                  >
-                    <img src={`/avatar/presets/${p.id}`} alt={p.name} className="w-full h-full object-contain p-1" />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Layer builder from extracted sheet */}
-          <div>
-            <div className="text-sm font-bold text-surface-100 mb-2 flex items-center gap-1.5">
-              <Sparkles size={14} className="text-primary" /> Builder
-            </div>
-            {[
-              { key: 'body', label: 'Body', count: 6 },
-              { key: 'outfit', label: 'Outfit', count: 6 },
-              { key: 'face', label: 'Face', count: 12 },
-              { key: 'hair', label: 'Hair', count: 8 },
-              { key: 'accessory', label: 'Accessory', count: 7 },
-              { key: 'aura', label: 'Aura', count: 5 },
-            ].map(({ key, label, count }) => (
-              <div key={key} className="mb-2">
-                <label className="block text-xs text-surface-400 mb-1">{label}</label>
-                <select
-                  className="w-full text-sm rounded-lg bg-surface-800 border border-surface-700 px-3 py-2 text-surface-100"
-                  value={previewParts?.[key] ?? a.parts?.[key] ?? 0}
-                  disabled={!!busy}
-                  onChange={(e) => {
-                    const idx = Number(e.target.value);
-                    const next = { ...(previewParts || a.parts || {}), [key]: idx };
-                    setPreviewParts(next);
-                    act({ action: 'set_part', part: key, idx }, `part_${key}`);
-                  }}
-                >
-                  <option value={0}>None</option>
-                  {Array.from({ length: count }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>{label} {i + 1}</option>
-                  ))}
-                </select>
+            {/* Evolution art (always free, always available) */}
+            <button
+              onClick={() => setBrowsing(null)}
+              className={`w-full mb-3 flex items-center gap-3 rounded-2xl border-2 p-2 text-left transition-all ${
+                browsing === null ? 'border-primary bg-primary/10' : 'border-surface-700 bg-surface-800/60 hover:border-surface-600'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-surface-900/60 flex items-center justify-center flex-shrink-0">
+                <Sparkles size={18} className="text-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-surface-100">{a.stage?.name} · Evolution art</div>
+                <div className="text-[10px] text-surface-400 truncate">Free forever — evolves with your workouts</div>
+              </div>
+            </button>
+
+            {families.map((fam) => (
+              <div key={fam.name} className="mb-3">
+                <div className="text-[11px] uppercase tracking-wide text-surface-400 mb-1.5">{fam.name}</div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {fam.items.map((l) => {
+                    const owned = ownedLooks.includes(l.id);
+                    const stageOk = stageReached(l.stage);
+                    const active = browsing === l.id;
+                    const worn = a.preset === l.id;
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => setBrowsing(l.id)}
+                        className={`relative flex-shrink-0 w-[68px] rounded-2xl border-2 p-1 transition-all ${
+                          active ? 'border-primary bg-primary/15 scale-105' : 'border-surface-700 bg-surface-800/60 hover:border-surface-600'
+                        }`}
+                        title={l.name}
+                      >
+                        <img
+                          src={`/avatar/presets/${l.id}`}
+                          alt={l.name}
+                          className="w-full h-14 object-contain"
+                          style={{ filter: stageOk ? (owned ? 'none' : 'grayscale(0.5)') : 'grayscale(1) brightness(0.6)' }}
+                        />
+                        <div className="text-[9px] text-surface-300 truncate px-0.5">{l.color || l.name}</div>
+                        {worn && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-success text-surface-900 flex items-center justify-center">
+                            <Check size={10} />
+                          </span>
+                        )}
+                        {!stageOk && (
+                          <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-surface-900/40">
+                            <Lock size={14} className="text-surface-300" />
+                          </span>
+                        )}
+                        {stageOk && !owned && (
+                          <span className="absolute -top-1 -right-1 px-1 h-4 rounded-full bg-accent text-[8px] font-bold text-surface-900 flex items-center">
+                            {l.price_tc}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
@@ -308,6 +464,31 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
               {a.stage_progress?.next_stage
                 ? t('next_evolution', { left: a.stage_progress.next_stage.min_workouts - a.stage_progress.current, stage: a.stage_progress.next_stage.name, perk: a.stage_progress.next_stage.perk })
                 : t('max_evolution', { perk: a.stage?.perk })}
+            </div>
+            {/* What each stage unlocks */}
+            <div className="mt-3 space-y-1.5">
+              {['sprout', 'rookie', 'athlete', 'beast', 'legend'].map((sid) => {
+                const reached = stageReached(sid);
+                const unlocks = looks.filter(l => l.stage === sid);
+                const free = unlocks.filter(l => l.price_tc === 0).length;
+                const paid = unlocks.length - free;
+                return (
+                  <div key={sid} className={`flex items-center gap-2 text-[11px] ${reached ? 'text-surface-200' : 'text-surface-500'}`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      reached ? 'bg-success/20 text-success' : 'bg-surface-800 text-surface-500'
+                    }`}>
+                      {reached ? <Check size={9} /> : <Lock size={9} />}
+                    </span>
+                    <span className="capitalize font-semibold w-16">{sid}</span>
+                    <span className="text-surface-400 truncate">
+                      {free > 0 && `${free} free look${free === 1 ? '' : 's'}`}
+                      {free > 0 && paid > 0 && ' · '}
+                      {paid > 0 && `${paid} buyable`}
+                      {unlocks.length === 0 && 'perks only'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             {a.ads_this_week >= 2 && (
               <div className="mt-2 flex items-center gap-2 text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">

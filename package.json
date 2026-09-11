@@ -9,7 +9,8 @@
         "build": "next build",
         "start": "next start",
         "test:deal": "node tests/deal-math.test.mjs",
-        "test": "yarn test:deal"
+        "test:looks": "node tests/avatar-looks.test.mjs",
+        "test": "yarn test:deal && yarn test:looks"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.1.1",

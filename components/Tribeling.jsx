@@ -188,8 +188,9 @@ export function Tribeling({
   const scale = Math.min(1.15, Math.max(0.6, energy));
   const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}-${preset || ''}`;
 
-  // User-built layered avatar from extracted sheet parts
-  if (parts && Object.values(parts).some(v => v > 0)) {
+  // User-built layered avatar from extracted sheet parts.
+  // A chosen look always wins, so legacy part data can't override it.
+  if (!preset && parts && Object.values(parts).some(v => v > 0)) {
     const base = parts.outfit ? { key: 'outfit', src: PART_SRC.outfit(parts.outfit) }
       : parts.body ? { key: 'body', src: PART_SRC.body(parts.body) }
       : parts.aura ? { key: 'aura', src: PART_SRC.aura(parts.aura) }
@@ -215,7 +216,7 @@ export function Tribeling({
   }
 
   // Custom flat avatar (avatar-maker mode)
-  if (custom?.enabled) {
+  if (!preset && custom?.enabled) {
     return (
       <div className="flex flex-col items-center gap-1 select-none" title={`Tribeling - ${m.label}`}>
         <div className="relative">

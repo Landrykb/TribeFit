@@ -4,6 +4,8 @@ import {
   getUser, updateUserStats,
   getAvatarState, recordAdWatch,
   AVATAR_SKINS, AVATAR_ACCESSORIES,
+  AVATAR_LOOKS, RESTYLE_FEE_TC,
+  getEvolutionStage, isLookUnlockedByStage, ownedLooks, lookChangeBudget,
 } from '@/lib/supabase-db';
 
 function thisWeekKey() {
@@ -39,6 +41,8 @@ export async function GET(request) {
       avatar,
       skins: AVATAR_SKINS,
       accessories: AVATAR_ACCESSORIES,
+      looks: AVATAR_LOOKS,
+      restyle_fee_tc: RESTYLE_FEE_TC,
       wallet_balance_tc: user?.wallet_balance_tc || 0,
     });
   } catch (error) {
@@ -138,13 +142,68 @@ export async function POST(request) {
         return respond();
       }
 
-      case 'set_preset': {
-        const p = body.preset;
-        if (typeof p !== 'number' && typeof p !== 'string') return NextResponse.json({ error: 'preset required' }, { status: 400 });
-        await mergeAvatarState(userId, { preset: p });
-        return respond();
+      // Buy a locked look (recolor variant / premium art) with TribeCoins.
+      case 'buy_look': {
+        const lookId = body.look;
+        const def = AVATAR_LOOKS[lookId];
+        if (!def) return NextResponse.json({ error: 'Unknown look' }, { status: 400 });
+
+        const stage = getEvolutionStage(user?.total_workouts || 0);
+        if (!isLookUnlockedByStage(lookId, stage.id)) {
+          return NextResponse.json({ error: `Reach ${def.stage} to unlock ${def.name}`, locked_stage: def.stage }, { status: 403 });
+        }
+
+        const state = await readAvatarState(userId);
+        const owned = ownedLooks(state, stage.id);
+        if (owned.includes(lookId)) return respond({ already_owned: true });
+
+        const balance = user?.wallet_balance_tc || 0;
+        if (balance < def.price_tc) {
+          return NextResponse.json({ error: 'Insufficient TribeCoins', needed: def.price_tc, current: balance }, { status: 402 });
+        }
+
+        await updateUserStats(userId, { wallet_balance_tc: balance - def.price_tc });
+        // Buying also equips it, and does not consume a free restyle.
+        await mergeAvatarState(userId, {
+          owned_looks: Array.from(new Set([...(state.owned_looks || []), lookId])),
+          preset: lookId,
+        });
+        return respond({ unlocked: def });
       }
 
+      // Equip an already-unlocked look. Free while the stage allowance lasts,
+      // then charged at RESTYLE_FEE_TC per change.
+      case 'set_preset':
+      case 'select_look': {
+        const lookId = body.look ?? body.preset;
+        const def = AVATAR_LOOKS[lookId];
+        if (!def) return NextResponse.json({ error: 'Unknown look' }, { status: 400 });
+
+        const stage = getEvolutionStage(user?.total_workouts || 0);
+        const state = await readAvatarState(userId);
+        if (!ownedLooks(state, stage.id).includes(lookId)) {
+          return NextResponse.json({ error: 'Look not unlocked', look: lookId }, { status: 403 });
+        }
+        if (state.preset === lookId) return respond({ already_equipped: true });
+
+        const budget = lookChangeBudget(state, stage.id);
+        const balance = user?.wallet_balance_tc || 0;
+        if (budget.remaining <= 0) {
+          if (balance < RESTYLE_FEE_TC) {
+            return NextResponse.json({ error: 'Out of free changes — not enough TribeCoins', needed: RESTYLE_FEE_TC, current: balance }, { status: 402 });
+          }
+          await updateUserStats(userId, { wallet_balance_tc: balance - RESTYLE_FEE_TC });
+        }
+
+        await mergeAvatarState(userId, {
+          preset: lookId,
+          look_changes: Number(state.look_changes || 0) + 1,
+          parts: {},
+        });
+        return respond({ charged_tc: budget.remaining <= 0 ? RESTYLE_FEE_TC : 0 });
+      }
+
+      // Go back to the evolution artwork for the current stage — always free.
       case 'clear_preset': {
         await mergeAvatarState(userId, { preset: null });
         return respond();

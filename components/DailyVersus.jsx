@@ -83,6 +83,7 @@ export function DailyVersus({ groupId, userId }) {
                 stage={s.avatar?.stage}
                 skin={s.avatar?.skin}
                 accessory={s.avatar?.accessory}
+                preset={s.avatar?.preset}
                 size={32}
                 showLabel={false}
               />
