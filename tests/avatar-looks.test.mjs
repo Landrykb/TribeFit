@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   AVATAR_LOOKS, EVOLUTION_STAGES, RESTYLE_FEE_TC, FREE_CHANGES_PER_STAGE,
   getEvolutionStage, isLookUnlockedByStage, ownedLooks, lookChangeBudget,
+  stageArtFor, AVATAR_BODY_TYPES, DEFAULT_BODY_TYPE,
 } from '../lib/avatar-looks.js';
 
 function assert(ok, label) {
@@ -75,5 +76,32 @@ assertEqual(
   EVOLUTION_STAGES.length * FREE_CHANGES_PER_STAGE,
   'legend has the full allowance',
 );
+
+// Body type axis exists and falls back to neutral for unknown/unmapped stages.
+assert(Object.keys(AVATAR_BODY_TYPES).includes('female'), 'female body type exists');
+assert(Object.keys(AVATAR_BODY_TYPES).includes(DEFAULT_BODY_TYPE), 'default body type exists');
+assert(stageArtFor('athlete', 'female'), 'female athlete stage art exists');
+assert(stageArtFor('beast', 'female'), 'female beast stage art exists');
+assertEqual(
+  stageArtFor('sprout', 'female'),
+  stageArtFor('sprout', DEFAULT_BODY_TYPE),
+  'female sprout falls back to neutral art',
+);
+
+// Female stage artwork exists on disk and has no Blaze references.
+const publicAvatarDir = path.join(process.cwd(), 'public/avatar');
+assert(fs.existsSync(path.join(publicAvatarDir, 'stage-female-athlete.svg')), 'female athlete art on disk');
+assert(fs.existsSync(path.join(publicAvatarDir, 'stage-female-beast.svg')), 'female beast art on disk');
+assert(!fs.existsSync(path.join(publicAvatarDir, 'presets', 'preset-8.svg')), 'blaze base removed');
+const blazeFiles = fs.readdirSync(presetDir).filter(f => f.includes('blaze'));
+assertEqual(blazeFiles, [], 'no blaze variant files remain');
+
+// Trainer family is in the catalog as a customizable non-evolution look.
+assert(AVATAR_LOOKS['preset-trainer.svg'], 'trainer base look exists');
+assert(
+  Object.keys(AVATAR_LOOKS).some(id => id.startsWith('variant_trainer_')),
+  'trainer has recolor variants',
+);
+assert(!AVATAR_LOOKS['preset-trainer.svg'].price_tc, 'trainer base is free');
 
 console.log('Avatar look tests completed.');

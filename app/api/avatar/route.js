@@ -4,7 +4,7 @@ import {
   getUser, updateUserStats,
   getAvatarState, recordAdWatch,
   AVATAR_SKINS, AVATAR_ACCESSORIES,
-  AVATAR_LOOKS, RESTYLE_FEE_TC,
+  AVATAR_LOOKS, RESTYLE_FEE_TC, AVATAR_BODY_TYPES, DEFAULT_BODY_TYPE, isBodyType,
   getEvolutionStage, isLookUnlockedByStage, ownedLooks, lookChangeBudget,
 } from '@/lib/supabase-db';
 
@@ -42,6 +42,7 @@ export async function GET(request) {
       skins: AVATAR_SKINS,
       accessories: AVATAR_ACCESSORIES,
       looks: AVATAR_LOOKS,
+      body_types: AVATAR_BODY_TYPES,
       restyle_fee_tc: RESTYLE_FEE_TC,
       wallet_balance_tc: user?.wallet_balance_tc || 0,
     });
@@ -120,6 +121,13 @@ export async function POST(request) {
         }
         clean.enabled = c.enabled !== false;
         await mergeAvatarState(userId, { custom: clean });
+        return respond();
+      }
+
+      case 'set_body_type': {
+        const bodyType = body.bodyType;
+        if (!isBodyType(bodyType)) return NextResponse.json({ error: 'Invalid body type' }, { status: 400 });
+        await mergeAvatarState(userId, { body_type: bodyType });
         return respond();
       }
 

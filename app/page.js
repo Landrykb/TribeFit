@@ -3129,6 +3129,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     stage={tribeling.stage?.id}
                     skin={tribeling.skin}
                     accessory={tribeling.accessory}
+                    bodyType={tribeling.body_type}
                     custom={tribeling.custom}
                     preset={tribeling.preset}
                     parts={tribeling.parts}
@@ -3910,6 +3911,7 @@ function TribeFitApp({ isDarkMode, setIsDarkMode }) {
                     stage={tribeling.stage?.id}
                     skin={tribeling.skin}
                     accessory={tribeling.accessory}
+                    bodyType={tribeling.body_type}
                     preset={tribeling.preset}
                     parts={tribeling.parts}
                     size={92}

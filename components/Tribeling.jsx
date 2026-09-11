@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Meh, BatteryLow, Tv, Sparkles } from 'lucide-react';
 import { FlatChibi } from './FlatChibi';
+import { stageArtFor, DEFAULT_BODY_TYPE } from '../lib/avatar-looks';
 
 // Tribeling: the user's creature avatar (Stompers-style).
 // Evolution stage grows with lifetime workouts; mood reacts to daily activity;
@@ -128,15 +129,6 @@ export function MoodPill({ mood = 'steady', streak = 0, className = '' }) {
 }
 
 // Layered-image avatar — composites body + face assets from /public/avatar.
-// Full-character stage artwork (preferred when present)
-const STAGE_ART = {
-  sprout: '/avatar/stage-sprout.png',
-  rookie: '/avatar/stage-rookie.png',
-  athlete: '/avatar/stage-rookie.png',
-  beast: '/avatar/stage-legend.png',
-  legend: '/avatar/stage-legend.png',
-};
-
 const SKIN_BODY = {
   ember: 'lime', solar: 'orange', venom: 'teal', frost: 'blue',
   magma: 'coral', midnight: 'dark',
@@ -170,6 +162,7 @@ export function Tribeling({
   custom = null,
   parts = null,
   preset = null,
+  bodyType = DEFAULT_BODY_TYPE,
 }) {
   const PART_SRC = {
     body: (i) => `/avatar/sheet/body-${i}.png`,
@@ -186,7 +179,7 @@ export function Tribeling({
   const aura = STAGE_AURA[stage];
   const m = MOOD_META[mood] || MOOD_META.steady;
   const scale = Math.min(1.15, Math.max(0.6, energy));
-  const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}-${preset || ''}`;
+  const stateKey = `${mood}-${stage}-${skinId}-${accessory}-${bodyType}-${JSON.stringify(parts || {})}-${custom?.enabled || ''}-${preset || ''}`;
 
   // User-built layered avatar from extracted sheet parts.
   // A chosen look always wins, so legacy part data can't override it.
@@ -233,7 +226,7 @@ export function Tribeling({
     );
   }
 
-  const stageArt = preset ? `/avatar/presets/${preset}` : STAGE_ART[stage];
+  const stageArt = preset ? `/avatar/presets/${preset}` : stageArtFor(stage, bodyType);
   const layers = (
     <div className="relative" style={{ width: size * scale, height: size * scale, transition: 'width 0.35s cubic-bezier(.34,1.56,.64,1), height 0.35s cubic-bezier(.34,1.56,.64,1)' }}>
       {aura && (

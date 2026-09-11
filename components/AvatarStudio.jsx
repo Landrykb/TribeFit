@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApi, optimisticMutate } from '../lib/api';
-import { Lock, Check, Coins, Tv, Dumbbell, Sparkles, ChevronLeft, ChevronRight, Wand2, RotateCcw } from 'lucide-react';
+import { AVATAR_BODY_TYPES } from '../lib/avatar-looks';
+import { Lock, Check, Coins, Tv, Dumbbell, Sparkles, ChevronLeft, ChevronRight, Wand2, RotateCcw, User } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/button';
 import { useToast } from './ui/Toast';
@@ -91,10 +92,12 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
       }
       case 'clear_preset':
         return { preset: null };
+      case 'set_body_type':
+        return { body_type: payload.bodyType };
       case 'set_custom':
         return { custom: payload.custom };
       case 'toggle_custom':
-        return { custom: { ...(avatar.custom || {}), enabled: payload.enabled !== false } };
+        return { custom: { ...(avatar.custom || {}), enabled: payload.enabled !== false }};
       default:
         return {};
     }
@@ -139,6 +142,7 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
   const a = data?.avatar;
   const curSkin = previewSkin || a?.skin || 'ember';
   const curAccessory = previewAccessory !== null ? previewAccessory : (a?.accessory || 'none');
+  const curBodyType = a?.body_type || 'neutral';
 
   // ---- Look try-on experience ----
   // `browsing` is the look the user is inspecting in the big preview. It is only
@@ -205,6 +209,24 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
             </span>
           </div>
 
+          {/* Body type selector (identity choice, always free) */}
+          <div className="flex items-center gap-2">
+            {Object.values(AVATAR_BODY_TYPES).map((bt) => (
+              <button
+                key={bt.id}
+                onClick={() => act({ action: 'set_body_type', bodyType: bt.id }, `body_${bt.id}`)}
+                disabled={!!busy || curBodyType === bt.id}
+                className={`text-[10px] px-2.5 py-1 rounded-full border flex items-center gap-1 transition-colors ${
+                  curBodyType === bt.id
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'bg-surface-800 border-surface-700 text-surface-300 hover:border-surface-500'
+                }`}
+              >
+                <User size={11} /> {bt.name}
+              </button>
+            ))}
+          </div>
+
           {/* Big try-on stage: browse looks without committing */}
           <div className="relative flex flex-col items-center py-5 bg-gradient-to-b from-surface-800/70 to-surface-900/40 rounded-3xl border border-surface-700 overflow-hidden">
             <div className="absolute inset-x-8 top-6 h-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
@@ -241,6 +263,7 @@ export function AvatarStudio({ isOpen, onClose, userId, onWalletChange }) {
                     stage={a.stage?.id}
                     skin={curSkin}
                     accessory={curAccessory}
+                    bodyType={curBodyType}
                     custom={previewCustom || a.custom}
                     parts={browsing ? null : (previewParts || a.parts)}
                     preset={browsing}
